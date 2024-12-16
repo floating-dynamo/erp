@@ -1,8 +1,8 @@
-import { Home, Package, Sparkles, UserRound } from "lucide-react";
+import { Home, Package, Truck, UserRound } from "lucide-react";
 
 export const siteConfig = {
   brand: {
-    logo: Sparkles,
+    logo: Truck,
     name: "ERP",
   },
   sidebar: {

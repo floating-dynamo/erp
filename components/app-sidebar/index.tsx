@@ -21,7 +21,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader>
         <div className="flex gap-3 items-center ml-4">
-          <BrandLogo className="size-4 text-primary" />
+          <BrandLogo className="size-5 text-primary" />
           <p className="font-bold text-xl">{brandName}</p>
         </div>
       </SidebarHeader>
