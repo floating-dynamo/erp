@@ -3,7 +3,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import Image from "next/image";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -30,8 +29,14 @@ import {
 } from "@/components/ui/select";
 import { CUSTOMERS_MOCK_DATA } from "@/mocks/customers/mock";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ImageIcon } from "lucide-react";
+import { CalendarIcon, UploadCloudIcon, XIcon } from "lucide-react";
 import { useRef } from "react";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface CreateRequirementFormProps {
   onCancel?: () => void;
@@ -45,21 +50,27 @@ export const CreateRequirementForm = ({
   const form = useForm<ZodCreateRequirementSchema>({
     resolver: zodResolver(createRequirementSchema),
     defaultValues: {
-      enquiryNumber: "",
+      enquiryNumber: 0,
+      customerId: "",
     },
   });
   // const { mutate, isPending } = useCreateWorkspace();
   const inputRef = useRef<HTMLInputElement>(null);
   // const router = useRouter();
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      form.setValue("image", file);
+      form.setValue("file", file);
     }
   };
 
+  // const handleClearFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  // }
+
   const onSubmit = (values: ZodCreateRequirementSchema) => {
+    console.log(values);
     // const finalValues = {
     //   ...values,
     //   image: values.image instanceof File ? values.image : "",
@@ -75,7 +86,6 @@ export const CreateRequirementForm = ({
     //     },
     //   }
     // );
-    console.log(values);
   };
 
   return (
@@ -97,7 +107,11 @@ export const CreateRequirementForm = ({
                   <FormItem>
                     <FormLabel>Customer</FormLabel>
                     <FormControl>
-                      <Select {...field}>
+                      <Select
+                        {...field}
+                        value={field.value}
+                        onValueChange={(value) => field.onChange(value)}
+                      >
                         <SelectTrigger className="w-full bg-neutral-200 font-medium p-1">
                           <SelectValue placeholder="No customer selected" />
                         </SelectTrigger>
@@ -121,7 +135,15 @@ export const CreateRequirementForm = ({
                   <FormItem>
                     <FormLabel>Enquiry Number</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Enter enquiry number" />
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(e.target.valueAsNumber || 0)
+                        }
+                        type="number"
+                        placeholder="Enter enquiry number"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -129,54 +151,103 @@ export const CreateRequirementForm = ({
               />
               <FormField
                 control={form.control}
-                name="image"
+                name="enquiryDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Enquiry Date</FormLabel>
+                    <FormControl>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon />
+                            {field.value
+                              ? new Intl.DateTimeFormat("en-US").format(
+                                  new Date(field.value)
+                                )
+                              : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-0">
+                          <Calendar
+                            mode="single"
+                            selected={
+                              field.value ? new Date(field.value) : undefined
+                            }
+                            onSelect={(date) => {
+                              const selectedDate = date
+                                ? date.toISOString()
+                                : "";
+                              field.onChange(selectedDate);
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="file"
                 render={({ field }) => (
                   <div className="flex flex-col gap-y-2">
                     <div className="flex items-center gap-x-5">
-                      {field.value ? (
-                        <div className="size-[72px] relative rounded-md overflow-hidden">
-                          <Image
-                            src={
-                              field.value instanceof File
-                                ? URL.createObjectURL(field.value)
-                                : field.value
-                            }
-                            alt="Logo"
-                            fill
-                            className="object-cover"
+                      <Avatar className="size-[72px]">
+                        <AvatarFallback>
+                          <UploadCloudIcon className="size-[36px] text-neutral-400" />
+                        </AvatarFallback>
+                      </Avatar>
+                      {!field.value ? (
+                        <div className="flex flex-col">
+                          <p className="text-sm">Attach a file</p>
+                          <p className="text-sm text-muted-foreground">
+                            PDF, JPEG, PNG, SVG or JPEG, max 20mb
+                          </p>
+                          <input
+                            className="hidden"
+                            accept=".jpg, .png, .jpeg, .svg, .pdf"
+                            type="file"
+                            ref={inputRef}
+                            onChange={handleFileChange}
+                            disabled={false}
                           />
+                          <Button
+                            type="button"
+                            disabled={false}
+                            variant={"tertiary"}
+                            size={"xs"}
+                            className="w-fit mt-2"
+                            onClick={() => inputRef.current?.click()}
+                          >
+                            Upload File
+                          </Button>
                         </div>
                       ) : (
-                        <Avatar className="size-[72px]">
-                          <AvatarFallback>
-                            <ImageIcon className="size-[36px] text-neutral-400" />
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="flex flex-col">
+                          <p className="text-sm">Uploaded File</p>
+                          <div className="text-muted-foreground flex items-center gap-2">
+                            <p className="text-sm">{field.value.name}</p>
+                            <span
+                              className="font-semibold p-0 m-0"
+                              onClick={() => {
+                                field.onChange(null);
+                                if (inputRef.current) {
+                                  inputRef.current.value = "";
+                                }
+                              }}
+                            >
+                              <XIcon className="size-4 hover:opacity-75 cursor-pointer transition" />
+                            </span>
+                          </div>
+                        </div>
                       )}
-                      <div className="flex flex-col">
-                        <p className="text-sm">Attach a file</p>
-                        <p className="text-sm text-muted-foreground">
-                          PDF, JPEG, PNG, SVG or JPEG, max 20mb
-                        </p>  
-                        <input
-                          className="hidden"
-                          accept=".jpg, .png, .jpeg, .svg"
-                          type="file"
-                          ref={inputRef}
-                          onChange={handleImageChange}
-                          disabled={false}
-                        />
-                        <Button
-                          type="button"
-                          disabled={false}
-                          variant={"tertiary"}
-                          size={"xs"}
-                          className="w-fit mt-2"
-                          onClick={() => inputRef.current?.click()}
-                        >
-                          Upload File
-                        </Button>
-                      </div>
                     </div>
                   </div>
                 )}

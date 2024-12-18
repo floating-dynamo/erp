@@ -17,7 +17,7 @@ const RequirementsPage = () => {
         </Button>
       </div>
       <div>
-        <p className="p-4 text-xl font-bold">All Requirements</p>
+        Requirements
       </div>
     </div>
   );
