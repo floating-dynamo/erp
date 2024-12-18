@@ -1,25 +1,20 @@
-"use client";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
-import { usePathname } from "next/navigation";
-import { Separator } from "@/components/ui/separator";
-import { capitalizeFirstLetter } from "@/lib/utils";
+import Sidebar from "@/components/sidebar";
+import Navbar from "@/components/navbar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const pageName = capitalizeFirstLetter(pathname.split("/")[1]);
-
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <main>
-        <div className="flex items-center space-x-2 pt-2">
-          <SidebarTrigger />
-          <Separator orientation="vertical" />
-          <p className="font-medium text-primary">{pageName}</p>
+    <div className="min-h-screen">
+      <div className="flex w-full h-full">
+        <div className="fixed left-0 top-0 hidden lg:block lg:w-[264px] h-full overflow-y-auto">
+          <Sidebar />
         </div>
-        <div className="w-full">{children}</div>
-      </main>
-    </SidebarProvider>
+        <div className="lg:pl-[264px] w-full">
+          <div className="mx-auto max-w-screen-2xl h-full">
+            <Navbar />
+            <main className="h-full py-8 px-6 flex flex-col">{children}</main>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
