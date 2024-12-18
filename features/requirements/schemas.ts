@@ -9,4 +9,13 @@ export const createRequirementSchema = z.object({
   enquiryDate: z.string().refine((value) => !isNaN(Date.parse(value)), {
     message: "Invalid date",
   }),
+  items: z.array(
+    z.object({
+      itemCode: z.number(),
+      itemDescription: z.string().min(1, "Required"),
+      quantity: z.number(),
+      unitPrice: z.number(),
+      unitTax: z.number(),
+    })
+  ),
 });

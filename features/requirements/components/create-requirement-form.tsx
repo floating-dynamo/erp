@@ -29,7 +29,13 @@ import {
 } from "@/components/ui/select";
 import { CUSTOMERS_MOCK_DATA } from "@/mocks/customers/mock";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { CalendarIcon, UploadCloudIcon, XIcon } from "lucide-react";
+import {
+  CalendarIcon,
+  PlusCircleIcon,
+  TrashIcon,
+  UploadCloudIcon,
+  XIcon,
+} from "lucide-react";
 import { useRef } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -52,6 +58,7 @@ export const CreateRequirementForm = ({
     defaultValues: {
       enquiryNumber: 0,
       customerId: "",
+      items: [],
     },
   });
   // const { mutate, isPending } = useCreateWorkspace();
@@ -107,6 +114,7 @@ export const CreateRequirementForm = ({
                   <FormItem>
                     <FormLabel>Customer</FormLabel>
                     <FormControl>
+                      {/* TODO: Make this a combobox */}
                       <Select
                         {...field}
                         value={field.value}
@@ -193,6 +201,190 @@ export const CreateRequirementForm = ({
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="items"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Items</FormLabel>
+                    <FormControl>
+                      <div className="flex flex-col gap-6">
+                        {(field.value || []).map((item, index) => (
+                          <div
+                            key={index}
+                            className="flex gap-2 flex-wrap items-center border-b pb-4"
+                          >
+                            {/* Item Code */}
+                            <div>
+                              <FormLabel className="text-xs text-muted-foreground">
+                                Item Code
+                              </FormLabel>
+                              <Input
+                                {...field}
+                                type="number"
+                                placeholder="Enter item code"
+                                value={item.itemCode || 0}
+                                onChange={(e) =>
+                                  field.onChange(
+                                    (field.value || []).map((itm, i) =>
+                                      i === index
+                                        ? {
+                                            ...itm,
+                                            itemCode: Number(e.target.value),
+                                          }
+                                        : itm
+                                    )
+                                  )
+                                }
+                              />
+                            </div>
+
+                            {/* Item Description */}
+                            <div>
+                              <FormLabel className="text-xs text-muted-foreground">
+                                Description
+                              </FormLabel>
+                              <Input
+                                {...field}
+                                type="text"
+                                placeholder="Enter item description"
+                                value={item.itemDescription || ""}
+                                onChange={(e) =>
+                                  field.onChange(
+                                    (field.value || []).map((itm, i) =>
+                                      i === index
+                                        ? {
+                                            ...itm,
+                                            itemDescription: e.target.value,
+                                          }
+                                        : itm
+                                    )
+                                  )
+                                }
+                              />
+                            </div>
+
+                            {/* Quantity */}
+                            <div>
+                              <FormLabel className="text-xs text-muted-foreground">
+                                Quantity
+                              </FormLabel>
+                              <Input
+                                {...field}
+                                type="number"
+                                placeholder="Enter quantity"
+                                value={item.quantity || 0}
+                                onChange={(e) =>
+                                  field.onChange(
+                                    (field.value || []).map((itm, i) =>
+                                      i === index
+                                        ? {
+                                            ...itm,
+                                            quantity: Number(e.target.value),
+                                          }
+                                        : itm
+                                    )
+                                  )
+                                }
+                              />
+                            </div>
+
+                            {/* Unit Price */}
+                            <div>
+                              <FormLabel className="text-xs text-muted-foreground">
+                                Unit Price
+                              </FormLabel>
+                              <Input
+                                {...field}
+                                type="number"
+                                placeholder="Enter unit price"
+                                value={item.unitPrice || 0}
+                                onChange={(e) =>
+                                  field.onChange(
+                                    (field.value || []).map((itm, i) =>
+                                      i === index
+                                        ? {
+                                            ...itm,
+                                            unitPrice: Number(e.target.value),
+                                          }
+                                        : itm
+                                    )
+                                  )
+                                }
+                              />
+                            </div>
+
+                            {/* Unit Tax */}
+                            <div>
+                              <FormLabel className="text-xs text-muted-foreground">
+                                Unit Tax
+                              </FormLabel>
+                              <Input
+                                {...field}
+                                type="number"
+                                placeholder="Enter tax amount"
+                                value={item.unitTax || 0}
+                                onChange={(e) =>
+                                  field.onChange(
+                                    (field.value || []).map((itm, i) =>
+                                      i === index
+                                        ? {
+                                            ...itm,
+                                            unitTax: Number(e.target.value),
+                                          }
+                                        : itm
+                                    )
+                                  )
+                                }
+                              />
+                            </div>
+
+                            {/* Remove Button */}
+                            <div className="flex items-center justify-center h-full">
+                              <Button
+                                variant="destructive"
+                                type="button"
+                                onClick={() =>
+                                  field.onChange(
+                                    (field.value || []).filter(
+                                      (_, i) => i !== index
+                                    )
+                                  )
+                                }
+                              >
+                                <TrashIcon />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Add Item Button */}
+                        <Button
+                          type="button"
+                          variant={"secondary"}
+                          onClick={() =>
+                            field.onChange([
+                              ...(field.value || []),
+                              {
+                                itemCode: 0,
+                                itemDescription: "",
+                                quantity: 0,
+                                unitPrice: 0,
+                                unitTax: 0,
+                              },
+                            ])
+                          }
+                        >
+                          <PlusCircleIcon className="size-4" />
+                          Add a new item
+                        </Button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="file"
