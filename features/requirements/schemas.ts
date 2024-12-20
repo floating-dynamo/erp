@@ -18,4 +18,5 @@ export const createRequirementSchema = z.object({
       unitTax: z.number(),
     })
   ),
+  termsAndConditions: z.string().optional(),
 });

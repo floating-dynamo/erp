@@ -43,6 +43,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
 
 interface CreateRequirementFormProps {
   onCancel?: () => void;
@@ -77,6 +78,17 @@ export const CreateRequirementForm = ({
   // }
 
   const onSubmit = (values: ZodCreateRequirementSchema) => {
+    const totalItemsPrice = values.items
+      .map(({ unitPrice, quantity }) => unitPrice * quantity)
+      .reduce((acc, num) => acc + num);
+    const totalItemsFinalPrice = values.items
+      .map(
+        ({ unitPrice, quantity, unitTax }) =>
+          unitPrice * quantity + unitPrice * (unitTax / 100)
+      )
+      .reduce((acc, num) => acc + num);
+    values.totalItemsPrice = totalItemsPrice;
+    values.totalItemsFinalPrice = totalItemsFinalPrice;
     console.log(values);
     // const finalValues = {
     //   ...values,
@@ -361,16 +373,16 @@ export const CreateRequirementForm = ({
                         {/* Add Item Button */}
                         <Button
                           type="button"
-                          variant={"secondary"}
+                          variant={"tertiary"}
                           onClick={() =>
                             field.onChange([
                               ...(field.value || []),
                               {
-                                itemCode: 0,
+                                itemCode: undefined,
                                 itemDescription: "",
-                                quantity: 0,
-                                unitPrice: 0,
-                                unitTax: 0,
+                                quantity: undefined,
+                                unitPrice: undefined,
+                                unitTax: undefined,
                               },
                             ])
                           }
@@ -384,7 +396,23 @@ export const CreateRequirementForm = ({
                   </FormItem>
                 )}
               />
-
+              <FormField
+                control={form.control}
+                name="termsAndConditions"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Terms and conditions</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        rows={6}
+                        placeholder="Enter the terms and conditions"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="file"

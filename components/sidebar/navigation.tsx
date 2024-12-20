@@ -1,8 +1,10 @@
+"use client";
 import React from "react";
 import { FileTextIcon, UsersIcon } from "lucide-react";
 import { GoHome, GoHomeFill } from "react-icons/go";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
 
 const routes = [
   {
@@ -26,10 +28,12 @@ const routes = [
 ];
 
 const Navigation = () => {
+  const pathname = usePathname();
+
   return (
     <ul className="flex flex-col">
       {routes.map(({ label, href, icon, activeIcon }) => {
-        const isActive = false;
+        const isActive = pathname === href;
         const Icon = isActive ? activeIcon : icon;
 
         return (
