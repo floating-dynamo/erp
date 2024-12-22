@@ -16,7 +16,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { createRequirementSchema } from "../schemas";
+import { createEnquirySchema } from "../schemas";
 // import { useCreateWorkspace } from "../api/use-create-workspace";
 // import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,7 @@ import {
 import { CUSTOMERS_MOCK_DATA } from "@/mocks/customers/mock";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
+  ArrowLeft,
   CalendarIcon,
   PlusCircleIcon,
   TrashIcon,
@@ -45,17 +46,15 @@ import {
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 
-interface CreateRequirementFormProps {
+interface CreateEnquiryFormProps {
   onCancel?: () => void;
 }
 
-type ZodCreateRequirementSchema = z.infer<typeof createRequirementSchema>;
+type ZodCreateEnquirySchema = z.infer<typeof createEnquirySchema>;
 
-export const CreateRequirementForm = ({
-  onCancel,
-}: CreateRequirementFormProps) => {
-  const form = useForm<ZodCreateRequirementSchema>({
-    resolver: zodResolver(createRequirementSchema),
+export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
+  const form = useForm<ZodCreateEnquirySchema>({
+    resolver: zodResolver(createEnquirySchema),
     defaultValues: {
       enquiryNumber: 0,
       customerId: "",
@@ -77,7 +76,7 @@ export const CreateRequirementForm = ({
 
   // }
 
-  const onSubmit = (values: ZodCreateRequirementSchema) => {
+  const onSubmit = (values: ZodCreateEnquirySchema) => {
     const totalItemsPrice = values.items
       .map(({ unitPrice, quantity }) => unitPrice * quantity)
       .reduce((acc, num) => acc + num);
@@ -110,7 +109,19 @@ export const CreateRequirementForm = ({
   return (
     <Card className="w-full h-full border-none shadow-none">
       <CardHeader className="flex p-7">
-        <CardTitle className="text-xl font-bold">Add a new enquiry</CardTitle>
+        <CardTitle className="text-xl font-bold flex gap-7 item-center">
+          <Button
+            variant="outline"
+            type="button"
+            size="icon"
+            onClick={onCancel}
+            disabled={false}
+            className={cn(!onCancel && "invisible")}
+          >
+            <ArrowLeft className="size-4" />
+          </Button>
+          Add a new enquiry
+        </CardTitle>
       </CardHeader>
       <div className="px-7">
         <Separator />
@@ -428,7 +439,7 @@ export const CreateRequirementForm = ({
                         <div className="flex flex-col">
                           <p className="text-sm">Attach a file</p>
                           <p className="text-sm text-muted-foreground">
-                            PDF, JPEG, PNG, SVG or JPEG, max 20mb
+                            You can add a maximum of 1 file, 20MB
                           </p>
                           <input
                             className="hidden"
@@ -474,8 +485,8 @@ export const CreateRequirementForm = ({
               />
             </div>
             <Separator className="my-7" />
-            <div className="flex items-center justify-between">
-              <Button
+            <div className="flex items-center justify-end">
+              {/* <Button
                 variant="secondary"
                 type="button"
                 size="lg"
@@ -483,8 +494,8 @@ export const CreateRequirementForm = ({
                 disabled={false}
                 className={cn(!onCancel && "invisible")}
               >
-                Cancel
-              </Button>
+                <ArrowLeft className="size-4" /> Back
+              </Button> */}
               <Button type="submit" size="lg" disabled={false}>
                 Create Enquiry
               </Button>

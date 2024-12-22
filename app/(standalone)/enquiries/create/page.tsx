@@ -1,14 +1,14 @@
 "use client";
-import { CreateRequirementForm } from "@/features/requirements/components/create-requirement-form";
+import { CreateEnquiryForm } from "@/features/enquiries/components/create-enquiry-form";
 import { redirect } from "next/navigation";
 import React from "react";
 
 const CreateRequirementsPage = () => {
   return (
     <div className="w-full lg:max-w-3xl">
-      <CreateRequirementForm
+      <CreateEnquiryForm
         onCancel={() => {
-          redirect("/dashboard");
+          redirect("/enquiries");
         }}
       />
     </div>

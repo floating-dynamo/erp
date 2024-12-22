@@ -1,7 +1,14 @@
 "use client";
 import React from "react";
-import { FileTextIcon, UsersIcon } from "lucide-react";
-import { GoHome, GoHomeFill } from "react-icons/go";
+// import { FileTextIcon, UsersIcon } from "lucide-react";
+import {
+  GoHome,
+  GoHomeFill,
+  GoPerson,
+  GoPersonFill,
+  GoFileDirectory,
+  GoFileDirectoryFill,
+} from "react-icons/go";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
@@ -16,14 +23,14 @@ const routes = [
   {
     label: "Customers",
     href: "/customers",
-    icon: UsersIcon,
-    activeIcon: UsersIcon,
+    icon: GoPerson,
+    activeIcon: GoPersonFill,
   },
   {
-    label: "Requirements",
-    href: "/requirements",
-    icon: FileTextIcon,
-    activeIcon: FileTextIcon,
+    label: "Enquiries",
+    href: "/enquiries",
+    icon: GoFileDirectory,
+    activeIcon: GoFileDirectoryFill,
   },
 ];
 

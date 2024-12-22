@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/button";
+import CustomerTable from "@/features/customers/components/customer-table";
+import { CUSTOMERS_MOCK_DATA } from "@/mocks/customers/mock";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import React from "react";
@@ -13,7 +15,10 @@ const CustomersPage = () => {
           </Link>
         </Button>
       </div>
-      <div>Requirements</div>
+      <div>
+        <h3 className="font-bold text-xl">Customers Listing</h3>
+        <CustomerTable customers={CUSTOMERS_MOCK_DATA} />
+      </div>
     </div>
   );
 };

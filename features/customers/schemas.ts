@@ -19,7 +19,7 @@ export const customerPOCSchema = z.object({
 // Define the schema for Customer
 export const createCustomerSchema = z.object({
   id: z.string().optional(),
-  name: z.string().trim().min(1, 'Required'),
+  name: z.string().trim().min(1, "Required"),
   address: customerAddressSchema.optional(),
   contactDetails: z.string().optional(),
   poc: z.array(customerPOCSchema).optional(),
@@ -27,3 +27,5 @@ export const createCustomerSchema = z.object({
   vendorId: z.string().optional(),
   customerType: z.string().optional(),
 });
+
+export type Customer = z.infer<typeof createCustomerSchema>;

@@ -15,12 +15,16 @@ import {
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle } from "lucide-react";
+import { ArrowLeft, PlusCircle } from "lucide-react";
 
 // Infer the form schema type
 type CreateCustomerFormSchema = z.infer<typeof createCustomerSchema>;
 
-export const CreateCustomerForm = () => {
+interface CreateCustomerFormProps {
+  onCancel?: () => void;
+}
+
+export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
   const form = useForm<CreateCustomerFormSchema>({
     resolver: zodResolver(createCustomerSchema),
     defaultValues: {
@@ -55,7 +59,18 @@ export const CreateCustomerForm = () => {
   return (
     <Card className="w-full h-full border-none shadow-none">
       <CardHeader className="flex p-7">
-        <CardTitle className="text-xl font-bold">Add a new customer</CardTitle>
+        <CardTitle className="text-xl font-bold flex gap-7 items-center">
+          <Button
+            variant="outline"
+            type="button"
+            size="icon"
+            onClick={onCancel}
+            disabled={false}
+          >
+            <ArrowLeft className="size-4" />
+          </Button>
+          Add a new customer
+        </CardTitle>
       </CardHeader>
       <div className="px-7">
         <Separator />
@@ -101,7 +116,7 @@ export const CreateCustomerForm = () => {
                           placeholder={`Enter ${key}`}
                           onChange={(e) => {
                             if (key === "pincode") {
-                              field.onChange(Number(e.target.value) || 0); // Explicitly convert to number
+                              field.onChange(Number(e.target.value) || null); // Explicitly convert to number
                             } else {
                               field.onChange(e.target.value); // Default string handling
                             }
@@ -135,6 +150,10 @@ export const CreateCustomerForm = () => {
                         <FormControl>
                           <Input
                             {...field}
+                            value={field.value}
+                            onChange={(e) =>
+                              field.onChange(Number(e.target.value) || null)
+                            }
                             placeholder="Enter mobile number"
                             type="number"
                           />
@@ -236,7 +255,9 @@ export const CreateCustomerForm = () => {
             <Separator className="my-6" />
 
             {/* Submit Button */}
-            <Button type="submit">Submit</Button>
+            <div className="flex items-center lg:justify-end justify-center w-full">
+              <Button type="submit">Submit</Button>
+            </div>
           </form>
         </Form>
       </CardContent>

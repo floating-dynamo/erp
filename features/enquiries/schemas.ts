@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const createRequirementSchema = z.object({
+export const createEnquirySchema = z.object({
   customerId: z.string().trim().min(1, "Required"),
   enquiryNumber: z.number().min(0, "Required"),
   totalItemsPrice: z.number().optional(),
