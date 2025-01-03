@@ -56,7 +56,7 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
   const form = useForm<ZodCreateEnquirySchema>({
     resolver: zodResolver(createEnquirySchema),
     defaultValues: {
-      enquiryNumber: 0,
+      enquiryNumber: "",
       customerId: "",
       items: [],
     },
@@ -77,33 +77,18 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
   // }
 
   const onSubmit = (values: ZodCreateEnquirySchema) => {
-    const totalItemsPrice = values.items
-      .map(({ unitPrice, quantity }) => unitPrice * quantity)
-      .reduce((acc, num) => acc + num);
-    const totalItemsFinalPrice = values.items
-      .map(
-        ({ unitPrice, quantity, unitTax }) =>
-          unitPrice * quantity + unitPrice * (unitTax / 100)
-      )
-      .reduce((acc, num) => acc + num);
-    values.totalItemsPrice = totalItemsPrice;
-    values.totalItemsFinalPrice = totalItemsFinalPrice;
+    // const totalItemsPrice = values.items
+    //   .map(({ unitPrice, quantity }) => unitPrice * quantity)
+    //   .reduce((acc, num) => acc + num);
+    // const totalItemsFinalPrice = values.items
+    //   .map(
+    //     ({ unitPrice, quantity, unitTax }) =>
+    //       unitPrice * quantity + unitPrice * (unitTax / 100)
+    //   )
+    //   .reduce((acc, num) => acc + num);
+    // values.totalItemsPrice = totalItemsPrice;
+    // values.totalItemsFinalPrice = totalItemsFinalPrice;
     console.log(values);
-    // const finalValues = {
-    //   ...values,
-    //   image: values.image instanceof File ? values.image : "",
-    // };
-    // mutate(
-    //   {
-    //     form: finalValues,
-    //   },
-    //   {
-    //     onSuccess: ({ data }) => {
-    //       form.reset();
-    //       router.push(`/workspaces/${data.$id}`);
-    //     },
-    //   }
-    // );
   };
 
   return (
@@ -168,11 +153,7 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                     <FormControl>
                       <Input
                         {...field}
-                        value={field.value ?? ""}
-                        onChange={(e) =>
-                          field.onChange(e.target.valueAsNumber || 0)
-                        }
-                        type="number"
+                        type="text"
                         placeholder="Enter enquiry number"
                       />
                     </FormControl>
@@ -235,7 +216,7 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                         {(field.value || []).map((item, index) => (
                           <div
                             key={index}
-                            className="flex gap-2 flex-wrap items-center border-b pb-4"
+                            className="flex gap-2 flex-wrap items-end border-b pb-4"
                           >
                             {/* Item Code */}
                             <div>
@@ -246,7 +227,7 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                                 {...field}
                                 type="number"
                                 placeholder="Enter item code"
-                                value={item.itemCode || 0}
+                                value={item.itemCode || ""}
                                 onChange={(e) =>
                                   field.onChange(
                                     (field.value || []).map((itm, i) =>
@@ -296,7 +277,7 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                                 {...field}
                                 type="number"
                                 placeholder="Enter quantity"
-                                value={item.quantity || 0}
+                                value={item.quantity || ""}
                                 onChange={(e) =>
                                   field.onChange(
                                     (field.value || []).map((itm, i) =>
@@ -312,61 +293,12 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                               />
                             </div>
 
-                            {/* Unit Price */}
-                            <div>
-                              <FormLabel className="text-xs text-muted-foreground">
-                                Unit Price
-                              </FormLabel>
-                              <Input
-                                {...field}
-                                type="number"
-                                placeholder="Enter unit price"
-                                value={item.unitPrice || 0}
-                                onChange={(e) =>
-                                  field.onChange(
-                                    (field.value || []).map((itm, i) =>
-                                      i === index
-                                        ? {
-                                            ...itm,
-                                            unitPrice: Number(e.target.value),
-                                          }
-                                        : itm
-                                    )
-                                  )
-                                }
-                              />
-                            </div>
-
-                            {/* Unit Tax */}
-                            <div>
-                              <FormLabel className="text-xs text-muted-foreground">
-                                Unit Tax
-                              </FormLabel>
-                              <Input
-                                {...field}
-                                type="number"
-                                placeholder="Enter tax amount"
-                                value={item.unitTax || 0}
-                                onChange={(e) =>
-                                  field.onChange(
-                                    (field.value || []).map((itm, i) =>
-                                      i === index
-                                        ? {
-                                            ...itm,
-                                            unitTax: Number(e.target.value),
-                                          }
-                                        : itm
-                                    )
-                                  )
-                                }
-                              />
-                            </div>
-
                             {/* Remove Button */}
                             <div className="flex items-center justify-center h-full">
                               <Button
                                 variant="destructive"
                                 type="button"
+                                className="mb-2"
                                 onClick={() =>
                                   field.onChange(
                                     (field.value || []).filter(
@@ -392,8 +324,6 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                                 itemCode: undefined,
                                 itemDescription: "",
                                 quantity: undefined,
-                                unitPrice: undefined,
-                                unitTax: undefined,
                               },
                             ])
                           }

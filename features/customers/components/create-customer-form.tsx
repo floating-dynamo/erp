@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, PlusCircle } from "lucide-react";
+import { ArrowLeft, PlusCircle, TrashIcon } from "lucide-react";
 
 // Infer the form schema type
 type CreateCustomerFormSchema = z.infer<typeof createCustomerSchema>;
@@ -34,7 +34,6 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
         city: "",
         state: "",
         country: "",
-        pincode: undefined,
       },
       gstNumber: "",
       vendorId: "",
@@ -104,7 +103,7 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
                 <FormField
                   key={key}
                   control={form.control}
-                  name={`address.${key}`} // This ensures the path matches the schema
+                  name={`address.${key}`}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
@@ -116,13 +115,13 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
                           placeholder={`Enter ${key}`}
                           onChange={(e) => {
                             if (key === "pincode") {
-                              field.onChange(Number(e.target.value) || null); // Explicitly convert to number
+                              field.onChange(Number(e.target.value) || "");
                             } else {
-                              field.onChange(e.target.value); // Default string handling
+                              field.onChange(e.target.value);
                             }
                           }}
-                          value={field.value ?? ""} // Fallback to empty string for undefined values
-                          type={key === "pincode" ? "number" : "text"} // Set input type based on the field
+                          value={field.value ?? ""}
+                          type={key === "pincode" ? "number" : "text"}
                         />
                       </FormControl>
                       <FormMessage />
@@ -138,8 +137,27 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
               {pocFields.map((field, index) => (
                 <div
                   key={field.id}
-                  className="flex items-center gap-4 border-b pb-4"
+                  className="flex items-end gap-4 border-b pb-4 flex-wrap"
                 >
+                  {/* Name */}
+                  <FormField
+                    control={form.control}
+                    name={`poc.${index}.name` as const}
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormLabel>Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Enter name"
+                            type="text"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   {/* Mobile */}
                   <FormField
                     control={form.control}
@@ -183,14 +201,17 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
                   />
 
                   {/* Remove Button */}
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={() => removePOC(index)}
-                    className="h-10"
-                  >
-                    Remove
-                  </Button>
+                  {/* Remove Button */}
+                  <div className="flex items-center justify-center h-full">
+                    <Button
+                      variant="destructive"
+                      type="button"
+                      onClick={() => removePOC(index)}
+                      className="flex items-center justify-center mb-2"
+                    >
+                      <TrashIcon />
+                    </Button>
+                  </div>
                 </div>
               ))}
 
@@ -200,6 +221,7 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
                 variant={"tertiary"}
                 onClick={() =>
                   addPOC({
+                    name: "",
                     mobile: undefined,
                     email: "",
                   })

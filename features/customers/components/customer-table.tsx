@@ -60,15 +60,19 @@ const columns: ColumnDef<Customer>[] = [
     ),
   },
   {
-    accessorKey: "address",
-    header: "Address",
+    accessorKey: "city",
+    header: "City",
     cell: ({ row }) => {
       const address = row.original.address;
-      return address ? (
-        <div>
-          {address.address1}, {address.city}, {address.state}, {address.country}
-        </div>
-      ) : null;
+      return address ? <div>{address.city}</div> : null;
+    },
+  },
+  {
+    accessorKey: "state",
+    header: "State",
+    cell: ({ row }) => {
+      const address = row.original.address;
+      return address ? <div>{address.state}</div> : null;
     },
   },
   {

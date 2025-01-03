@@ -7,11 +7,12 @@ export const customerAddressSchema = z.object({
   city: z.string(),
   state: z.string(),
   country: z.string(),
-  pincode: z.number(),
+  pincode: z.number().optional(),
 });
 
 // Define the schema for CustomerPOC
 export const customerPOCSchema = z.object({
+  name: z.string().trim().min(1, "Required"),
   mobile: z.number().optional(),
   email: z.string().email(),
 });
