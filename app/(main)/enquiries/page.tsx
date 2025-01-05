@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import EnquiriesTable from "@/features/enquiries/components/enquiries-table";
-import { ENQUIRIES_MOCK_DATA } from "@/mocks/enquiries/mock";
+import { ENQUIRIES_MOCK_DATA } from "@/services/api/mocks/enquiries";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import React from "react";

@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CUSTOMERS_MOCK_DATA } from "@/mocks/customers/mock";
+import { CUSTOMERS_MOCK_DATA } from "@/services/api/mocks/customers";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   ArrowLeft,

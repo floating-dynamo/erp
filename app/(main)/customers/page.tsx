@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import CustomerTable from "@/features/customers/components/customer-table";
-import { CUSTOMERS_MOCK_DATA } from "@/mocks/customers/mock";
+import { CUSTOMERS_MOCK_DATA } from "@/services/api/mocks/customers";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import React from "react";

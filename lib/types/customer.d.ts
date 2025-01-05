@@ -21,3 +21,7 @@ export interface CustomerPOC {
   mobile?: number;
   email: string;
 }
+
+export interface GetCusomtersResponse {
+  customers: Customer[];
+}

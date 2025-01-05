@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, Loader2Icon, MoreHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/table";
 import { Customer } from "../schemas";
 import { Input } from "@/components/ui/input";
+import { useCustomers } from "../api/use-customers";
 
 const columns: ColumnDef<Customer>[] = [
   {
@@ -60,7 +61,7 @@ const columns: ColumnDef<Customer>[] = [
     ),
   },
   {
-    accessorKey: "city",
+    accessorKey: "address.city",
     header: "City",
     cell: ({ row }) => {
       const address = row.original.address;
@@ -68,7 +69,7 @@ const columns: ColumnDef<Customer>[] = [
     },
   },
   {
-    accessorKey: "state",
+    accessorKey: "address.state",
     header: "State",
     cell: ({ row }) => {
       const address = row.original.address;
@@ -115,11 +116,7 @@ const columns: ColumnDef<Customer>[] = [
   },
 ];
 
-interface CustomerTableProps {
-  customers: Customer[];
-}
-
-export default function CustomerTable({ customers }: CustomerTableProps) {
+export default function CustomerTable() {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -127,9 +124,10 @@ export default function CustomerTable({ customers }: CustomerTableProps) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const { data: customers = [], isLoading } = useCustomers();
 
   const table = useReactTable({
-    data: customers,
+    data: customers ?? [],
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -146,6 +144,14 @@ export default function CustomerTable({ customers }: CustomerTableProps) {
       rowSelection,
     },
   });
+
+  if (isLoading) {
+    return (
+      <div className="w-full flex items-center justify-center h-60">
+        <Loader2Icon className="animate-spin h-6 w-6 text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -202,7 +208,7 @@ export default function CustomerTable({ customers }: CustomerTableProps) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  <p>Could not find the customer</p>
+                  <p>No customers to view</p>
                 </TableCell>
               </TableRow>
             )}
