@@ -5,7 +5,7 @@ import React from "react";
 
 const CreateRequirementsPage = () => {
   return (
-    <div className="w-full lg:max-w-3xl">
+    <div className="w-full lg:max-w-4xl">
       <CreateEnquiryForm
         onCancel={() => {
           redirect("/enquiries");

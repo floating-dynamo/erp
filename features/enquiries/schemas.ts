@@ -20,3 +20,5 @@ export const createEnquirySchema = z.object({
   ),
   termsAndConditions: z.string().optional(),
 });
+
+export type Enquiry = z.infer<typeof createEnquirySchema>;

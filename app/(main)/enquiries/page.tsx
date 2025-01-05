@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/button";
+import EnquiriesTable from "@/features/enquiries/components/enquiries-table";
+import { ENQUIRIES_MOCK_DATA } from "@/mocks/enquiries/mock";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import React from "react";
@@ -13,7 +15,10 @@ const RequirementsPage = () => {
           </Link>
         </Button>
       </div>
-      <div>Enquiries</div>
+      <div>
+        <h3 className="font-bold text-xl">Enquiries Listing</h3>
+        <EnquiriesTable enquiries={ENQUIRIES_MOCK_DATA} />
+      </div>
     </div>
   );
 };

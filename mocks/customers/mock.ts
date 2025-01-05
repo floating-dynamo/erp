@@ -14,6 +14,7 @@ export const CUSTOMERS_MOCK_DATA = [
       {
         mobile: 9876543210,
         email: "contact@techsolutions.com",
+        name: "John Doe",
       },
     ],
     gstNumber: "GST123456",
@@ -35,6 +36,7 @@ export const CUSTOMERS_MOCK_DATA = [
       {
         mobile: 9123456789,
         email: "info@globalventures.com",
+        name: "Jane Doe",
       },
     ],
     gstNumber: "GST654321",
@@ -56,6 +58,7 @@ export const CUSTOMERS_MOCK_DATA = [
       {
         mobile: 9012345678,
         email: "support@urbanessentials.com",
+        name: "Alice Smith",
       },
     ],
     gstNumber: "GST112233",
@@ -77,6 +80,7 @@ export const CUSTOMERS_MOCK_DATA = [
       {
         mobile: 8901234567,
         email: "contact@innovatech.com",
+        name: "Bob Johnson",
       },
     ],
     gstNumber: "GST223344",
@@ -97,6 +101,7 @@ export const CUSTOMERS_MOCK_DATA = [
     poc: [
       {
         email: "hello@ecoworld.com",
+        name: "Eve Williams",
       },
     ],
     gstNumber: "GST334455",
