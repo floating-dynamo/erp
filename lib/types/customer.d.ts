@@ -1,4 +1,4 @@
-export interface Customer {
+export interface ICustomer {
   id?: string;
   name: string;
   address?: CustomerAddress;
@@ -24,4 +24,9 @@ export interface CustomerPOC {
 
 export interface GetCusomtersResponse {
   customers: Customer[];
+}
+
+export interface AddCustomerResponse {
+  message: string;
+  success: boolean;
 }

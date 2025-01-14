@@ -11,6 +11,21 @@ const apiService: IApiService = {
       return null;
     }
   },
+  async addCustomer({ customer }) {
+    try {
+      await axios.post("api/customers", customer);
+      return {
+        message: "Customer added successfully",
+        success: true,
+      };
+    } catch (error) {
+      console.error(error);
+      return {
+        message: "Failed to add customer",
+        success: false,
+      };
+    }
+  },
 };
 
 export default apiService;

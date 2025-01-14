@@ -16,6 +16,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, PlusCircle, TrashIcon } from "lucide-react";
+import { useAddCustomer } from "../api/use-add-customer";
+import { useRouter } from "next/navigation";
 
 // Infer the form schema type
 type CreateCustomerFormSchema = z.infer<typeof createCustomerSchema>;
@@ -25,6 +27,8 @@ interface CreateCustomerFormProps {
 }
 
 export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
+  const { mutate: addCustomer, isPending } = useAddCustomer();
+  const router = useRouter();
   const form = useForm<CreateCustomerFormSchema>({
     resolver: zodResolver(createCustomerSchema),
     defaultValues: {
@@ -52,7 +56,12 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
   });
 
   const onSubmit = (values: CreateCustomerFormSchema) => {
-    console.log(values);
+    addCustomer(values, {
+      onSuccess: () => {
+        form.reset();
+        router.push("/customers");
+      },
+    });
   };
 
   return (
@@ -278,7 +287,9 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
 
             {/* Submit Button */}
             <div className="flex items-center lg:justify-end justify-center w-full">
-              <Button type="submit">Submit</Button>
+              <Button type="submit" disabled={isPending}>
+                Submit
+              </Button>
             </div>
           </form>
         </Form>

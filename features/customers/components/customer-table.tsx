@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Loader2Icon, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +35,7 @@ import {
 import { Customer } from "../schemas";
 import { Input } from "@/components/ui/input";
 import { useCustomers } from "../api/use-customers";
+import Loader from "@/components/loader";
 
 const columns: ColumnDef<Customer>[] = [
   {
@@ -146,11 +147,7 @@ export default function CustomerTable() {
   });
 
   if (isLoading) {
-    return (
-      <div className="w-full flex items-center justify-center h-60">
-        <Loader2Icon className="animate-spin h-6 w-6 text-muted-foreground" />
-      </div>
-    );
+    return <Loader text="Fetching all customers" />;
   }
 
   return (
