@@ -17,19 +17,12 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createEnquirySchema } from "../schemas";
-import { cn } from "@/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { CUSTOMERS_MOCK_DATA } from "@/services/api/mocks/customers";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   ArrowLeft,
   CalendarIcon,
+  Check,
+  ChevronsUpDown,
   PlusCircleIcon,
   TrashIcon,
   UploadCloudIcon,
@@ -37,14 +30,25 @@ import {
 } from "lucide-react";
 import { useRef } from "react";
 import { Calendar } from "@/components/ui/calendar";
+import { Textarea } from "@/components/ui/textarea";
+import { useAddEnquiry } from "../api/use-add-enquiry";
+import { useRouter } from "next/navigation";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Textarea } from "@/components/ui/textarea";
-import { useAddEnquiry } from "../api/use-add-enquiry";
-import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import Loader from "@/components/loader";
+import { useCustomers } from "@/features/customers/api/use-customers";
 
 interface CreateEnquiryFormProps {
   onCancel?: () => void;
@@ -54,6 +58,7 @@ type ZodCreateEnquirySchema = z.infer<typeof createEnquirySchema>;
 
 export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
   const { mutate: addEnquiry, isPending } = useAddEnquiry();
+  const { data: customers, isLoading } = useCustomers();
   const form = useForm<ZodCreateEnquirySchema>({
     resolver: zodResolver(createEnquirySchema),
     defaultValues: {
@@ -81,6 +86,16 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
       },
     });
   };
+
+  if (isLoading && !customers) {
+    return <Loader />;
+  }
+
+  const customerSelectData =
+    customers?.map((customer) => ({
+      value: customer.id,
+      label: customer.name,
+    })) || [];
 
   return (
     <Card className="w-full h-full border-none shadow-none">
@@ -110,26 +125,65 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                 control={form.control}
                 name="customerId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col">
                     <FormLabel>Customer</FormLabel>
                     <FormControl>
-                      {/* TODO: Make this a combobox */}
-                      <Select
-                        {...field}
-                        value={field.value}
-                        onValueChange={(value) => field.onChange(value)}
-                      >
-                        <SelectTrigger className="w-full bg-neutral-200 font-medium p-1">
-                          <SelectValue placeholder="No customer selected" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {CUSTOMERS_MOCK_DATA?.map((customer) => (
-                            <SelectItem key={customer.id} value={customer.id}>
-                              <span className="truncate">{customer.name}</span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "sm:w-[300px] w-full justify-between",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value
+                                ? customerSelectData.find(
+                                    (customer) => customer.value === field.value
+                                  )?.label
+                                : "Select Customer"}
+                              <ChevronsUpDown className="opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="sm:w-[300px] w-[200px] p-0">
+                          <Command>
+                            <CommandInput
+                              placeholder="Search Customer..."
+                              className="h-9"
+                            />
+                            <CommandList>
+                              <CommandEmpty>No framework found.</CommandEmpty>
+                              <CommandGroup>
+                                {customerSelectData.map((customer) => (
+                                  <CommandItem
+                                    value={customer.label}
+                                    key={customer.value}
+                                    onSelect={() => {
+                                      form.setValue(
+                                        "customerId",
+                                        customer.value
+                                      );
+                                    }}
+                                  >
+                                    {customer.label}
+                                    <Check
+                                      className={cn(
+                                        "ml-auto",
+                                        customer.value === field.value
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
