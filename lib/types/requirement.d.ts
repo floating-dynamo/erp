@@ -1,15 +1,15 @@
-export interface Enquiry {
-  id?: string;
-  cusomterId: string;
-  enquiryNumber: string;
-  items: EnquiryItem[];
-  isArchived?: boolean;
-  totalItemsPrice?: number;
-  totalItemsFinalPrice?: number;
-  termsAndConditions?: string;
-}
+import { Enquiry } from "@/features/enquiries/schemas";
 
 export interface EnquiryItem {
   itemCode: string;
   itemDescription: string;
+}
+
+export interface GetEnquiriesResponse {
+  enquiries: Enquiry[];
+}
+
+export interface AddEnquiryResponse {
+  message: string;
+  success: boolean;
 }

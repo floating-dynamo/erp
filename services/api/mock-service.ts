@@ -1,8 +1,11 @@
 import { IApiService } from "@/lib/types";
 import { CUSTOMERS_MOCK_DATA } from "./mocks/customers";
 import { Customer } from "@/features/customers/schemas";
+import { Enquiry } from "@/features/enquiries/schemas";
+import { ENQUIRIES_MOCK_DATA } from "./mocks/enquiries";
 
 const customers: Customer[] = CUSTOMERS_MOCK_DATA;
+const enquiries: Enquiry[] = ENQUIRIES_MOCK_DATA;
 
 const mockService: IApiService = {
   async getCustomers() {
@@ -20,6 +23,26 @@ const mockService: IApiService = {
       setTimeout(() => {
         resolve({
           message: "Customer added successfully",
+          success: true,
+        });
+      }, 1000);
+    });
+  },
+  async getEnquiries() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          enquiries,
+        });
+      }, 1000);
+    });
+  },
+  addEnquiry({ enquiry }) {
+    enquiries.push(enquiry);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          message: "Enquiry added successfully",
           success: true,
         });
       }, 1000);

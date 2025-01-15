@@ -35,6 +35,8 @@ import {
 import { Enquiry } from "../schemas";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useEnquiries } from "../api/use-enquiries";
+import Loader from "@/components/loader";
 
 const ActionsCell = ({ enquiry }: { enquiry: Enquiry }) => {
   const { toast } = useToast();
@@ -123,11 +125,7 @@ const columns: ColumnDef<Enquiry>[] = [
   },
 ];
 
-interface EnquiriesTableProps {
-  enquiries: Enquiry[];
-}
-
-const EnquiriesTable: React.FC<EnquiriesTableProps> = ({ enquiries }) => {
+const EnquiriesTable: React.FC = () => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -135,9 +133,10 @@ const EnquiriesTable: React.FC<EnquiriesTableProps> = ({ enquiries }) => {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const { data: enquiries, isLoading } = useEnquiries();
 
   const table = useReactTable({
-    data: enquiries,
+    data: enquiries!,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -154,6 +153,10 @@ const EnquiriesTable: React.FC<EnquiriesTableProps> = ({ enquiries }) => {
       rowSelection,
     },
   });
+
+  if (isLoading) {
+    return <Loader text="Fetching all enquiries" />;
+  }
 
   return (
     <div className="w-full">

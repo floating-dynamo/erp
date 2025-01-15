@@ -21,7 +21,31 @@ const apiService: IApiService = {
     } catch (error) {
       console.error(error);
       return {
-        message: "Failed to add customer",
+        message: "Something went wrong",
+        success: false,
+      };
+    }
+  },
+  async getEnquiries() {
+    try {
+      const enquiries = await axios.get("api/enquiries");
+      return enquiries.data;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  },
+  async addEnquiry({ enquiry }) {
+    try {
+      await axios.post("api/enquiries", enquiry);
+      return {
+        message: "Enquiry added successfully",
+        success: true,
+      };
+    } catch (error) {
+      console.error(error);
+      return {
+        message: "Something went wrong",
         success: false,
       };
     }

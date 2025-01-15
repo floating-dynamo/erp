@@ -19,13 +19,13 @@ export const useAddCustomer = () => {
       });
       queryClient.invalidateQueries({ queryKey: ["customers"] });
     },
-    onError: () => {
+    onError: (err) => {
       toast({
         title: "Failed to create the customer",
         description: "An error occurred while creating the customer",
         variant: "destructive",
       });
-      console.log("Failed to create the customer");
+      console.error("Failed to create the customer: ", err);
     },
   });
 

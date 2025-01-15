@@ -17,8 +17,6 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createEnquirySchema } from "../schemas";
-// import { useCreateWorkspace } from "../api/use-create-workspace";
-// import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -45,6 +43,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
+import { useAddEnquiry } from "../api/use-add-enquiry";
+import { useRouter } from "next/navigation";
 
 interface CreateEnquiryFormProps {
   onCancel?: () => void;
@@ -53,6 +53,7 @@ interface CreateEnquiryFormProps {
 type ZodCreateEnquirySchema = z.infer<typeof createEnquirySchema>;
 
 export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
+  const { mutate: addEnquiry, isPending } = useAddEnquiry();
   const form = useForm<ZodCreateEnquirySchema>({
     resolver: zodResolver(createEnquirySchema),
     defaultValues: {
@@ -61,9 +62,8 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
       items: [],
     },
   });
-  // const { mutate, isPending } = useCreateWorkspace();
   const inputRef = useRef<HTMLInputElement>(null);
-  // const router = useRouter();
+  const router = useRouter();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -72,23 +72,14 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
     }
   };
 
-  // const handleClearFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-
-  // }
-
   const onSubmit = (values: ZodCreateEnquirySchema) => {
-    // const totalItemsPrice = values.items
-    //   .map(({ unitPrice, quantity }) => unitPrice * quantity)
-    //   .reduce((acc, num) => acc + num);
-    // const totalItemsFinalPrice = values.items
-    //   .map(
-    //     ({ unitPrice, quantity, unitTax }) =>
-    //       unitPrice * quantity + unitPrice * (unitTax / 100)
-    //   )
-    //   .reduce((acc, num) => acc + num);
-    // values.totalItemsPrice = totalItemsPrice;
-    // values.totalItemsFinalPrice = totalItemsFinalPrice;
     console.log(values);
+    addEnquiry(values, {
+      onSuccess: () => {
+        form.reset();
+        router.push("/enquiries");
+      },
+    });
   };
 
   return (
@@ -416,17 +407,7 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
             </div>
             <Separator className="my-7" />
             <div className="flex items-center justify-end">
-              {/* <Button
-                variant="secondary"
-                type="button"
-                size="lg"
-                onClick={onCancel}
-                disabled={false}
-                className={cn(!onCancel && "invisible")}
-              >
-                <ArrowLeft className="size-4" /> Back
-              </Button> */}
-              <Button type="submit" size="lg" disabled={false}>
+              <Button type="submit" size="lg" disabled={isPending}>
                 Create Enquiry
               </Button>
             </div>
