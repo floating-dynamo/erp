@@ -50,6 +50,14 @@ const apiService: IApiService = {
       };
     }
   },
+  async getCustomerById({ id }) {
+    try {
+      const customer = await axios.get(`api/customers/${id}`);
+      return customer.data;
+    } catch (error) {
+      console.error(error);
+    }
+  },
 };
 
 export default apiService;

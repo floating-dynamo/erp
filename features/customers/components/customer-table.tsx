@@ -36,6 +36,7 @@ import { Customer } from "../schemas";
 import { Input } from "@/components/ui/input";
 import { useCustomers } from "../api/use-customers";
 import Loader from "@/components/loader";
+import { redirect } from "next/navigation";
 
 const columns: ColumnDef<Customer>[] = [
   {
@@ -88,6 +89,9 @@ const columns: ColumnDef<Customer>[] = [
     cell: ({ row }) => <div>{row.getValue("customerType")}</div>,
   },
   {
+    accessorKey: "id",
+  },
+  {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
@@ -104,12 +108,18 @@ const columns: ColumnDef<Customer>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
+              className="cursor-pointer"
               onClick={() => navigator.clipboard.writeText(customer.id!)}
             >
               Copy customer ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() => redirect(`customers/${row.getValue("id")}`)}
+            >
+              View customer
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -123,7 +133,9 @@ export default function CustomerTable() {
     []
   );
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+    React.useState<VisibilityState>({
+      id: false
+    });
   const [rowSelection, setRowSelection] = React.useState({});
   const { data: customers = [], isLoading } = useCustomers();
 

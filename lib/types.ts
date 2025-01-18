@@ -11,6 +11,7 @@ export interface IApiService {
   }: {
     customer: Customer;
   }) => Promise<AddCustomerResponse>;
+  getCustomerById: ({ id }: { id: string }) => Promise<Customer | null>;
 
   // Enquiry Endpoints
   getEnquiries: () => Promise<GetEnquiriesResponse>;

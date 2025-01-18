@@ -28,6 +28,14 @@ const mockService: IApiService = {
       }, 1000);
     });
   },
+  getCustomerById({ id }) {
+    const customer = customers.find((customer) => customer.id === id) || null;
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(customer);
+      }, 1000);
+    });
+  },
   async getEnquiries() {
     return new Promise((resolve) => {
       setTimeout(() => {

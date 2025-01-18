@@ -56,6 +56,7 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
   });
 
   const onSubmit = (values: CreateCustomerFormSchema) => {
+    values.id = Math.random().toString(36).substr(2, 9);
     addCustomer(values, {
       onSuccess: () => {
         form.reset();
