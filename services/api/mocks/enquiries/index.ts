@@ -3,6 +3,7 @@ import { Enquiry } from "@/features/enquiries/schemas";
 const mockEnquiries: Enquiry[] = [
   {
     customerId: "CUST001",
+    customerName: "Acme Corporation",
     enquiryNumber: "ENQ001",
     totalItemsPrice: 1000,
     totalItemsFinalPrice: 1100,
@@ -21,6 +22,7 @@ const mockEnquiries: Enquiry[] = [
   },
   {
     customerId: "CUST002",
+    customerName: "Globex Inc.",
     enquiryNumber: "ENQ002",
     totalItemsPrice: 2000,
     totalItemsFinalPrice: 2200,
@@ -39,6 +41,7 @@ const mockEnquiries: Enquiry[] = [
   },
   {
     customerId: "CUST003",
+    customerName: "Initech",
     enquiryNumber: "ENQ003",
     totalItemsPrice: 1500,
     totalItemsFinalPrice: 1650,
@@ -57,6 +60,7 @@ const mockEnquiries: Enquiry[] = [
   },
   {
     customerId: "CUST004",
+    customerName: "Umbrella Corporation",
     enquiryNumber: "ENQ004",
     totalItemsPrice: 2500,
     totalItemsFinalPrice: 2750,
@@ -75,6 +79,7 @@ const mockEnquiries: Enquiry[] = [
   },
   {
     customerId: "CUST005",
+    customerName: "Hooli",
     enquiryNumber: "ENQ005",
     totalItemsPrice: 3000,
     totalItemsFinalPrice: 3300,

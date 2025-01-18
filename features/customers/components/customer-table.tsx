@@ -37,6 +37,46 @@ import { Input } from "@/components/ui/input";
 import { useCustomers } from "../api/use-customers";
 import Loader from "@/components/loader";
 import { redirect } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
+
+const ActionsCell = ({ customer }: { customer: Customer }) => {
+  const { toast } = useToast();
+
+  const handleCopyCustomerId = () => {
+    navigator.clipboard.writeText(customer.id!);
+    toast({
+      title: "Customer ID copied",
+      description: customer.id,
+    });
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Open menu</span>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={handleCopyCustomerId}
+        >
+          Copy customer ID
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => redirect(`customers/${customer?.id}`)}
+        >
+          View customer
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
 
 const columns: ColumnDef<Customer>[] = [
   {
@@ -94,36 +134,7 @@ const columns: ColumnDef<Customer>[] = [
   {
     id: "actions",
     enableHiding: false,
-    cell: ({ row }) => {
-      const customer = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={() => navigator.clipboard.writeText(customer.id!)}
-            >
-              Copy customer ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={() => redirect(`customers/${row.getValue("id")}`)}
-            >
-              View customer
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
+    cell: ({ row }) => <ActionsCell customer={row.original} />,
   },
 ];
 
@@ -134,7 +145,7 @@ export default function CustomerTable() {
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({
-      id: false
+      id: false,
     });
   const [rowSelection, setRowSelection] = React.useState({});
   const { data: customers = [], isLoading } = useCustomers();

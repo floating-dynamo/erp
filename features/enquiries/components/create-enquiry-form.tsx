@@ -79,6 +79,9 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
 
   const onSubmit = (values: ZodCreateEnquirySchema) => {
     console.log(values);
+    values.customerName =
+      customers?.find((customer) => customer?.id === values.customerId).name ||
+      "NA";
     addEnquiry(values, {
       onSuccess: () => {
         form.reset();

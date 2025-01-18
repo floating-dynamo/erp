@@ -83,6 +83,9 @@ const ActionsCell = ({ enquiry }: { enquiry: Enquiry }) => {
 const columns: ColumnDef<Enquiry>[] = [
   {
     accessorKey: "customerId",
+  },
+  {
+    accessorKey: "customerName",
     header: ({ column }) => {
       return (
         <Button
@@ -95,7 +98,7 @@ const columns: ColumnDef<Enquiry>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div>{row.getValue("customerId")}</div>,
+    cell: ({ row }) => <div>{row.getValue("customerName")}</div>,
   },
   {
     accessorKey: "enquiryNumber",
@@ -131,7 +134,9 @@ const EnquiriesTable: React.FC = () => {
     []
   );
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+    React.useState<VisibilityState>({
+      customerId: false,
+    });
   const [rowSelection, setRowSelection] = React.useState({});
   const { data: enquiries, isLoading } = useEnquiries();
 
@@ -164,10 +169,10 @@ const EnquiriesTable: React.FC = () => {
         <Input
           placeholder="Search Enquiries by Customer Name"
           value={
-            (table.getColumn("customerId")?.getFilterValue() as string) ?? ""
+            (table.getColumn("customerName")?.getFilterValue() as string) ?? ""
           }
           onChange={(event) =>
-            table.getColumn("customerId")?.setFilterValue(event.target.value)
+            table.getColumn("customerName")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
