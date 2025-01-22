@@ -1,6 +1,5 @@
 "use client";
 import Loader from "@/components/loader";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -17,6 +16,7 @@ import {
   ArrowLeftIcon,
   Building2Icon,
   Copy,
+  DownloadIcon,
   MailIcon,
   MapPinIcon,
   PhoneIcon,
@@ -72,24 +72,29 @@ export default function CustomerDetailsPage({
           >
             <ArrowLeftIcon className="size-4" />
           </Button>
-          <h1 className="text-xl sm:text-3xl font-bold">{customer.name}</h1>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Copy
-                  onClick={copyCustomerId}
-                  className="size-4 text-muted-foreground cursor-pointer"
-                />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Copy Customer ID</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <div className="flex flex-col">
+            <div className="flex gap-4 items-center flex-wrap">
+              <h1 className="text-xl sm:text-3xl font-bold">{customer.name}</h1>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Copy
+                      onClick={copyCustomerId}
+                      className="size-4 text-muted-foreground cursor-pointer"
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Copy Customer ID</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <p className="text-muted-foreground text-xs sm:text-sm">{customer?.customerType}</p>
+          </div>
         </div>
-        <Badge className="sm:text-sm text-xs rounded-full">
-          {customer?.customerType || "NA"}
-        </Badge>
+        <Button variant={"primary"} className="text-xs sm:text-sm">
+          <DownloadIcon /> Export Customer
+        </Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         <CompanyDetailsCard
