@@ -2,6 +2,7 @@ import { Customer } from "@/features/customers/schemas";
 import { AddCustomerResponse, GetCusomtersResponse } from "./types/customer";
 import { AddEnquiryResponse, GetEnquiriesResponse } from "./types/requirement";
 import { Enquiry } from "@/features/enquiries/schemas";
+import { GetCountriesResponse } from "./types/index";
 
 export interface IApiService {
   // Customer Endpoints
@@ -20,4 +21,5 @@ export interface IApiService {
   }: {
     enquiry: Enquiry;
   }) => Promise<AddEnquiryResponse>;
+  getCountries: () => Promise<GetCountriesResponse>;
 }

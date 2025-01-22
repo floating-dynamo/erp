@@ -3,6 +3,7 @@ import { CUSTOMERS_MOCK_DATA } from "./mocks/customers";
 import { Customer } from "@/features/customers/schemas";
 import { Enquiry } from "@/features/enquiries/schemas";
 import { ENQUIRIES_MOCK_DATA } from "./mocks/enquiries";
+import axios from "axios";
 
 const customers: Customer[] = CUSTOMERS_MOCK_DATA;
 const enquiries: Enquiry[] = ENQUIRIES_MOCK_DATA;
@@ -55,6 +56,14 @@ const mockService: IApiService = {
         });
       }, 1000);
     });
+  },
+  async getCountries() {
+    try {
+      const countries = await axios.get("/api/countries");
+      return countries.data;
+    } catch (error) {
+      console.error(error);
+    }
   },
 };
 

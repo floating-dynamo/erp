@@ -152,13 +152,13 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="sm:w-[300px] w-[200px] p-0">
-                          <Command>
+                          <Command as="div">
                             <CommandInput
                               placeholder="Search Customer..."
                               className="h-9"
                             />
                             <CommandList>
-                              <CommandEmpty>No framework found.</CommandEmpty>
+                              <CommandEmpty>No Customer found.</CommandEmpty>
                               <CommandGroup>
                                 {customerSelectData.map((customer) => (
                                   <CommandItem

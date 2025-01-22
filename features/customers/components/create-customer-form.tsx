@@ -15,12 +15,35 @@ import {
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, ImageIcon, PlusCircle, TrashIcon } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  ChevronsUpDown,
+  ImageIcon,
+  PlusCircle,
+  TrashIcon,
+} from "lucide-react";
 import { useAddCustomer } from "../api/use-add-customer";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useCountries } from "../api/use-countries";
+import Loader from "@/components/loader";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 
 // Infer the form schema type
 type CreateCustomerFormSchema = z.infer<typeof createCustomerSchema>;
@@ -31,6 +54,8 @@ interface CreateCustomerFormProps {
 
 export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
   const { mutate: addCustomer, isPending } = useAddCustomer();
+  const { data: countriesData, isLoading: isFetchingCountries } =
+    useCountries();
   const router = useRouter();
   const form = useForm<CreateCustomerFormSchema>({
     resolver: zodResolver(createCustomerSchema),
@@ -49,6 +74,20 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
     },
   });
   const inputRef = useRef<HTMLInputElement>(null);
+  // TODO: States as combobox
+  // const [countryStates, setCountryStates] = useState<string[]>([]);
+
+  // useEffect(() => {
+  //   if (countriesData) {
+  //     const currentCountry = form.getValues("address.country");
+  //     console.log("Current Country ", currentCountry);
+  //     const cities =
+  //       countriesData?.data?.find(
+  //         (country) => country.country === currentCountry
+  //       )?.cities || [];
+  //     setCountryStates(cities);
+  //   }
+  // }, [countriesData]);
 
   const {
     fields: pocFields,
@@ -80,6 +119,10 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
       form.setValue("image", file);
     }
   };
+
+  if (isFetchingCountries) {
+    return <Loader />;
+  }
 
   return (
     <Card className="w-full h-full border-none shadow-none">
@@ -125,36 +168,175 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
                 Object.keys(customerAddressSchema.shape) as Array<
                   keyof typeof customerAddressSchema.shape
                 >
-              ).map((key) => (
-                <FormField
-                  key={key}
-                  control={form.control}
-                  name={`address.${key}`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {key.charAt(0).toUpperCase() + key.slice(1)}
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder={`Enter ${key}`}
-                          onChange={(e) => {
-                            if (key === "pincode") {
-                              field.onChange(Number(e.target.value) || "");
-                            } else {
-                              field.onChange(e.target.value);
-                            }
-                          }}
-                          value={field.value ?? ""}
-                          type={key === "pincode" ? "number" : "text"}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ))}
+              ).map(
+                (key) =>
+                  // key !== "state" &&
+                  key !== "country" && (
+                    <FormField
+                      key={key}
+                      control={form.control}
+                      name={`address.${key}`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            {key.charAt(0).toUpperCase() + key.slice(1)}
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder={`Enter ${key}`}
+                              onChange={(e) => {
+                                if (key === "pincode") {
+                                  field.onChange(Number(e.target.value) || "");
+                                } else {
+                                  field.onChange(e.target.value);
+                                }
+                              }}
+                              value={field.value ?? ""}
+                              type={key === "pincode" ? "number" : "text"}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )
+              )}
+              {/* Address - State */}
+              {/* <FormField
+                control={form.control}
+                name="address.state"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>State</FormLabel>
+                    <FormControl>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value
+                                ? countryStates?.find(
+                                    (state) => state === field.value
+                                  )
+                                : "Select State"}
+                              <ChevronsUpDown className="opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="sm:w-[300px] w-[200px] p-0">
+                          <Command>
+                            <CommandInput
+                              placeholder="Search State..."
+                              className="h-9"
+                            />
+                            <CommandList>
+                              <CommandEmpty>No State found.</CommandEmpty>
+                              <CommandGroup>
+                                {countryStates?.map((state) => (
+                                  <CommandItem
+                                    value={state}
+                                    key={state}
+                                    onSelect={() => {
+                                      form.setValue("address.state", state);
+                                    }}
+                                  >
+                                    {state}
+                                    <Check
+                                      className={cn(
+                                        "ml-auto",
+                                        state === field.value
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              /> */}
+              {/* Address - Country */}
+              <FormField
+                control={form.control}
+                name="address.country"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Country</FormLabel>
+                    <FormControl>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value
+                                ? countriesData?.data?.find(
+                                    (country) => country.country === field.value
+                                  )?.country
+                                : "Select Country"}
+                              <ChevronsUpDown className="opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="sm:w-[300px] w-[200px] p-0">
+                          <Command>
+                            <CommandInput
+                              placeholder="Search Country..."
+                              className="h-9"
+                            />
+                            <CommandList>
+                              <CommandEmpty>No Country found.</CommandEmpty>
+                              <CommandGroup>
+                                {countriesData?.data?.map((country) => (
+                                  <CommandItem
+                                    value={country.country}
+                                    key={country.country}
+                                    onSelect={() => {
+                                      form.setValue(
+                                        "address.country",
+                                        country.country
+                                      );
+                                    }}
+                                  >
+                                    {country?.country}
+                                    <Check
+                                      className={cn(
+                                        "ml-auto",
+                                        country.country === field.value
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* POC Section */}

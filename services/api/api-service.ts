@@ -1,10 +1,14 @@
 import { IApiService } from "@/lib/types";
 import axios from "axios";
 
+const axiosInstance = axios.create({
+  baseURL: "api",
+});
+
 const apiService: IApiService = {
   async getCustomers() {
     try {
-      const customers = await axios.get("api/customers");
+      const customers = await axiosInstance.get("customers");
       return customers.data;
     } catch (error) {
       console.error(error);
@@ -13,7 +17,7 @@ const apiService: IApiService = {
   },
   async addCustomer({ customer }) {
     try {
-      await axios.post("api/customers", customer);
+      await axiosInstance.post("customers", customer);
       return {
         message: "Customer added successfully",
         success: true,
@@ -28,7 +32,7 @@ const apiService: IApiService = {
   },
   async getEnquiries() {
     try {
-      const enquiries = await axios.get("api/enquiries");
+      const enquiries = await axiosInstance.get("enquiries");
       return enquiries.data;
     } catch (error) {
       console.error(error);
@@ -37,7 +41,7 @@ const apiService: IApiService = {
   },
   async addEnquiry({ enquiry }) {
     try {
-      await axios.post("api/enquiries", enquiry);
+      await axiosInstance.post("enquiries", enquiry);
       return {
         message: "Enquiry added successfully",
         success: true,
@@ -52,8 +56,16 @@ const apiService: IApiService = {
   },
   async getCustomerById({ id }) {
     try {
-      const customer = await axios.get(`api/customers/${id}`);
+      const customer = await axiosInstance.get(`customers/${id}`);
       return customer.data;
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  async getCountries() {
+    try {
+      const countries = await axiosInstance.get("countries");
+      return countries.data;
     } catch (error) {
       console.error(error);
     }
