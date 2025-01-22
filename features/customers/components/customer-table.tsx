@@ -96,13 +96,6 @@ const columns: ColumnDef<Customer>[] = [
     cell: ({ row }) => <div>{row.getValue("name")}</div>,
   },
   {
-    accessorKey: "contactDetails",
-    header: "Contact Details",
-    cell: ({ row }) => (
-      <div className="lowercase">{row.getValue("contactDetails")}</div>
-    ),
-  },
-  {
     accessorKey: "address.city",
     header: "City",
     cell: ({ row }) => {

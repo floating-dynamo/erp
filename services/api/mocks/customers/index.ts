@@ -1,6 +1,6 @@
 export const CUSTOMERS_MOCK_DATA = [
   {
-    id: "1",
+    id: "f7dd5f22-4b2d-47ae-a533-045be18e7ac9",
     name: "Tech Solutions",
     address: {
       address1: "123 Main Street",
@@ -9,7 +9,6 @@ export const CUSTOMERS_MOCK_DATA = [
       country: "USA",
       pincode: 94101,
     },
-    contactDetails: "123-456-7890",
     poc: [
       {
         mobile: 9876543210,
@@ -22,7 +21,7 @@ export const CUSTOMERS_MOCK_DATA = [
     customerType: "Corporate",
   },
   {
-    id: "2",
+    id: "fb60cb4e-c6cc-4bbf-9709-6016c7e6b6cc",
     name: "Global Ventures",
     address: {
       address1: "456 Park Avenue",
@@ -31,7 +30,6 @@ export const CUSTOMERS_MOCK_DATA = [
       country: "USA",
       pincode: 10022,
     },
-    contactDetails: "456-789-1234",
     poc: [
       {
         mobile: 9123456789,
@@ -44,7 +42,7 @@ export const CUSTOMERS_MOCK_DATA = [
     customerType: "Corporate",
   },
   {
-    id: "3",
+    id: "d500bca1-9d8d-4417-826f-551b5b7b3f6d",
     name: "Urban Essentials",
     address: {
       address1: "789 Sunset Boulevard",
@@ -66,7 +64,7 @@ export const CUSTOMERS_MOCK_DATA = [
     customerType: "Retail",
   },
   {
-    id: "4",
+    id: "61925677-4e1e-42c2-a600-53b7f133a6e1",
     name: "Innovatech",
     address: {
       address1: "321 Innovation Way",
@@ -88,7 +86,7 @@ export const CUSTOMERS_MOCK_DATA = [
     customerType: "Corporate",
   },
   {
-    id: "5",
+    id: "3ce67b1d-29c0-4006-a311-ae7e182d0705",
     name: "Eco World",
     address: {
       address1: "654 Green Lane",

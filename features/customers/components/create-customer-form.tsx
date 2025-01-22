@@ -27,7 +27,7 @@ import { useAddCustomer } from "../api/use-add-customer";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { useCountries } from "../api/use-countries";
 import Loader from "@/components/loader";
 import {
