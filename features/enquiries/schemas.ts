@@ -10,6 +10,9 @@ export const createEnquirySchema = z.object({
   enquiryDate: z.string().refine((value) => !isNaN(Date.parse(value)), {
     message: "Invalid date",
   }),
+  dueDate: z.string().refine((value) => !isNaN(Date.parse(value)), {
+    message: "Invalid date",
+  }),
   items: z.array(
     z.object({
       itemCode: z.number(),

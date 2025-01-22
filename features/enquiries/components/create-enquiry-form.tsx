@@ -255,6 +255,50 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
               />
               <FormField
                 control={form.control}
+                name="dueDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Due Date</FormLabel>
+                    <FormControl>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon />
+                            {field.value
+                              ? new Intl.DateTimeFormat("en-US").format(
+                                  new Date(field.value)
+                                )
+                              : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-0">
+                          <Calendar
+                            mode="single"
+                            selected={
+                              field.value ? new Date(field.value) : undefined
+                            }
+                            onSelect={(date) => {
+                              const selectedDate = date
+                                ? date.toISOString()
+                                : "";
+                              field.onChange(selectedDate);
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="items"
                 render={({ field }) => (
                   <FormItem>

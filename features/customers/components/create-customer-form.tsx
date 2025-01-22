@@ -56,7 +56,7 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
   });
 
   const onSubmit = (values: CreateCustomerFormSchema) => {
-    values.id = Math.random().toString(36).substr(2, 9);
+    values.id = Math.random().toString(36).substr(2, 9); // TODO: Move this to backend - uuid
     addCustomer(values, {
       onSuccess: () => {
         form.reset();
