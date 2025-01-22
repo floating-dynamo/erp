@@ -27,6 +27,12 @@ export const createCustomerSchema = z.object({
   gstNumber: z.string().optional(),
   vendorId: z.string().optional(),
   customerType: z.string().optional(),
+  image: z
+    .union([
+      z.instanceof(File),
+      z.string().transform((value) => (value === "" ? undefined : value)),
+    ])
+    .optional(),
 });
 
 export type Customer = z.infer<typeof createCustomerSchema>;

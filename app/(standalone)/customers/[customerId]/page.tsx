@@ -34,12 +34,12 @@ export default function CustomerDetailsPage({
   params,
 }: CustomerDetailsPageProps) {
   const { customerId } = use(params);
-  const { data: customer, isLoading } = useGetCustomerDetails({
+  const { data: customer, isFetching } = useGetCustomerDetails({
     id: customerId,
   });
   const { toast } = useToast();
 
-  if (isLoading) {
+  if (isFetching) {
     return <Loader text="Loading customer details" />;
   }
 

@@ -15,9 +15,12 @@ import {
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, PlusCircle, TrashIcon } from "lucide-react";
+import { ArrowLeft, ImageIcon, PlusCircle, TrashIcon } from "lucide-react";
 import { useAddCustomer } from "../api/use-add-customer";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useRef } from "react";
 
 // Infer the form schema type
 type CreateCustomerFormSchema = z.infer<typeof createCustomerSchema>;
@@ -45,6 +48,7 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
       poc: [],
     },
   });
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const {
     fields: pocFields,
@@ -56,13 +60,25 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
   });
 
   const onSubmit = (values: CreateCustomerFormSchema) => {
-    values.id = Math.random().toString(36).substr(2, 9); // TODO: Move this to backend - uuid
-    addCustomer(values, {
+    const finalValues = {
+      ...values,
+      id: Math.random().toString(36).substr(2, 9), // TODO: Move this to backend - uuid
+      image: values.image instanceof File ? values.image : "",
+    };
+    console.log("Customer: ", finalValues);
+    addCustomer(finalValues, {
       onSuccess: () => {
         form.reset();
         router.push("/customers");
       },
     });
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      form.setValue("image", file);
+    }
   };
 
   return (
@@ -281,6 +297,80 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
                   </FormControl>
                   <FormMessage />
                 </FormItem>
+              )}
+            />
+
+            {/* Customer Logo Upload */}
+            <FormField
+              control={form.control}
+              name="image"
+              render={({ field }) => (
+                <div className="flex flex-col gap-y-2">
+                  <div className="flex items-center gap-x-5">
+                    {field.value ? (
+                      <div className="size-[72px] relative rounded-md overflow-hidden">
+                        <Image
+                          src={
+                            field.value instanceof File
+                              ? URL.createObjectURL(field.value)
+                              : field.value
+                          }
+                          alt="Logo"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <Avatar className="size-[72px]">
+                        <AvatarFallback>
+                          <ImageIcon className="size-[36px] text-neutral-400" />
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div className="flex flex-col">
+                      <p className="text-sm">Company Logo</p>
+                      <p className="text-sm text-muted-foreground">
+                        JPEG, PNG, SVG or JPEG, max 1mb
+                      </p>
+                      <input
+                        className="hidden"
+                        accept=".jpg, .png, .jpeg, .svg"
+                        type="file"
+                        ref={inputRef}
+                        onChange={handleImageChange}
+                        disabled={isPending}
+                      />
+                      {field.value ? (
+                        <Button
+                          type="button"
+                          disabled={isPending}
+                          variant={"destructive"}
+                          size={"xs"}
+                          className="w-fit mt-2"
+                          onClick={() => {
+                            field.onChange(null);
+                            if (inputRef.current) {
+                              inputRef.current.value = "";
+                            }
+                          }}
+                        >
+                          Remove Image
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          disabled={isPending}
+                          variant={"tertiary"}
+                          size={"xs"}
+                          className="w-fit mt-2"
+                          onClick={() => inputRef.current?.click()}
+                        >
+                          Upload Image
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               )}
             />
 
