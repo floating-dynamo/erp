@@ -255,10 +255,10 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
               />
               <FormField
                 control={form.control}
-                name="dueDate"
+                name="quotationDueDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Due Date</FormLabel>
+                    <FormLabel>Quotation Due Date</FormLabel>
                     <FormControl>
                       <Popover>
                         <PopoverTrigger asChild>

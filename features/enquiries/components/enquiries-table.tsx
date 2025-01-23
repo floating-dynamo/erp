@@ -37,6 +37,8 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useEnquiries } from "../api/use-enquiries";
 import Loader from "@/components/loader";
+import dayjs from "dayjs";
+import { getDateDisplayFormat } from "@/lib/utils";
 
 const ActionsCell = ({ enquiry }: { enquiry: Enquiry }) => {
   const { toast } = useToast();
@@ -119,7 +121,11 @@ const columns: ColumnDef<Enquiry>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div>{row.getValue("enquiryDate")}</div>,
+    cell: ({ row }) => (
+      <div>
+        {dayjs(row.getValue("enquiryDate")).format(getDateDisplayFormat())}
+      </div>
+    ),
   },
   {
     id: "actions",
