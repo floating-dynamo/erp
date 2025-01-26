@@ -96,7 +96,8 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
               </TooltipProvider>
             </div>
             <p className="text-muted-foreground text-xs sm:text-sm">
-              {formatDate(new Date(enquiry?.enquiryDate))}
+              Due:{" "}
+              <span className="font-semibold">{formatDate(new Date(enquiry?.quotationDueDate))}</span>
             </p>
           </div>
         </div>
