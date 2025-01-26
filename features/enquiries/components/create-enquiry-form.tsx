@@ -78,11 +78,15 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
   };
 
   const onSubmit = (values: ZodCreateEnquirySchema) => {
-    console.log(values);
-    values.customerName =
-      customers?.find((customer) => customer?.id === values.customerId).name ||
-      "NA";
-    addEnquiry(values, {
+    const finalValues = {
+      ...values,
+      customerName:
+        customers?.find((customer) => customer?.id === values.customerId)
+          .name || "NA",
+      id: Math.random().toString(36).substr(2, 9), // TODO: Move this to backend - uuid
+    };
+    console.log("Cuustomer: ", finalValues);
+    addEnquiry(finalValues, {
       onSuccess: () => {
         form.reset();
         router.push("/enquiries");

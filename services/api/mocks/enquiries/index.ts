@@ -2,6 +2,7 @@ import { Enquiry } from "@/features/enquiries/schemas";
 
 const mockEnquiries: Enquiry[] = [
   {
+    id: "1e7b1d9e-1c4d-4b8e-8f1e-1e7b1d9e1c4d",
     customerId: "CUST001",
     customerName: "Acme Corporation",
     enquiryNumber: "ENQ001",
@@ -9,6 +10,7 @@ const mockEnquiries: Enquiry[] = [
     totalItemsFinalPrice: 1100,
     file: undefined,
     enquiryDate: "2023-01-01",
+    quotationDueDate: "2023-01-15",
     items: [
       {
         itemCode: 101,
@@ -21,6 +23,7 @@ const mockEnquiries: Enquiry[] = [
     termsAndConditions: "Terms 1",
   },
   {
+    id: "2e7b1d9e-2c4d-4b8e-8f1e-2e7b1d9e2c4d",
     customerId: "CUST002",
     customerName: "Globex Inc.",
     enquiryNumber: "ENQ002",
@@ -28,6 +31,7 @@ const mockEnquiries: Enquiry[] = [
     totalItemsFinalPrice: 2200,
     file: undefined,
     enquiryDate: "2023-02-01",
+    quotationDueDate: "2023-01-15",
     items: [
       {
         itemCode: 102,
@@ -40,6 +44,7 @@ const mockEnquiries: Enquiry[] = [
     termsAndConditions: "Terms 2",
   },
   {
+    id: "3e7b1d9e-3c4d-4b8e-8f1e-3e7b1d9e3c4d",
     customerId: "CUST003",
     customerName: "Initech",
     enquiryNumber: "ENQ003",
@@ -47,6 +52,7 @@ const mockEnquiries: Enquiry[] = [
     totalItemsFinalPrice: 1650,
     file: undefined,
     enquiryDate: "2023-03-01",
+    quotationDueDate: "2023-01-15",
     items: [
       {
         itemCode: 103,
@@ -59,6 +65,7 @@ const mockEnquiries: Enquiry[] = [
     termsAndConditions: "Terms 3",
   },
   {
+    id: "4e7b1d9e-4c4d-4b8e-8f1e-4e7b1d9e4c4d",
     customerId: "CUST004",
     customerName: "Umbrella Corporation",
     enquiryNumber: "ENQ004",
@@ -66,6 +73,7 @@ const mockEnquiries: Enquiry[] = [
     totalItemsFinalPrice: 2750,
     file: undefined,
     enquiryDate: "2023-04-01",
+    quotationDueDate: "2023-01-15",
     items: [
       {
         itemCode: 104,
@@ -78,6 +86,7 @@ const mockEnquiries: Enquiry[] = [
     termsAndConditions: "Terms 4",
   },
   {
+    id: "5e7b1d9e-5c4d-4b8e-8f1e-5e7b1d9e5c4d",
     customerId: "CUST005",
     customerName: "Hooli",
     enquiryNumber: "ENQ005",
@@ -85,6 +94,7 @@ const mockEnquiries: Enquiry[] = [
     totalItemsFinalPrice: 3300,
     file: undefined,
     enquiryDate: "2023-05-01",
+    quotationDueDate: "2023-01-15",
     items: [
       {
         itemCode: 105,

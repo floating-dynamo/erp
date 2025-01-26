@@ -57,6 +57,14 @@ const mockService: IApiService = {
       }, 1000);
     });
   },
+  getEnquiryById({ id }) {
+    const enquiry = enquiries.find((enquiry) => enquiry?.id === id) || null;
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(enquiry);
+      }, 1000);
+    });
+  },
   async getCountries() {
     try {
       const countries = await axios.get("/api/countries");

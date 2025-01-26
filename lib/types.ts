@@ -21,5 +21,7 @@ export interface IApiService {
   }: {
     enquiry: Enquiry;
   }) => Promise<AddEnquiryResponse>;
+  getEnquiryById: ({ id }: { id: string }) => Promise<Enquiry | null>;
+
   getCountries: () => Promise<GetCountriesResponse>;
 }

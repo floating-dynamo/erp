@@ -6,6 +6,7 @@ const axiosInstance = axios.create({
 });
 
 const apiService: IApiService = {
+  // Customer Endpoints
   async getCustomers() {
     try {
       const customers = await axiosInstance.get("customers");
@@ -30,6 +31,15 @@ const apiService: IApiService = {
       };
     }
   },
+  async getCustomerById({ id }) {
+    try {
+      const customer = await axiosInstance.get(`customers/${id}`);
+      return customer.data;
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  // Enquiry Endpoints
   async getEnquiries() {
     try {
       const enquiries = await axiosInstance.get("enquiries");
@@ -54,14 +64,15 @@ const apiService: IApiService = {
       };
     }
   },
-  async getCustomerById({ id }) {
+  async getEnquiryById({ id }) {
     try {
-      const customer = await axiosInstance.get(`customers/${id}`);
-      return customer.data;
+      const enquiry = await axiosInstance.get(`enquiries/${id}`);
+      return enquiry.data;
     } catch (error) {
       console.error(error);
     }
   },
+  // Misc Endpoints
   async getCountries() {
     try {
       const countries = await axiosInstance.get("countries");

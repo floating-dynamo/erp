@@ -253,7 +253,7 @@ const PocDetailsCard = ({
 const CustomerNotFound = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4">
-      <UserRoundX className="size-12" />
+      <UserRoundX className="size-12 text-slate-500" />
       <p className="text-muted-foreground text-lg text-center">
         Customer data not found
       </p>

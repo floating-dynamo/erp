@@ -39,15 +39,16 @@ import { useEnquiries } from "../api/use-enquiries";
 import Loader from "@/components/loader";
 import dayjs from "dayjs";
 import { getDateDisplayFormat } from "@/lib/utils";
+import { redirect } from "next/navigation";
 
 const ActionsCell = ({ enquiry }: { enquiry: Enquiry }) => {
   const { toast } = useToast();
 
   const handleCopyEnquiryId = () => {
-    navigator.clipboard.writeText(enquiry.enquiryNumber!);
+    navigator.clipboard.writeText(enquiry.id!);
     toast({
       title: "Enquiry ID copied",
-      description: enquiry.enquiryNumber,
+      description: enquiry.id,
     });
   };
 
@@ -69,14 +70,25 @@ const ActionsCell = ({ enquiry }: { enquiry: Enquiry }) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem onClick={handleCopyEnquiryId}>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={handleCopyEnquiryId}
+        >
           Copy enquiry ID
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleCopyCustomerId}>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={handleCopyCustomerId}
+        >
           Copy customer ID
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>View enquiry</DropdownMenuItem>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => redirect(`enquiries/${enquiry?.id}`)}
+        >
+          View enquiry
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
