@@ -38,7 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useEnquiries } from "../api/use-enquiries";
 import Loader from "@/components/loader";
 import dayjs from "dayjs";
-import { getDateDisplayFormat } from "@/lib/utils";
+import { formatDate, getDateDisplayFormat } from "@/lib/utils";
 import { redirect } from "next/navigation";
 
 const ActionsCell = ({ enquiry }: { enquiry: Enquiry }) => {
@@ -112,12 +112,16 @@ const columns: ColumnDef<Enquiry>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div>{row.getValue("customerName")}</div>,
+    cell: ({ row }) => (
+      <div className="ml-4">{row.getValue("customerName")}</div>
+    ),
   },
   {
     accessorKey: "enquiryNumber",
     header: "Enquiry Number",
-    cell: ({ row }) => <div>{row.getValue("enquiryNumber")}</div>,
+    cell: ({ row }) => (
+      <div className="ml-4">{row.getValue("enquiryNumber")}</div>
+    ),
   },
   {
     accessorKey: "enquiryDate",
@@ -134,9 +138,25 @@ const columns: ColumnDef<Enquiry>[] = [
       );
     },
     cell: ({ row }) => (
-      <div>
-        {dayjs(row.getValue("enquiryDate")).format(getDateDisplayFormat())}
-      </div>
+      <div className="ml-4">{formatDate(row.getValue("enquiryDate"))}</div>
+    ),
+  },
+  {
+    accessorKey: "quotationDueDate",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="outline"
+          size={"sm"}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Quotation Due Date
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => (
+      <div className="ml-4">{formatDate(row.getValue("quotationDueDate"))}</div>
     ),
   },
   {

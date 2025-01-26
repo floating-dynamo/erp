@@ -89,7 +89,9 @@ export default function CustomerDetailsPage({
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <p className="text-muted-foreground text-xs sm:text-sm">{customer?.customerType}</p>
+            <p className="text-muted-foreground text-xs sm:text-sm">
+              {customer?.customerType}
+            </p>
           </div>
         </div>
         <Button variant={"primary"} className="text-xs sm:text-sm">
@@ -251,12 +253,20 @@ const PocDetailsCard = ({
 };
 
 const CustomerNotFound = () => {
+  function backToCustomerListing() {
+    redirect("/customers");
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4">
       <UserRoundX className="size-12 text-slate-500" />
-      <p className="text-muted-foreground text-lg text-center">
+      <p className="text-muted-foreground text-lg text-center md:text-2xl">
         Customer data not found
       </p>
+      <Button onClick={backToCustomerListing} variant={"outline"} className="md:text-lg">
+        <ArrowLeftIcon className="size-4" />
+        Back to Customer Listing
+      </Button>
     </div>
   );
 };
