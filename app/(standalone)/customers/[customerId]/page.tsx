@@ -112,13 +112,23 @@ export default function CustomerDetailsPage({
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               className="cursor-pointer text-xs sm:text-sm"
-              onClick={() => generatePDF(`customer-details-${customerId}`)}
+              onClick={() =>
+                generatePDF(
+                  `customer-details-${customerId}`,
+                  customer.name.split(" ").join("_")
+                )
+              }
             >
               <DownloadIcon className="size-3" /> Save (.pdf)
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer text-xs sm:text-sm"
-              onClick={() => generatePDF(`customer-details-${customerId}`)}
+              onClick={() =>
+                generatePDF(
+                  `customer-details-${customerId}`,
+                  customer.name.split(" ").join("_")
+                )
+              }
             >
               <DownloadIcon className="size-3" /> Save (.xlsx)
             </DropdownMenuItem>
