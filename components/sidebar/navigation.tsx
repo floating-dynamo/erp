@@ -4,8 +4,8 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import {
-  BuildingIcon,
-  FileIcon,
+  Building2Icon,
+  CalculatorIcon,
   FolderIcon,
   FolderOpenIcon,
   HomeIcon,
@@ -35,14 +35,14 @@ const routes = [
   {
     label: "Quotations",
     href: "/quotations",
-    icon: FileIcon,
-    activeIcon: FileIcon,
+    icon: CalculatorIcon,
+    activeIcon: CalculatorIcon,
   },
   {
     label: "My Company",
     href: "/my-company",
-    icon: BuildingIcon,
-    activeIcon: BuildingIcon,
+    icon: Building2Icon,
+    activeIcon: Building2Icon,
   },
 ];
 

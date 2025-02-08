@@ -135,7 +135,7 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                 control={form.control}
                 name="customerId"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
+                  <FormItem className="flex flex-col sticky top-0 bg-white z-50 py-4 border-b-2">
                     <FormLabel>
                       Customer <span className="text-orange-500">*</span>
                     </FormLabel>
@@ -402,22 +402,24 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                             </div>
 
                             {/* Remove Button */}
-                            <div className="flex items-center justify-center h-full">
-                              <Button
-                                variant="destructive"
-                                type="button"
-                                className="mb-2"
-                                onClick={() =>
-                                  field.onChange(
-                                    (field.value || []).filter(
-                                      (_, i) => i !== index
+                            {index !== 0 && (
+                              <div className="flex items-center justify-center h-full">
+                                <Button
+                                  variant="destructive"
+                                  type="button"
+                                  className="mb-2"
+                                  onClick={() =>
+                                    field.onChange(
+                                      (field.value || []).filter(
+                                        (_, i) => i !== index
+                                      )
                                     )
-                                  )
-                                }
-                              >
-                                <TrashIcon />
-                              </Button>
-                            </div>
+                                  }
+                                >
+                                  <TrashIcon />
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         ))}
 
