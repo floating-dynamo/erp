@@ -69,6 +69,12 @@ const ActionsCell = ({ customer }: { customer: Customer }) => {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer"
+          onClick={() => redirect(`enquiries/create?customer=${customer?.id}`)}
+        >
+          Create enquiry
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="cursor-pointer"
           onClick={() => redirect(`customers/${customer?.id}`)}
         >
           View customer
@@ -117,9 +123,9 @@ const columns: ColumnDef<Customer>[] = [
     cell: ({ row }) => <div>{row.getValue("gstNumber")}</div>,
   },
   {
-    accessorKey: "customerType",
-    header: "Customer Type",
-    cell: ({ row }) => <div>{row.getValue("customerType")}</div>,
+    accessorKey: "vendorId",
+    header: "Vendor ID",
+    cell: ({ row }) => <div>{row.getValue("vendorId")}</div>,
   },
   {
     accessorKey: "id",

@@ -64,7 +64,10 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
     defaultValues: {
       enquiryNumber: "",
       customerId: "",
-      items: [],
+      items: [
+        { itemCode: undefined, itemDescription: "", quantity: undefined },
+      ],
+      isQotationCreated: false,
     },
   });
   const inputRef = useRef<HTMLInputElement>(null);

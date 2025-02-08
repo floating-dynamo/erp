@@ -22,6 +22,16 @@ export const siteConfig = {
         url: "/requirements",
         icon: Package,
       },
+      {
+        title: "Quotations",
+        url: "/quotations",
+        icon: Package,
+      },
+      {
+        title: "My Company",
+        url: "/my-company",
+        icon: Package,
+      },
     ],
   },
 };

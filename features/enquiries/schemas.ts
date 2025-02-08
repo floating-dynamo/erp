@@ -16,12 +16,13 @@ export const createEnquirySchema = z.object({
   }),
   items: z.array(
     z.object({
-      itemCode: z.number(),
+      itemCode: z.number().optional(),
       itemDescription: z.string().min(1, "Required"),
-      quantity: z.number(),
+      quantity: z.number().min(0, "It cannot be negative"),
     })
   ),
   termsAndConditions: z.string().optional(),
+  isQotationCreated: z.boolean().optional(),
 });
 
 export type Enquiry = z.infer<typeof createEnquirySchema>;

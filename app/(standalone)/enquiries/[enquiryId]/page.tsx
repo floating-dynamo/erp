@@ -79,7 +79,7 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
           <div className="flex flex-col">
             <div className="flex gap-4 items-center flex-wrap">
               <h1 className="text-xl sm:text-3xl font-bold">
-                {enquiry.enquiryNumber}
+                {enquiry.enquiryNumber || "NA"}
               </h1>
               <TooltipProvider>
                 <Tooltip>

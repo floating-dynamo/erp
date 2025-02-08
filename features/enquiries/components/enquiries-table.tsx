@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, CheckIcon, MoreHorizontal, XIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -37,8 +37,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useEnquiries } from "../api/use-enquiries";
 import Loader from "@/components/loader";
-import dayjs from "dayjs";
-import { formatDate, getDateDisplayFormat } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import { redirect } from "next/navigation";
 
 const ActionsCell = ({ enquiry }: { enquiry: Enquiry }) => {
@@ -157,6 +156,30 @@ const columns: ColumnDef<Enquiry>[] = [
     },
     cell: ({ row }) => (
       <div className="ml-4">{formatDate(row.getValue("quotationDueDate"))}</div>
+    ),
+  },
+  {
+    accessorKey: "isQotationCreated",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="outline"
+          size={"sm"}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Quotation Created
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => (
+      <div className="ml-4">
+        {row.getValue("isQotationCreated") ? (
+          <CheckIcon className="size-4 text-green-700" />
+        ) : (
+          <XIcon className="size-4 text-red-500" />
+        )}
+      </div>
     ),
   },
   {

@@ -3,7 +3,15 @@ import React from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
-import { FolderIcon, FolderOpenIcon, HomeIcon, UserIcon, UsersIcon } from "lucide-react";
+import {
+  BuildingIcon,
+  FileIcon,
+  FolderIcon,
+  FolderOpenIcon,
+  HomeIcon,
+  UserIcon,
+  UsersIcon,
+} from "lucide-react";
 
 const routes = [
   {
@@ -23,6 +31,18 @@ const routes = [
     href: "/enquiries",
     icon: FolderIcon,
     activeIcon: FolderOpenIcon,
+  },
+  {
+    label: "Quotations",
+    href: "/quotations",
+    icon: FileIcon,
+    activeIcon: FileIcon,
+  },
+  {
+    label: "My Company",
+    href: "/my-company",
+    icon: BuildingIcon,
+    activeIcon: BuildingIcon,
   },
 ];
 
