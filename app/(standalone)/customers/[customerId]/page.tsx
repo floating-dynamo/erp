@@ -20,6 +20,7 @@ import {
   MailIcon,
   MapPinIcon,
   MoreHorizontalIcon,
+  PenIcon,
   PhoneIcon,
   UserIcon,
   UserRoundX,
@@ -28,6 +29,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { redirect } from "next/navigation";
@@ -102,46 +104,46 @@ export default function CustomerDetailsPage({
             </p>
           </div>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild data-html2canvas-ignore>
-            <Button variant="outline" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontalIcon className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              className="cursor-pointer text-xs sm:text-sm"
-              onClick={() =>
-                generatePDF(
-                  `customer-details-${customerId}`,
-                  customer.name.split(" ").join("_")
-                )
-              }
-            >
-              <DownloadIcon className="size-3" /> Save (.pdf)
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="cursor-pointer text-xs sm:text-sm"
-              onClick={() =>
-                generatePDF(
-                  `customer-details-${customerId}`,
-                  customer.name.split(" ").join("_")
-                )
-              }
-            >
-              <DownloadIcon className="size-3" /> Save (.xlsx)
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        {/* <Button
-          variant={"primary"}
-          className="text-xs sm:text-sm"
-          onClick={() => generatePDF(`customer-details-${customerId}`)}
-          data-html2canvas-ignore
-        >
-          <DownloadIcon /> Export Customer
-        </Button> */}
+        <div className="flex flex-wrap items-center gap-3">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild data-html2canvas-ignore>
+              <Button variant="outline" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontalIcon className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm">
+                <PenIcon className="size-4" /> Edit Customer
+              </DropdownMenuItem>
+              <Separator className="my-2" />
+              <DropdownMenuLabel>Export</DropdownMenuLabel>
+              <DropdownMenuItem
+                className="cursor-pointer text-xs sm:text-sm"
+                onClick={() =>
+                  generatePDF(
+                    `customer-details-${customerId}`,
+                    customer.name.split(" ").join("_")
+                  )
+                }
+              >
+                <DownloadIcon className="size-3" /> Save (.pdf)
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer text-xs sm:text-sm"
+                onClick={() =>
+                  generatePDF(
+                    `customer-details-${customerId}`,
+                    customer.name.split(" ").join("_")
+                  )
+                }
+              >
+                <DownloadIcon className="size-3" /> Save (.xlsx)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         <CompanyDetailsCard
