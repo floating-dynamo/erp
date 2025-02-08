@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useGetCustomerDetails } from "@/features/customers/api/use-get-customer-details";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { cn, generatePDF } from "@/lib/utils";
 import {
   ArrowLeftIcon,
   Building2Icon,
@@ -19,10 +19,17 @@ import {
   DownloadIcon,
   MailIcon,
   MapPinIcon,
+  MoreHorizontalIcon,
   PhoneIcon,
   UserIcon,
   UserRoundX,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { redirect } from "next/navigation";
 import { use } from "react";
 
@@ -60,7 +67,7 @@ export default function CustomerDetailsPage({
   }
 
   return (
-    <div className="w-full lg:max-w-4xl">
+    <div className="w-full lg:max-w-4xl" id={`customer-details-${customerId}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center justify-center gap-4">
           <Button
@@ -69,6 +76,7 @@ export default function CustomerDetailsPage({
             size="icon"
             onClick={backToCustomersPage}
             disabled={false}
+            data-html2canvas-ignore
           >
             <ArrowLeftIcon className="size-4" />
           </Button>
@@ -77,7 +85,7 @@ export default function CustomerDetailsPage({
               <h1 className="text-xl sm:text-3xl font-bold">{customer.name}</h1>
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger asChild>
+                  <TooltipTrigger asChild data-html2canvas-ignore>
                     <Copy
                       onClick={copyCustomerId}
                       className="size-4 text-muted-foreground cursor-pointer"
@@ -94,9 +102,36 @@ export default function CustomerDetailsPage({
             </p>
           </div>
         </div>
-        <Button variant={"primary"} className="text-xs sm:text-sm">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild data-html2canvas-ignore>
+            <Button variant="outline" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontalIcon className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              className="cursor-pointer text-xs sm:text-sm"
+              onClick={() => generatePDF(`customer-details-${customerId}`)}
+            >
+              <DownloadIcon className="size-3" /> Save (.pdf)
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer text-xs sm:text-sm"
+              onClick={() => generatePDF(`customer-details-${customerId}`)}
+            >
+              <DownloadIcon className="size-3" /> Save (.xlsx)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {/* <Button
+          variant={"primary"}
+          className="text-xs sm:text-sm"
+          onClick={() => generatePDF(`customer-details-${customerId}`)}
+          data-html2canvas-ignore
+        >
           <DownloadIcon /> Export Customer
-        </Button>
+        </Button> */}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         <CompanyDetailsCard
@@ -263,7 +298,11 @@ const CustomerNotFound = () => {
       <p className="text-muted-foreground text-lg text-center md:text-2xl">
         Customer data not found
       </p>
-      <Button onClick={backToCustomerListing} variant={"outline"} className="md:text-lg">
+      <Button
+        onClick={backToCustomerListing}
+        variant={"outline"}
+        className="md:text-lg"
+      >
         <ArrowLeftIcon className="size-4" />
         Back to Customer Listing
       </Button>
