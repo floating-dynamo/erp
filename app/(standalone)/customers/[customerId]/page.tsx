@@ -47,6 +47,8 @@ export default function CustomerDetailsPage({
     id: customerId,
   });
   const { toast } = useToast();
+  const customerDetailsElementId = `customer-details-${customerId}`;
+  const exportPdfFileName = (customer?.name || "NA").split(" ").join("_");
 
   if (isFetching) {
     return <Loader text="Loading customer details" />;
@@ -69,7 +71,7 @@ export default function CustomerDetailsPage({
   }
 
   return (
-    <div className="w-full lg:max-w-4xl" id={`customer-details-${customerId}`}>
+    <div className="w-full lg:max-w-4xl" id={customerDetailsElementId}>
       <div className="flex items-center justify-between">
         <div className="flex items-center justify-center gap-4">
           <Button
@@ -104,46 +106,38 @@ export default function CustomerDetailsPage({
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild data-html2canvas-ignore>
-              <Button variant="outline" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontalIcon className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm">
-                <PenIcon className="size-4" /> Edit Customer
-              </DropdownMenuItem>
-              <Separator className="my-2" />
-              <DropdownMenuLabel>Export</DropdownMenuLabel>
-              <DropdownMenuItem
-                className="cursor-pointer text-xs sm:text-sm"
-                onClick={() =>
-                  generatePDF(
-                    `customer-details-${customerId}`,
-                    customer.name.split(" ").join("_")
-                  )
-                }
-              >
-                <DownloadIcon className="size-3" /> Save (.pdf)
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer text-xs sm:text-sm"
-                onClick={() =>
-                  generatePDF(
-                    `customer-details-${customerId}`,
-                    customer.name.split(" ").join("_")
-                  )
-                }
-              >
-                <DownloadIcon className="size-3" /> Save (.xlsx)
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild data-html2canvas-ignore>
+            <Button variant="outline" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontalIcon className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm">
+              <PenIcon className="size-4" /> Edit Customer
+            </DropdownMenuItem>
+            <Separator className="my-2" />
+            <DropdownMenuLabel>Export</DropdownMenuLabel>
+            <DropdownMenuItem
+              className="cursor-pointer text-xs sm:text-sm"
+              onClick={() =>
+                generatePDF(customerDetailsElementId, exportPdfFileName)
+              }
+            >
+              <DownloadIcon className="size-3" /> Save (.pdf)
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer text-xs sm:text-sm"
+              onClick={() =>
+                generatePDF(customerDetailsElementId, exportPdfFileName)
+              }
+            >
+              <DownloadIcon className="size-3" /> Save (.xlsx)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         <CompanyDetailsCard

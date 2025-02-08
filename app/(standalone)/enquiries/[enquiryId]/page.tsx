@@ -10,19 +10,29 @@ import {
 } from "@/components/ui/tooltip";
 import { useGetEnquiryDetails } from "@/features/enquiries/api/use-get-enquiry-details";
 import { useToast } from "@/hooks/use-toast";
-import { formatDate } from "@/lib/utils";
+import { formatDate, generatePDF } from "@/lib/utils";
 import {
   ArrowLeftIcon,
   Building2,
   Calendar,
   ClipboardXIcon,
   Copy,
-  Download,
+  DownloadIcon,
+  MoreHorizontalIcon,
   Package,
+  PenIcon,
   ScrollText,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { redirect } from "next/navigation";
 import React, { use } from "react";
+import { Separator } from "@/components/ui/separator";
 
 interface EnquiryDetailsPageProps {
   params: Promise<{ enquiryId: string }>;
@@ -34,6 +44,9 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
     id: enquiryId,
   });
   const { toast } = useToast();
+  const enquiryDetailsElementId = `enquiry-details-${enquiryId}`;
+  const exportPdfFileName =
+    (enquiry?.customerName || "NA").split(" ").join("_") + "_Enquiry";
 
   if (isFetching) {
     return <Loader text="Loading enquiry details" />;
@@ -64,7 +77,7 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
   }
 
   return (
-    <div className="w-full lg:max-w-4xl">
+    <div className="w-full lg:max-w-4xl" id={enquiryDetailsElementId}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center justify-center gap-4">
           <Button
@@ -73,6 +86,7 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
             size="icon"
             onClick={backToEnquiriesPage}
             disabled={false}
+            data-html2canvas-ignore
           >
             <ArrowLeftIcon className="size-4" />
           </Button>
@@ -83,7 +97,7 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
               </h1>
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger asChild>
+                  <TooltipTrigger asChild data-html2canvas-ignore>
                     <Copy
                       onClick={copyEnquiryId}
                       className="size-4 text-muted-foreground cursor-pointer"
@@ -97,16 +111,44 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
             </div>
             <p className="text-muted-foreground text-xs sm:text-sm">
               Due:{" "}
-              <span className="font-semibold">{formatDate(new Date(enquiry?.quotationDueDate))}</span>
+              <span className="font-semibold">
+                {formatDate(new Date(enquiry?.quotationDueDate))}
+              </span>
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <Button className="flex items-center gap-2">
-            <Download className="h-4 w-4" />
-            Export Enquiry
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild data-html2canvas-ignore>
+            <Button variant="outline" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontalIcon className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm">
+              <PenIcon className="size-4" /> Edit Enquiry
+            </DropdownMenuItem>
+            <Separator className="my-2" />
+            <DropdownMenuLabel>Export</DropdownMenuLabel>
+            <DropdownMenuItem
+              className="cursor-pointer text-xs sm:text-sm"
+              onClick={() =>
+                generatePDF(enquiryDetailsElementId, exportPdfFileName)
+              }
+            >
+              <DownloadIcon className="size-3" /> Save (.pdf)
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer text-xs sm:text-sm"
+              onClick={() =>
+                generatePDF(enquiryDetailsElementId, exportPdfFileName)
+              }
+            >
+              <DownloadIcon className="size-3" /> Save (.xlsx)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -124,7 +166,7 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
                 <p className="font-medium">{enquiry.customerName}</p>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger asChild>
+                    <TooltipTrigger asChild data-html2canvas-ignore>
                       <Copy
                         onClick={copyCustomerId}
                         className="size-4 text-muted-foreground cursor-pointer"
@@ -137,7 +179,7 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
                 </TooltipProvider>
               </div>
             </div>
-            <div>
+            <div data-html2canvas-ignore>
               <Button
                 size={"sm"}
                 variant={"ghost"}
