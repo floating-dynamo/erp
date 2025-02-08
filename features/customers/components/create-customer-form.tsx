@@ -152,7 +152,7 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Customer Name</FormLabel>
+                  <FormLabel>Customer Name <span className="text-orange-500">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="Enter customer name" {...field} />
                   </FormControl>

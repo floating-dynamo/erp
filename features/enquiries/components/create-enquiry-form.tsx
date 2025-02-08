@@ -136,7 +136,9 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                 name="customerId"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Customer</FormLabel>
+                    <FormLabel>
+                      Customer <span className="text-orange-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Popover>
                         <PopoverTrigger asChild>
@@ -221,7 +223,9 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                 name="enquiryDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Enquiry Date</FormLabel>
+                    <FormLabel>
+                      Enquiry Date <span className="text-orange-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Popover>
                         <PopoverTrigger asChild>
@@ -265,7 +269,10 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                 name="quotationDueDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Quotation Due Date</FormLabel>
+                    <FormLabel>
+                      Quotation Due Date{" "}
+                      <span className="text-orange-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Popover>
                         <PopoverTrigger asChild>
@@ -345,7 +352,8 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                             {/* Item Description */}
                             <div>
                               <FormLabel className="text-xs text-muted-foreground">
-                                Description
+                                Description{" "}
+                                <span className="text-orange-500">*</span>
                               </FormLabel>
                               <Input
                                 {...field}
@@ -370,7 +378,8 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                             {/* Quantity */}
                             <div>
                               <FormLabel className="text-xs text-muted-foreground">
-                                Quantity
+                                Quantity{" "}
+                                <span className="text-orange-500">*</span>
                               </FormLabel>
                               <Input
                                 {...field}
