@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useGetEnquiryDetails } from "@/features/enquiries/api/use-get-enquiry-details";
 import { useToast } from "@/hooks/use-toast";
-import { formatDate, generatePDF } from "@/lib/utils";
+import { formatDate, generateCsv, generatePDF } from "@/lib/utils";
 import {
   ArrowLeftIcon,
   Building2,
@@ -141,11 +141,9 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer text-xs sm:text-sm"
-              onClick={() =>
-                generatePDF(enquiryDetailsElementId, exportPdfFileName)
-              }
+              onClick={() => generateCsv({ data: enquiry, type: "Enquiry" })}
             >
-              <DownloadIcon className="size-3" /> Save (.xlsx)
+              <DownloadIcon className="size-3" /> Save (.csv)
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

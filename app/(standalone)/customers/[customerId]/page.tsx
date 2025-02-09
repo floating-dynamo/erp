@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useGetCustomerDetails } from "@/features/customers/api/use-get-customer-details";
 import { useToast } from "@/hooks/use-toast";
-import { cn, generatePDF } from "@/lib/utils";
+import { cn, generateCsv, generatePDF } from "@/lib/utils";
 import {
   ArrowLeftIcon,
   Building2Icon,
@@ -130,11 +130,9 @@ export default function CustomerDetailsPage({
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer text-xs sm:text-sm"
-              onClick={() =>
-                generatePDF(customerDetailsElementId, exportPdfFileName)
-              }
+              onClick={() => generateCsv({ data: customer, type: "Customer" })}
             >
-              <DownloadIcon className="size-3" /> Save (.xlsx)
+              <DownloadIcon className="size-3" /> Save (.csv)
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
