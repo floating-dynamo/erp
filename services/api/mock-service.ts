@@ -85,6 +85,15 @@ const mockService: IApiService = {
       }, 1000);
     });
   },
+  async getQuotationById({ id }) {
+    const quotation =
+      quotations.find((quotation) => quotation?.id === id) || null;
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(quotation);
+      }, 1000);
+    });
+  },
 };
 
 export default mockService;

@@ -82,6 +82,14 @@ const apiService: IApiService = {
       return null;
     }
   },
+  async getQuotationById({ id }) {
+    try {
+      const quotation = await axiosInstance.get(`/quotations/${id}`);
+      return quotation.data;
+    } catch (error) {
+      console.error(error);
+    }
+  },
   // Misc Endpoints
   async getCountries() {
     try {

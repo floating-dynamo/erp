@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, CopyIcon, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, CopyIcon, EyeIcon, MoreHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +21,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -36,6 +37,7 @@ import { Input } from "@/components/ui/input";
 import Loader from "@/components/loader";
 import { useToast } from "@/hooks/use-toast";
 import { useQuotations } from "../api/use-quotations";
+import { redirect } from "next/navigation";
 
 const ActionsCell = ({ quotation }: { quotation: Quotation }) => {
   const { toast } = useToast();
@@ -58,6 +60,13 @@ const ActionsCell = ({ quotation }: { quotation: Quotation }) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => redirect(`quotations/${quotation?.id}`)}
+        >
+          <EyeIcon className="size-3" /> View Quotation
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer"
           onClick={handleCopyCustomerId}
@@ -105,7 +114,15 @@ const columns: ColumnDef<Quotation>[] = [
   {
     accessorKey: "totalAmount",
     header: "Total Amount",
-    cell: ({ row }) => <div>Rs. {row.getValue("totalAmount")}</div>,
+    cell: ({ row }) => {
+      const totalAmount = row.getValue("totalAmount") as number;
+      const currency = row.original.items[0].currency || "INR";
+      return (
+        <div>
+          {currency} {totalAmount}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "id",

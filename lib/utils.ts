@@ -1,5 +1,6 @@
 import { Customer } from "@/features/customers/schemas";
 import { Enquiry } from "@/features/enquiries/schemas";
+import { Quotation } from "@/features/quotations/schemas";
 import { clsx, type ClassValue } from "clsx";
 import dayjs from "dayjs";
 import { twMerge } from "tailwind-merge";
@@ -13,7 +14,8 @@ export const generateCsv = ({
   type,
 }:
   | { data: Customer; type: "Customer" }
-  | { data: Enquiry; type: "Enquiry" }) => {
+  | { data: Enquiry; type: "Enquiry" }
+  | { data: Quotation; type: "Quotation" }) => {
   if (!data) return;
   let headers: string[] = [];
   const rows: (string | number | undefined)[][] = [];
@@ -93,6 +95,59 @@ export const generateCsv = ({
       });
 
       fileName = `Enquiry_${data.customerName?.replace(/\s/g, "_")}.csv`;
+      break;
+    }
+
+    case "Quotation": {
+      headers = [
+        "Quotation ID",
+        "Customer ID",
+        "Customer Name",
+        "Enquiry Number",
+        "Quotation Date",
+        "Quote Number",
+        "Item Code",
+        "Item Description",
+        "Material Consideration",
+        "Quantity",
+        "UOM",
+        "Rate",
+        "Currency",
+        "Amount",
+        "Remarks",
+        "Total Amount",
+        "Terms and Conditions",
+        "Company GSTIN",
+        "Company PAN",
+        "Company Name",
+      ];
+
+      data.items.forEach((item) => {
+        rows.push([
+          data.id,
+          data.customerId,
+          data.customerName,
+          data.enquiryNumber,
+          formatDate(new Date(data.quotationDate)),
+          data.quoteNumber,
+          item.itemCode,
+          item.itemDescription,
+          item.materialConsideration || "NA",
+          item.quantity,
+          item.uom,
+          item.rate,
+          item.currency,
+          item.amount,
+          item.remarks || "NA",
+          data.totalAmount,
+          data.termsAndConditions?.replace(/\n/g, " ") || "NA",
+          data.myCompanyGSTIN,
+          data.myCompanyPAN,
+          data.myCompanyName,
+        ]);
+      });
+
+      fileName = `Quotation_${data.customerName.replace(/\s/g, "_")}.csv`;
       break;
     }
   }
