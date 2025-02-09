@@ -4,9 +4,12 @@ import { Customer } from "@/features/customers/schemas";
 import { Enquiry } from "@/features/enquiries/schemas";
 import { ENQUIRIES_MOCK_DATA } from "./mocks/enquiries";
 import axios from "axios";
+import { Quotation } from "@/features/quotations/schemas";
+import QUOTATIONS_MOCK_DATA from "./mocks/quotations";
 
 const customers: Customer[] = CUSTOMERS_MOCK_DATA;
 const enquiries: Enquiry[] = ENQUIRIES_MOCK_DATA;
+const quotations: Quotation[] = QUOTATIONS_MOCK_DATA;
 
 const mockService: IApiService = {
   async getCustomers() {
@@ -72,6 +75,15 @@ const mockService: IApiService = {
     } catch (error) {
       console.error(error);
     }
+  },
+  async getQuotations() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          quotations,
+        });
+      }, 1000);
+    });
   },
 };
 

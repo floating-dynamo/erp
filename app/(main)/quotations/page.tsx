@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import EnquiriesTable from "@/features/enquiries/components/enquiries-table";
+import QuotationsTable from "@/features/quotations/components/quotation-table";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import React from "react";
@@ -16,7 +16,7 @@ const QuotationsPage = () => {
       </div>
       <div>
         <h3 className="font-bold text-xl">Quotations Listing</h3>
-        <EnquiriesTable />
+        <QuotationsTable />
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { AddCustomerResponse, GetCusomtersResponse } from "./types/customer";
 import { AddEnquiryResponse, GetEnquiriesResponse } from "./types/requirement";
 import { Enquiry } from "@/features/enquiries/schemas";
 import { GetCountriesResponse } from "./types/index";
+import { GetQuotationsResponse } from "./types/quotation";
 
 export interface IApiService {
   // Customer Endpoints
@@ -22,6 +23,9 @@ export interface IApiService {
     enquiry: Enquiry;
   }) => Promise<AddEnquiryResponse>;
   getEnquiryById: ({ id }: { id: string }) => Promise<Enquiry | null>;
+
+  // Quotation Endpoints
+  getQuotations: () => Promise<GetQuotationsResponse>
 
   getCountries: () => Promise<GetCountriesResponse>;
 }
