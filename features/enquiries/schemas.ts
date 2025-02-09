@@ -3,7 +3,7 @@ import { z } from "zod";
 export const createEnquirySchema = z.object({
   id: z.string().optional(),
   customerId: z.string().trim().min(1, "Required"),
-  customerName: z.string().optional(),
+  customerName: z.string().min(1, "Required"),
   enquiryNumber: z.string().min(0, "Required"),
   totalItemsPrice: z.number().optional(),
   totalItemsFinalPrice: z.number().optional(),

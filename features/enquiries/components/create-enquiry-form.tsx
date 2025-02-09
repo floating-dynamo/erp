@@ -28,7 +28,7 @@ import {
   UploadCloudIcon,
   XIcon,
 } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { useAddEnquiry } from "../api/use-add-enquiry";
@@ -71,7 +71,8 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
     resolver: zodResolver(createEnquirySchema),
     defaultValues: {
       enquiryNumber: "",
-      customerId: "",
+      customerId: customer?.id || "",
+      customerName: customer?.name || "",
       items: [
         { itemCode: undefined, itemDescription: "", quantity: undefined },
       ],
@@ -80,6 +81,11 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
   });
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    form.setValue("customerName", customer?.name || "");
+    form.setValue("customerId", customer?.id || "");
+  }, [customer, form]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -91,12 +97,9 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
   const onSubmit = (values: ZodCreateEnquirySchema) => {
     const finalValues = {
       ...values,
-      customerName:
-        customers?.find((customer) => customer?.id === values.customerId)
-          .name || "NA",
       id: Math.random().toString(36).substr(2, 9), // TODO: Move this to backend - uuid
     };
-    console.log("Cuustomer: ", finalValues);
+    console.log("Customer: ", finalValues);
     addEnquiry(finalValues, {
       onSuccess: () => {
         form.reset();
@@ -188,6 +191,10 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                                       form.setValue(
                                         "customerId",
                                         customer.value
+                                      );
+                                      form.setValue(
+                                        "customerName",
+                                        customer.label
                                       );
                                     }}
                                   >
