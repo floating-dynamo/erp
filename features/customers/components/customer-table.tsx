@@ -13,7 +13,13 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import {
+  ArrowUpDown,
+  CopyIcon,
+  EyeIcon,
+  MoreHorizontal,
+  PlusCircleIcon,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -62,22 +68,22 @@ const ActionsCell = ({ customer }: { customer: Customer }) => {
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={handleCopyCustomerId}
-        >
-          Copy customer ID
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="cursor-pointer"
           onClick={() => redirect(`enquiries/create?customer=${customer?.id}`)}
         >
-          Create enquiry
+          <PlusCircleIcon className="size-3" /> Create enquiry
         </DropdownMenuItem>
         <DropdownMenuItem
           className="cursor-pointer"
           onClick={() => redirect(`customers/${customer?.id}`)}
         >
-          View customer
+          <EyeIcon className="size-3" /> View customer
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={handleCopyCustomerId}
+        >
+          <CopyIcon className="size-3" /> Copy customer ID
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

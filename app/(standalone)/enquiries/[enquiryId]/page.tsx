@@ -15,6 +15,7 @@ import {
   ArrowLeftIcon,
   Building2,
   Calendar,
+  CirclePlusIcon,
   ClipboardXIcon,
   Copy,
   DownloadIcon,
@@ -28,6 +29,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { redirect } from "next/navigation";
@@ -129,7 +131,15 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
             <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm">
               <PenIcon className="size-4" /> Edit Enquiry
             </DropdownMenuItem>
-            <Separator className="my-2" />
+            <DropdownMenuItem
+              className="cursor-pointer text-xs sm:text-sm"
+              onClick={() =>
+                redirect(`/quotations/create?enquiry=${enquiryId}`)
+              }
+            >
+              <CirclePlusIcon className="size-4" /> Create Quotation
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuLabel>Export</DropdownMenuLabel>
             <DropdownMenuItem
               className="cursor-pointer text-xs sm:text-sm"

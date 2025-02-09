@@ -32,7 +32,7 @@ import { useRef } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { useAddEnquiry } from "../api/use-add-enquiry";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Popover,
   PopoverContent,
@@ -49,6 +49,7 @@ import {
 } from "@/components/ui/command";
 import Loader from "@/components/loader";
 import { useCustomers } from "@/features/customers/api/use-customers";
+import { useGetCustomerDetails } from "@/features/customers/api/use-get-customer-details";
 
 interface CreateEnquiryFormProps {
   onCancel?: () => void;
@@ -59,6 +60,13 @@ type ZodCreateEnquirySchema = z.infer<typeof createEnquirySchema>;
 export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
   const { mutate: addEnquiry, isPending } = useAddEnquiry();
   const { data: customers, isLoading } = useCustomers();
+  const searchParams = useSearchParams();
+  const customerId = searchParams.get("customer") || "";
+  const { data: customer, isFetching: isFetchingCustomer } =
+    useGetCustomerDetails({
+      id: customerId || "",
+    });
+
   const form = useForm<ZodCreateEnquirySchema>({
     resolver: zodResolver(createEnquirySchema),
     defaultValues: {
@@ -97,7 +105,7 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
     });
   };
 
-  if (isLoading && !customers) {
+  if (isLoading && !customers && isFetchingCustomer) {
     return <Loader />;
   }
 
@@ -147,11 +155,14 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                               variant="outline"
                               role="combobox"
                               className={cn(
-                                "sm:w-[300px] w-full justify-between",
+                                "sm:w-[300px] w-full justify-between disabled:text-slate-700",
                                 !field.value && "text-muted-foreground"
                               )}
+                              disabled={!!customer}
                             >
-                              {field.value
+                              {customer
+                                ? customer.name
+                                : field.value
                                 ? customerSelectData.find(
                                     (customer) => customer.value === field.value
                                   )?.label

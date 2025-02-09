@@ -9,6 +9,7 @@ export const useGetCustomerDetails = ({ id }: { id: string }) => {
 
       return customer;
     },
+    enabled: !!id,
   });
 
   return query;

@@ -9,6 +9,7 @@ export const useGetEnquiryDetails = ({ id }: { id: string }) => {
 
       return enquiry;
     },
+    enabled: !!id,
   });
 
   return query;
