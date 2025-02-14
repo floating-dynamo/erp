@@ -53,11 +53,15 @@ import { useGetCustomerDetails } from "@/features/customers/api/use-get-customer
 
 interface CreateEnquiryFormProps {
   onCancel?: () => void;
+  showBackButton: boolean;
 }
 
 type ZodCreateEnquirySchema = z.infer<typeof createEnquirySchema>;
 
-export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
+export const CreateEnquiryForm = ({
+  onCancel,
+  showBackButton = false,
+}: CreateEnquiryFormProps) => {
   const { mutate: addEnquiry, isPending } = useAddEnquiry();
   const { data: customers, isLoading } = useCustomers();
   const searchParams = useSearchParams();
@@ -69,22 +73,19 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
 
   const form = useForm<ZodCreateEnquirySchema>({
     resolver: zodResolver(createEnquirySchema),
-    defaultValues: {
-      enquiryNumber: "",
-      customerId: customer?.id || "",
-      customerName: customer?.name || "",
-      items: [
-        { itemCode: undefined, itemDescription: "", quantity: undefined },
-      ],
-      isQotationCreated: false,
-    },
   });
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   useEffect(() => {
-    form.setValue("customerName", customer?.name || "");
-    form.setValue("customerId", customer?.id || "");
+    form.reset({
+      customerName: customer?.name || "",
+      customerId: customer?.id,
+      items: [
+        { itemCode: undefined, itemDescription: "", quantity: undefined },
+      ],
+      isQotationCreated: false,
+    });
   }, [customer, form]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,16 +123,18 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
     <Card className="w-full h-full border-none shadow-none">
       <CardHeader className="flex p-7">
         <CardTitle className="text-xl font-bold flex gap-7 item-center">
-          <Button
-            variant="outline"
-            type="button"
-            size="icon"
-            onClick={onCancel}
-            disabled={false}
-            className={cn(!onCancel && "invisible")}
-          >
-            <ArrowLeft className="size-4" />
-          </Button>
+          {showBackButton && (
+            <Button
+              variant="outline"
+              type="button"
+              size="icon"
+              onClick={onCancel}
+              disabled={false}
+              className={cn(!onCancel && "invisible")}
+            >
+              <ArrowLeft className="size-4" />
+            </Button>
+          )}
           Add a new enquiry
         </CardTitle>
       </CardHeader>
@@ -175,7 +178,7 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="sm:w-[300px] w-[200px] p-0">
-                          <Command as="div">
+                          <Command>
                             <CommandInput
                               placeholder="Search Customer..."
                               className="h-9"
@@ -420,7 +423,7 @@ export const CreateEnquiryForm = ({ onCancel }: CreateEnquiryFormProps) => {
                             </div>
 
                             {/* Remove Button */}
-                            {index !== 0 && (
+                            {field.value.length > 1 && (
                               <div className="flex items-center justify-center h-full">
                                 <Button
                                   variant="destructive"

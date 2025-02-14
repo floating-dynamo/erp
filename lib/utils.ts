@@ -176,6 +176,13 @@ export function capitalizeFirstLetter(str: string) {
   return capitalized;
 }
 
+export const generateQuoteNumber = (isoDate: string, enquiryNumber: string) => {
+  const quoteNumDateFormat = "YY/MM/DD";
+  const date = dayjs(isoDate);
+  const formattedDate = date.format(quoteNumDateFormat);
+  return `QUO/${formattedDate}/${enquiryNumber}`;
+};
+
 export function formatDate(date: Date) {
   return dayjs(date).format(getDateDisplayFormat());
 }

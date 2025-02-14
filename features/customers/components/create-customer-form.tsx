@@ -50,9 +50,13 @@ type CreateCustomerFormSchema = z.infer<typeof createCustomerSchema>;
 
 interface CreateCustomerFormProps {
   onCancel?: () => void;
+  showBackButton: boolean;
 }
 
-export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
+export const CreateCustomerForm = ({
+  onCancel,
+  showBackButton = false,
+}: CreateCustomerFormProps) => {
   const { mutate: addCustomer, isPending } = useAddCustomer();
   const { data: countriesData, isLoading: isFetchingCountries } =
     useCountries();
@@ -128,15 +132,17 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
     <Card className="w-full h-full border-none shadow-none">
       <CardHeader className="flex p-7">
         <CardTitle className="text-xl font-bold flex gap-7 items-center">
-          <Button
-            variant="outline"
-            type="button"
-            size="icon"
-            onClick={onCancel}
-            disabled={false}
-          >
-            <ArrowLeft className="size-4" />
-          </Button>
+          {showBackButton && (
+            <Button
+              variant="outline"
+              type="button"
+              size="icon"
+              onClick={onCancel}
+              disabled={false}
+            >
+              <ArrowLeft className="size-4" />
+            </Button>
+          )}
           Add a new customer
         </CardTitle>
       </CardHeader>
@@ -152,7 +158,9 @@ export const CreateCustomerForm = ({ onCancel }: CreateCustomerFormProps) => {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Customer Name <span className="text-orange-500">*</span></FormLabel>
+                  <FormLabel>
+                    Customer Name <span className="text-orange-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Enter customer name" {...field} />
                   </FormControl>
