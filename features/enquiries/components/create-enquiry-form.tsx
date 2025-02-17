@@ -28,7 +28,7 @@ import {
   UploadCloudIcon,
   XIcon,
 } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { useAddEnquiry } from "../api/use-add-enquiry";
@@ -70,6 +70,7 @@ export const CreateEnquiryForm = ({
     useGetCustomerDetails({
       id: customerId || "",
     });
+  const [customerSelectOpen, setCustomerSelectOpen] = useState(false);
 
   const form = useForm<ZodCreateEnquirySchema>({
     resolver: zodResolver(createEnquirySchema),
@@ -154,7 +155,10 @@ export const CreateEnquiryForm = ({
                       Customer <span className="text-orange-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Popover>
+                      <Popover
+                        open={customerSelectOpen}
+                        onOpenChange={setCustomerSelectOpen}
+                      >
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button
@@ -199,6 +203,7 @@ export const CreateEnquiryForm = ({
                                         "customerName",
                                         customer.label
                                       );
+                                      setCustomerSelectOpen(false);
                                     }}
                                   >
                                     {customer.label}

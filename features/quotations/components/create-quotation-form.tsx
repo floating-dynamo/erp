@@ -13,7 +13,7 @@ import { useGetCustomerDetails } from "@/features/customers/api/use-get-customer
 import { useGetEnquiryDetails } from "@/features/enquiries/api/use-get-enquiry-details";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSearchParams } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { createQuotationSchema, Quotation } from "../schemas";
@@ -36,6 +36,7 @@ import { cn, generateQuoteNumber } from "@/lib/utils";
 import { useCustomers } from "@/features/customers/api/use-customers";
 import { useEnquiries } from "@/features/enquiries/api/use-enquiries";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 type CreateQuotationFormSchema = z.infer<typeof createQuotationSchema>;
 
@@ -54,6 +55,8 @@ const CreateQuotationForm = () => {
     useCustomers();
   const { data: enquiryList, isFetching: isFetchingEnquiryList } =
     useEnquiries();
+  const [customerSelectOpen, setCustomerSelectOpen] = useState(false);
+  const [enquirySelectOpen, setEnquirySelectOpen] = useState(false);
 
   const form = useForm<CreateQuotationFormSchema>({
     resolver: zodResolver(createQuotationSchema),
@@ -156,7 +159,10 @@ const CreateQuotationForm = () => {
                         Customer <span className="text-orange-500">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Popover>
+                        <Popover
+                          open={customerSelectOpen}
+                          onOpenChange={setCustomerSelectOpen}
+                        >
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
@@ -196,6 +202,7 @@ const CreateQuotationForm = () => {
                                       key={id}
                                       onSelect={() => {
                                         form.setValue("customerId", id);
+                                        setCustomerSelectOpen(false);
                                       }}
                                     >
                                       {name}
@@ -231,7 +238,10 @@ const CreateQuotationForm = () => {
                         <span className="text-orange-500">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Popover>
+                        <Popover
+                          open={enquirySelectOpen}
+                          onOpenChange={setEnquirySelectOpen}
+                        >
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
@@ -275,6 +285,7 @@ const CreateQuotationForm = () => {
                                           "enquiryNumber",
                                           enquiryNumber
                                         );
+                                        setEnquirySelectOpen(false);
                                       }}
                                     >
                                       {enquiryNumber}
@@ -314,7 +325,9 @@ const CreateQuotationForm = () => {
                       name={`items.${index}.itemCode` as const}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Item Code</FormLabel>
+                          <FormLabel>
+                            Item Code <span className="text-orange-500">*</span>
+                          </FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -338,7 +351,10 @@ const CreateQuotationForm = () => {
                       name={`items.${index}.itemDescription` as const}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Description</FormLabel>
+                          <FormLabel>
+                            Description{" "}
+                            <span className="text-orange-500">*</span>
+                          </FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -358,7 +374,9 @@ const CreateQuotationForm = () => {
                       name={`items.${index}.quantity` as const}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Quantity</FormLabel>
+                          <FormLabel>
+                            Quantity <span className="text-orange-500">*</span>
+                          </FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -420,7 +438,7 @@ const CreateQuotationForm = () => {
                       )}
                     />
 
-                    {/* Unit of Measurement */}
+                    {/* Currency */}
                     <FormField
                       control={form.control}
                       name={`items.${index}.currency` as const}
@@ -431,6 +449,26 @@ const CreateQuotationForm = () => {
                             <Input
                               {...field}
                               placeholder="Enter the Currency"
+                              type="text"
+                              className="w-full"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Remarks */}
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.remarks` as const}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Remarks</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Enter your remarks"
                               type="text"
                               className="w-full"
                             />
@@ -472,6 +510,27 @@ const CreateQuotationForm = () => {
                 >
                   <PlusCircleIcon className="size-4" /> Add Item
                 </Button>
+              </div>
+
+              {/* T&C */}
+              <div className="flex w-full mt-6">
+                <FormField
+                  control={form.control}
+                  name={"termsAndConditions"}
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel>Terms And Conditions</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          placeholder="Enter the terms and conditions..."
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
             <Separator className="my-7" />
