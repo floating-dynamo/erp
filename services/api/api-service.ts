@@ -82,6 +82,23 @@ const apiService: IApiService = {
       return null;
     }
   },
+  async addQuotation({ quotation }) {
+    try {
+      const { data } = await axiosInstance.post("/quotations", quotation);
+      return {
+        message: "Quotation added successfully",
+        success: true,
+        quoteNumber: data?.quoteNumber,
+      };
+    } catch (error) {
+      console.error(error);
+      return {
+        message: "Something went wrong",
+        success: false,
+        quoteNumber: "",
+      };
+    }
+  },
   async getQuotationById({ id }) {
     try {
       const quotation = await axiosInstance.get(`/quotations/${id}`);

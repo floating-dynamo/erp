@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { useGetCustomerDetails } from "@/features/customers/api/use-get-customer-details";
 import { useGetEnquiryDetails } from "@/features/enquiries/api/use-get-enquiry-details";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -23,7 +23,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Check, ChevronsUpDown, PlusCircleIcon, TrashIcon } from "lucide-react";
+import {
+  CalendarIcon,
+  Check,
+  ChevronsUpDown,
+  PlusCircleIcon,
+  TrashIcon,
+} from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -37,6 +43,8 @@ import { useCustomers } from "@/features/customers/api/use-customers";
 import { useEnquiries } from "@/features/enquiries/api/use-enquiries";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { useAddQuotation } from "../api/use-add-quotation";
 
 type CreateQuotationFormSchema = z.infer<typeof createQuotationSchema>;
 
@@ -57,6 +65,8 @@ const CreateQuotationForm = () => {
     useEnquiries();
   const [customerSelectOpen, setCustomerSelectOpen] = useState(false);
   const [enquirySelectOpen, setEnquirySelectOpen] = useState(false);
+  const { mutate: addQuotation, isPending } = useAddQuotation();
+  const router = useRouter();
 
   const form = useForm<CreateQuotationFormSchema>({
     resolver: zodResolver(createQuotationSchema),
@@ -112,16 +122,20 @@ const CreateQuotationForm = () => {
   }
 
   const onSubmit = (values: CreateQuotationFormSchema) => {
-    const quotationDate = new Date().toISOString();
     const finalValues: Quotation = {
       ...values,
       quoteNumber: generateQuoteNumber(
-        quotationDate,
+        new Date().toISOString(),
         enquiry?.enquiryNumber || ""
       ),
-      quotationDate,
     };
     console.log("Quotation: ", finalValues);
+    addQuotation(finalValues, {
+      onSuccess: () => {
+        form.reset();
+        router.push("/quotations");
+      },
+    });
   };
 
   return (
@@ -148,13 +162,13 @@ const CreateQuotationForm = () => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="flex flex-col">
-              <div className="flex flex-col sm:flex-row gap-5 w-full sm:w-fit">
+              <div className="flex flex-col sm:flex-row gap-5 w-full sm:w-fit mb-4 flex-wrap">
                 {/* Customer Name */}
                 <FormField
                   control={form.control}
                   name="customerId"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col sticky top-0 bg-white z-50 py-4">
+                    <FormItem className="flex flex-col bg-white py-4">
                       <FormLabel>
                         Customer <span className="text-orange-500">*</span>
                       </FormLabel>
@@ -202,6 +216,7 @@ const CreateQuotationForm = () => {
                                       key={id}
                                       onSelect={() => {
                                         form.setValue("customerId", id);
+                                        form.setValue("customerName", name);
                                         setCustomerSelectOpen(false);
                                       }}
                                     >
@@ -232,7 +247,7 @@ const CreateQuotationForm = () => {
                   control={form.control}
                   name="enquiryNumber"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col sticky top-0 bg-white z-50 py-4">
+                    <FormItem className="flex flex-col bg-white py-4">
                       <FormLabel>
                         Enquiry Number{" "}
                         <span className="text-orange-500">*</span>
@@ -302,6 +317,55 @@ const CreateQuotationForm = () => {
                                 </CommandGroup>
                               </CommandList>
                             </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Quotation Date */}
+                <FormField
+                  control={form.control}
+                  name="quotationDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col items-start justify-center min-w-72 py-4">
+                      <FormLabel>
+                        Quotation Date{" "}
+                        <span className="text-orange-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon />
+                              {field.value
+                                ? new Intl.DateTimeFormat("en-US").format(
+                                    new Date(field.value)
+                                  )
+                                : "Pick a date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="p-0">
+                            <Calendar
+                              mode="single"
+                              selected={
+                                field.value ? new Date(field.value) : undefined
+                              }
+                              onSelect={(date) => {
+                                const selectedDate = date
+                                  ? date.toISOString()
+                                  : "";
+                                field.onChange(selectedDate);
+                              }}
+                            />
                           </PopoverContent>
                         </Popover>
                       </FormControl>
@@ -538,7 +602,7 @@ const CreateQuotationForm = () => {
               <Button
                 type="submit"
                 size="lg"
-                disabled={false}
+                disabled={isPending}
                 className="w-full md:w-fit"
               >
                 Create Quotation

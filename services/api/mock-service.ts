@@ -94,6 +94,18 @@ const mockService: IApiService = {
       }, 1000);
     });
   },
+  async addQuotation({ quotation }) {
+    quotations.push(quotation);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          message: "Quotation added successfully",
+          success: true,
+          quoteNumber: quotation.quoteNumber || "",
+        });
+      }, 1000);
+    });
+  },
 };
 
 export default mockService;

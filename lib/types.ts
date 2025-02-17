@@ -3,7 +3,7 @@ import { AddCustomerResponse, GetCusomtersResponse } from "./types/customer";
 import { AddEnquiryResponse, GetEnquiriesResponse } from "./types/requirement";
 import { Enquiry } from "@/features/enquiries/schemas";
 import { GetCountriesResponse } from "./types/index";
-import { GetQuotationsResponse } from "./types/quotation";
+import { AddQuotationResponse, GetQuotationsResponse } from "./types/quotation";
 import { Quotation } from "@/features/quotations/schemas";
 
 export interface IApiService {
@@ -27,6 +27,11 @@ export interface IApiService {
 
   // Quotation Endpoints
   getQuotations: () => Promise<GetQuotationsResponse>;
+  addQuotation: ({
+    quotation,
+  }: {
+    quotation: Quotation;
+  }) => Promise<AddQuotationResponse>;
   getQuotationById: ({ id }: { id: string }) => Promise<Quotation | null>;
 
   getCountries: () => Promise<GetCountriesResponse>;
