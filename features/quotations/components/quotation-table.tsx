@@ -50,6 +50,22 @@ const ActionsCell = ({ quotation }: { quotation: Quotation }) => {
     });
   };
 
+  const handleCopyEnquiryNumber = () => {
+    navigator.clipboard.writeText(quotation.enquiryNumber!);
+    toast({
+      title: "Enquiry Number copied",
+      description: quotation?.enquiryNumber,
+    });
+  };
+
+  const handleCopyQuotationId = () => {
+    navigator.clipboard.writeText(quotation.id!);
+    toast({
+      title: "Quotation ID copied",
+      description: quotation?.id,
+    });
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -71,7 +87,19 @@ const ActionsCell = ({ quotation }: { quotation: Quotation }) => {
           className="cursor-pointer"
           onClick={handleCopyCustomerId}
         >
-          <CopyIcon className="size-3" /> Copy customer ID
+          <CopyIcon className="size-3" /> Copy Customer ID
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={handleCopyEnquiryNumber}
+        >
+          <CopyIcon className="size-3" /> Copy Enquiry Number
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={handleCopyQuotationId}
+        >
+          <CopyIcon className="size-3" /> Copy Quotation ID
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

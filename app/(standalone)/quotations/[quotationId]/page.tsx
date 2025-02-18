@@ -100,7 +100,7 @@ function QuotationDetails({ params }: QuotationDetailsPageProps) {
               </TooltipProvider>
             </div>
             <p className="text-muted-foreground text-xs sm:text-sm">
-              Created on: {formatDate(new Date(quotation?.quotationDate))}
+              Created on: {formatDate(new Date(quotation?.quotationDate || ""))}
             </p>
           </div>
         </div>

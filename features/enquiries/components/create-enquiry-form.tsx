@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import uuid4 from "uuid4";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -53,7 +54,7 @@ import { useGetCustomerDetails } from "@/features/customers/api/use-get-customer
 
 interface CreateEnquiryFormProps {
   onCancel?: () => void;
-  showBackButton: boolean;
+  showBackButton?: boolean;
 }
 
 type ZodCreateEnquirySchema = z.infer<typeof createEnquirySchema>;
@@ -99,7 +100,7 @@ export const CreateEnquiryForm = ({
   const onSubmit = (values: ZodCreateEnquirySchema) => {
     const finalValues = {
       ...values,
-      id: Math.random().toString(36).substr(2, 9), // TODO: Move this to backend - uuid
+      id: uuid4(), // TODO: Move this to backend - uuid
     };
     console.log("Customer: ", finalValues);
     addEnquiry(finalValues, {

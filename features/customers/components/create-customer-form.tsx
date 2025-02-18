@@ -44,13 +44,14 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import uuid4 from "uuid4";
 
 // Infer the form schema type
 type CreateCustomerFormSchema = z.infer<typeof createCustomerSchema>;
 
 interface CreateCustomerFormProps {
   onCancel?: () => void;
-  showBackButton: boolean;
+  showBackButton?: boolean;
 }
 
 export const CreateCustomerForm = ({
@@ -105,7 +106,7 @@ export const CreateCustomerForm = ({
   const onSubmit = (values: CreateCustomerFormSchema) => {
     const finalValues = {
       ...values,
-      id: Math.random().toString(36).substr(2, 9), // TODO: Move this to backend - uuid
+      id: uuid4(), // TODO: Move this to backend - uuid
       image: values.image instanceof File ? values.image : "",
     };
     console.log("Customer: ", finalValues);
