@@ -38,7 +38,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { cn, generateQuoteNumber } from "@/lib/utils";
+import { cn, generateQuoteNumber, getMetaData } from "@/lib/utils";
 import { useCustomers } from "@/features/customers/api/use-customers";
 import { useEnquiries } from "@/features/enquiries/api/use-enquiries";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { useAddQuotation } from "../api/use-add-quotation";
 import uuid4 from "uuid4";
+import { MetaDataType } from "@/lib/types";
 
 type CreateQuotationFormSchema = z.infer<typeof createQuotationSchema>;
 
@@ -66,7 +67,11 @@ const CreateQuotationForm = () => {
     useEnquiries();
   const [customerSelectOpen, setCustomerSelectOpen] = useState(false);
   const [enquirySelectOpen, setEnquirySelectOpen] = useState(false);
+  const [uomSelectOpen, setUomSelectOpen] = useState(false);
+  const [currencySelectOpen, setCurrencySelectOpen] = useState(false);
   const { mutate: addQuotation, isPending } = useAddQuotation();
+  const uomMetaData = getMetaData(MetaDataType.UOM);
+  const currencyMetaData = getMetaData(MetaDataType.CURRENCY);
   const router = useRouter();
 
   const form = useForm<CreateQuotationFormSchema>({
@@ -497,15 +502,69 @@ const CreateQuotationForm = () => {
                       control={form.control}
                       name={`items.${index}.uom` as const}
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="flex flex-col bg-white">
                           <FormLabel>Unit Of Measurement</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Enter the UOM"
-                              type="text"
-                              className="w-full"
-                            />
+                            <Popover
+                              open={uomSelectOpen}
+                              onOpenChange={setUomSelectOpen}
+                            >
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    className={cn(
+                                      "w-full h-12 justify-between disabled:text-slate-800",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                  >
+                                    {field.value
+                                      ? uomMetaData?.find(
+                                          (uom) => uom.value === field.value
+                                        )?.label
+                                      : "Select UOM"}
+                                    <ChevronsUpDown className="opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="p-0">
+                                <Command>
+                                  <CommandInput
+                                    placeholder="Search UOM..."
+                                    className="h-9"
+                                  />
+                                  <CommandList>
+                                    <CommandEmpty>No UOM found.</CommandEmpty>
+                                    <CommandGroup>
+                                      {uomMetaData?.map(({ label, value }) => (
+                                        <CommandItem
+                                          value={value}
+                                          key={label}
+                                          onSelect={() => {
+                                            form.setValue(
+                                              `items.${index}.uom`,
+                                              value
+                                            );
+                                            setUomSelectOpen(false);
+                                          }}
+                                        >
+                                          {label}
+                                          <Check
+                                            className={cn(
+                                              "ml-auto",
+                                              value === field.value
+                                                ? "opacity-100"
+                                                : "opacity-0"
+                                            )}
+                                          />
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -517,15 +576,74 @@ const CreateQuotationForm = () => {
                       control={form.control}
                       name={`items.${index}.currency` as const}
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="flex flex-col bg-white">
                           <FormLabel>Currency</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Enter the Currency"
-                              type="text"
-                              className="w-full"
-                            />
+                            <Popover
+                              open={currencySelectOpen}
+                              onOpenChange={setCurrencySelectOpen}
+                            >
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    className={cn(
+                                      "w-full h-12 justify-between disabled:text-slate-800",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                  >
+                                    {field.value
+                                      ? currencyMetaData?.find(
+                                          (currency) =>
+                                            currency.value === field.value
+                                        )?.label
+                                      : "Select Currency"}
+                                    <ChevronsUpDown className="opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="p-0">
+                                <Command>
+                                  <CommandInput
+                                    placeholder="Search Currency..."
+                                    className="h-9"
+                                  />
+                                  <CommandList>
+                                    <CommandEmpty>
+                                      No Currency found.
+                                    </CommandEmpty>
+                                    <CommandGroup>
+                                      {currencyMetaData?.map(
+                                        ({ label, value }) => (
+                                          <CommandItem
+                                            value={value}
+                                            key={label}
+                                            onSelect={() => {
+                                              form.setValue(
+                                                `items.${index}.currency`,
+                                                value
+                                              );
+                                              setCurrencySelectOpen(false);
+                                            }}
+                                          >
+                                            {label}
+                                            <Check
+                                              className={cn(
+                                                "ml-auto",
+                                                value === field.value
+                                                  ? "opacity-100"
+                                                  : "opacity-0"
+                                              )}
+                                            />
+                                          </CommandItem>
+                                        )
+                                      )}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
                           </FormControl>
                           <FormMessage />
                         </FormItem>

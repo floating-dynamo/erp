@@ -36,3 +36,8 @@ export interface IApiService {
 
   getCountries: () => Promise<GetCountriesResponse>;
 }
+
+export enum MetaDataType {
+  UOM = "uom",
+  CURRENCY = "currency",
+}

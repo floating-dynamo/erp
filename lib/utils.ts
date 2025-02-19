@@ -4,6 +4,7 @@ import { Quotation } from "@/features/quotations/schemas";
 import { clsx, type ClassValue } from "clsx";
 import dayjs from "dayjs";
 import { twMerge } from "tailwind-merge";
+import { MetaDataType } from "./types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -189,4 +190,28 @@ export function formatDate(date: Date) {
 
 export function getDateDisplayFormat() {
   return "DD-MMM-YY";
+}
+
+export function getMetaData(
+  type: MetaDataType
+): { label: string; value: string }[] {
+  switch (type) {
+    case MetaDataType.UOM:
+      return [
+        { value: "Kg", label: "Kilograms (Kg)" },
+        { value: "g", label: "Grams (g)" },
+        { value: "L", label: "Litres (L)" },
+        { value: "mL", label: "Mili Litres (mL)" },
+        { value: "Dz", label: "Dozen (Dz)" },
+        { value: "m", label: "Meter (m)" },
+        { value: "mm", label: "Milimeter (mm)" },
+      ];
+    case MetaDataType.CURRENCY:
+      return [
+        { value: "INR", label: "Indian Rupees (INR)" },
+        { value: "USD", label: "US Dollars (USD)" },
+        { value: "GBP", label: "British Pound (GBP)" },
+        { value: "SGD", label: "Singapore Dollar (SGD)" },
+      ];
+  }
 }
