@@ -227,7 +227,7 @@ const CreateQuotationForm = () => {
                                 <CommandGroup>
                                   {customerList?.map(({ id, name }) => (
                                     <CommandItem
-                                      value={id}
+                                      value={name}
                                       key={id}
                                       onSelect={() => {
                                         form.setValue("customerId", id);
@@ -479,7 +479,9 @@ const CreateQuotationForm = () => {
                       name={`items.${index}.rate` as const}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Rate</FormLabel>
+                          <FormLabel>
+                            Rate <span className="text-orange-500">*</span>
+                          </FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -644,6 +646,26 @@ const CreateQuotationForm = () => {
                                 </Command>
                               </PopoverContent>
                             </Popover>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Material */}
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.materialConsideration` as const}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Material Consideration</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Enter the material considerations"
+                              type="text"
+                              className="w-full"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

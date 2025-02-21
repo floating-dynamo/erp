@@ -129,7 +129,7 @@ export const generateCsv = ({
           data.customerId,
           data.customerName,
           data.enquiryNumber,
-          formatDate(new Date(data.quotationDate)),
+          formatDate(new Date(data?.quotationDate || "")),
           data.quoteNumber,
           item.itemCode,
           item.itemDescription,
