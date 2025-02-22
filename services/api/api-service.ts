@@ -9,7 +9,7 @@ const apiService: IApiService = {
   // Customer Endpoints
   async getCustomers() {
     try {
-      const customers = await axiosInstance.get("/customers");
+      const customers = await axios.get("/api/customers");
       return customers.data;
     } catch (error) {
       console.error(error);
@@ -18,7 +18,7 @@ const apiService: IApiService = {
   },
   async addCustomer({ customer }) {
     try {
-      await axiosInstance.post("/customers", customer);
+      await axios.post("/api/customers", customer);
       return {
         message: "Customer added successfully",
         success: true,
@@ -33,7 +33,7 @@ const apiService: IApiService = {
   },
   async getCustomerById({ id }) {
     try {
-      const customer = await axiosInstance.get(`/customers/${id}`);
+      const customer = await axios.get(`/api/customers/${id}`);
       return customer.data;
     } catch (error) {
       console.error(error);
@@ -109,8 +109,9 @@ const apiService: IApiService = {
   },
   // Misc Endpoints
   async getCountries() {
+    console.log("GET COUNTRIES WAS CALLED");
     try {
-      const countries = await axiosInstance.get("/countries");
+      const countries = await axios.get("/api/countries");
       return countries.data;
     } catch (error) {
       console.error(error);

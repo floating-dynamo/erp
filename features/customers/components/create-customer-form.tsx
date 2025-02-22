@@ -44,7 +44,6 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import uuid4 from "uuid4";
 
 // Infer the form schema type
 type CreateCustomerFormSchema = z.infer<typeof createCustomerSchema>;
@@ -106,7 +105,6 @@ export const CreateCustomerForm = ({
   const onSubmit = (values: CreateCustomerFormSchema) => {
     const finalValues = {
       ...values,
-      id: uuid4(), // TODO: Move this to backend - uuid
       image: values.image instanceof File ? values.image : "",
     };
     console.log("Customer: ", finalValues);

@@ -47,7 +47,9 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
   const { toast } = useToast();
   const enquiryDetailsElementId = `enquiry-details-${enquiryId}`;
   const exportPdfFileName =
-    (enquiry?.customerName || "NA").split(" ").join("_") + "_Enquiry";
+    (enquiry?.customerName || "NA").split(" ").join("_") +
+    "_Enquiry_" +
+    enquiry?.enquiryNumber;
 
   if (isFetching) {
     return <Loader text="Loading enquiry details" />;

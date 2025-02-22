@@ -9,6 +9,7 @@ import {
   FolderIcon,
   FolderOpenIcon,
   HomeIcon,
+  SettingsIcon,
   UserIcon,
   UsersIcon,
 } from "lucide-react";
@@ -43,6 +44,12 @@ const routes = [
     href: "/my-company",
     icon: Building2Icon,
     activeIcon: Building2Icon,
+  },
+  {
+    label: "Settings",
+    href: "/settings",
+    icon: SettingsIcon,
+    activeIcon: SettingsIcon,
   },
 ];
 
