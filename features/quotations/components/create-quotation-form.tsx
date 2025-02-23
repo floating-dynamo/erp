@@ -66,8 +66,6 @@ const CreateQuotationForm = () => {
     useEnquiries();
   const [customerSelectOpen, setCustomerSelectOpen] = useState(false);
   const [enquirySelectOpen, setEnquirySelectOpen] = useState(false);
-  const [uomSelectOpen, setUomSelectOpen] = useState(false);
-  const [currencySelectOpen, setCurrencySelectOpen] = useState(false);
   const { mutate: addQuotation, isPending } = useAddQuotation();
   const uomMetaData = getMetaData(MetaDataType.UOM);
   const currencyMetaData = getMetaData(MetaDataType.CURRENCY);
@@ -505,10 +503,7 @@ const CreateQuotationForm = () => {
                         <FormItem className="flex flex-col bg-white">
                           <FormLabel>Unit Of Measurement</FormLabel>
                           <FormControl>
-                            <Popover
-                              open={uomSelectOpen}
-                              onOpenChange={setUomSelectOpen}
-                            >
+                            <Popover>
                               <PopoverTrigger asChild>
                                 <FormControl>
                                   <Button
@@ -546,7 +541,6 @@ const CreateQuotationForm = () => {
                                               `items.${index}.uom`,
                                               value
                                             );
-                                            setUomSelectOpen(false);
                                           }}
                                         >
                                           {label}
@@ -579,10 +573,7 @@ const CreateQuotationForm = () => {
                         <FormItem className="flex flex-col bg-white">
                           <FormLabel>Currency</FormLabel>
                           <FormControl>
-                            <Popover
-                              open={currencySelectOpen}
-                              onOpenChange={setCurrencySelectOpen}
-                            >
+                            <Popover>
                               <PopoverTrigger asChild>
                                 <FormControl>
                                   <Button
@@ -624,7 +615,6 @@ const CreateQuotationForm = () => {
                                                 `items.${index}.currency`,
                                                 value
                                               );
-                                              setCurrencySelectOpen(false);
                                             }}
                                           >
                                             {label}

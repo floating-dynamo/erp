@@ -141,7 +141,18 @@ const columns: ColumnDef<Quotation>[] = [
   },
   {
     accessorKey: "totalAmount",
-    header: "Total Amount",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="outline"
+          size={"sm"}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Total Amount
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       const totalAmount = row.getValue("totalAmount") as number;
       const currency = row.original.items[0].currency || "INR";
