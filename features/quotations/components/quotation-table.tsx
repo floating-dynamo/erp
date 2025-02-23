@@ -254,7 +254,7 @@ export default function QuotationsTable() {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  <p>No customers to view</p>
+                  <p>No Quotations to view</p>
                 </TableCell>
               </TableRow>
             )}

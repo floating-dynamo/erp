@@ -1,10 +1,6 @@
 import { IApiService } from "@/lib/types";
 import axios from "axios";
 
-const axiosInstance = axios.create({
-  baseURL: "api",
-});
-
 const apiService: IApiService = {
   // Customer Endpoints
   async getCustomers() {
@@ -42,7 +38,7 @@ const apiService: IApiService = {
   // Enquiry Endpoints
   async getEnquiries() {
     try {
-      const enquiries = await axiosInstance.get("/enquiries");
+      const enquiries = await axios.get("/api/enquiries");
       return enquiries.data;
     } catch (error) {
       console.error(error);
@@ -51,7 +47,7 @@ const apiService: IApiService = {
   },
   async addEnquiry({ enquiry }) {
     try {
-      await axiosInstance.post("/enquiries", enquiry);
+      await axios.post("/api/enquiries", enquiry);
       return {
         message: "Enquiry added successfully",
         success: true,
@@ -66,7 +62,7 @@ const apiService: IApiService = {
   },
   async getEnquiryById({ id }) {
     try {
-      const enquiry = await axiosInstance.get(`/enquiries/${id}`);
+      const enquiry = await axios.get(`/api/enquiries/${id}`);
       return enquiry.data;
     } catch (error) {
       console.error(error);
@@ -75,7 +71,7 @@ const apiService: IApiService = {
   // Quotation Endpoints
   async getQuotations() {
     try {
-      const quotations = await axiosInstance.get("/quotations");
+      const quotations = await axios.get("/api/quotations");
       return quotations.data;
     } catch (error) {
       console.error(error);
@@ -84,7 +80,7 @@ const apiService: IApiService = {
   },
   async addQuotation({ quotation }) {
     try {
-      const { data } = await axiosInstance.post("/quotations", quotation);
+      const { data } = await axios.post("/api/quotations", quotation);
       return {
         message: "Quotation added successfully",
         success: true,
@@ -101,7 +97,7 @@ const apiService: IApiService = {
   },
   async getQuotationById({ id }) {
     try {
-      const quotation = await axiosInstance.get(`/quotations/${id}`);
+      const quotation = await axios.get(`/api/quotations/${id}`);
       return quotation.data;
     } catch (error) {
       console.error(error);

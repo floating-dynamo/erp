@@ -45,7 +45,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { useAddQuotation } from "../api/use-add-quotation";
-import uuid4 from "uuid4";
 import { MetaDataType } from "@/lib/types";
 
 type CreateQuotationFormSchema = z.infer<typeof createQuotationSchema>;
@@ -136,7 +135,6 @@ const CreateQuotationForm = () => {
 
     const finalValues: Quotation = {
       ...values,
-      id: uuid4(), // TODO: Move this to backend - uuid
       totalAmount: values.items.reduce((acc, prev) => prev.amount + acc, 0),
       quoteNumber: generateQuoteNumber(
         new Date().toISOString(),

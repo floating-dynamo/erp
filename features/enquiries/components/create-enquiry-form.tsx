@@ -3,7 +3,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import uuid4 from "uuid4";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -100,7 +99,6 @@ export const CreateEnquiryForm = ({
   const onSubmit = (values: ZodCreateEnquirySchema) => {
     const finalValues = {
       ...values,
-      id: uuid4(), // TODO: Move this to backend - uuid
     };
     console.log("Customer: ", finalValues);
     addEnquiry(finalValues, {

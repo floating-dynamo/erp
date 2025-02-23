@@ -95,7 +95,9 @@ export const generateCsv = ({
         ]);
       });
 
-      fileName = `Enquiry_${data.customerName?.replace(/\s/g, "_")}.csv`;
+      fileName = `${data.customerName?.replace(/\s/g, "_")}_Enquiry_${
+        data.enquiryNumber
+      }.csv`;
       break;
     }
 

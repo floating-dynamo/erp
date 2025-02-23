@@ -17,7 +17,7 @@ export const useAddQuotation = () => {
         title: "Quotation created",
         description: `The quotation has been created successfully - ${data?.quoteNumber}`,
       });
-      queryClient.invalidateQueries({ queryKey: ["quotations"] });
+      queryClient.invalidateQueries({ queryKey: ["quotations", "enquiries"] });
     },
     onError: (err) => {
       toast({
