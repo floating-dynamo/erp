@@ -36,9 +36,13 @@ const apiService: IApiService = {
     }
   },
   // Enquiry Endpoints
-  async getEnquiries() {
+  async getEnquiries({ customerId }) {
     try {
-      const enquiries = await axios.get("/api/enquiries");
+      const enquiries = await axios.get("/api/enquiries", {
+        params: {
+          customerId,
+        },
+      });
       return enquiries.data;
     } catch (error) {
       console.error(error);

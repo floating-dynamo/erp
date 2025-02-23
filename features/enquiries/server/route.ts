@@ -8,7 +8,15 @@ const app = new Hono()
   .get("/", async (c) => {
     try {
       await connectDB();
-      const enquiries = await EnquiryModel.find();
+      const customerId = c.req.query("customerId");
+      let enquiries;
+
+      if (customerId) {
+        enquiries = await EnquiryModel.find({ customerId });
+      } else {
+        enquiries = await EnquiryModel.find();
+      }
+
       return c.json({ enquiries });
     } catch (error) {
       console.log(error);

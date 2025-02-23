@@ -16,7 +16,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
-import { createQuotationSchema, Quotation } from "../schemas";
+import { createQuotationSchema } from "../schemas";
 import {
   Popover,
   PopoverContent,
@@ -38,7 +38,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { cn, generateQuoteNumber, getMetaData } from "@/lib/utils";
+import { cn, getMetaData } from "@/lib/utils";
 import { useCustomers } from "@/features/customers/api/use-customers";
 import { useEnquiries } from "@/features/enquiries/api/use-enquiries";
 import { Input } from "@/components/ui/input";
@@ -51,10 +51,13 @@ type CreateQuotationFormSchema = z.infer<typeof createQuotationSchema>;
 
 const CreateQuotationForm = () => {
   const searchParams = useSearchParams();
-  const enquiryId = searchParams.get("enquiry") || "";
+  const enquiryIdInitialValue = searchParams.get("enquiry") || "";
+  const [enquiryId, setEnquiryId] = useState<string | undefined>(
+    enquiryIdInitialValue
+  );
 
   const { data: enquiry, isFetching: isFetchingEnquiry } = useGetEnquiryDetails(
-    { id: enquiryId }
+    { id: enquiryId ?? "" }
   );
   const { data: customer, isFetching: isFetchingCustomer } =
     useGetCustomerDetails({
@@ -62,8 +65,12 @@ const CreateQuotationForm = () => {
     });
   const { data: customerList, isFetching: isFetchingCustomerList } =
     useCustomers();
-  const { data: enquiryList, isFetching: isFetchingEnquiryList } =
-    useEnquiries();
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>();
+  const {
+    data: enquiryList,
+    isFetching: isFetchingEnquiryList,
+    refetch: refetchEnquiry,
+  } = useEnquiries({ customerId: selectedCustomerId });
   const [customerSelectOpen, setCustomerSelectOpen] = useState(false);
   const [enquirySelectOpen, setEnquirySelectOpen] = useState(false);
   const { mutate: addQuotation, isPending } = useAddQuotation();
@@ -115,6 +122,12 @@ const CreateQuotationForm = () => {
     });
   }, [enquiry, form]);
 
+  useEffect(() => {
+    if (selectedCustomerId) {
+      refetchEnquiry();
+    }
+  }, [selectedCustomerId, refetchEnquiry]);
+
   if (
     isFetchingEnquiry ||
     isFetchingCustomer ||
@@ -131,17 +144,8 @@ const CreateQuotationForm = () => {
       amount: item.rate * item.quantity,
     }));
 
-    const finalValues: Quotation = {
-      ...values,
-      totalAmount: values.items.reduce((acc, prev) => prev.amount + acc, 0),
-      quoteNumber: generateQuoteNumber(
-        new Date().toISOString(),
-        values?.enquiryNumber || ""
-      ),
-    };
-
-    console.log("Quotation: ", finalValues);
-    addQuotation(finalValues, {
+    console.log("Quotation: ", values);
+    addQuotation(values, {
       onSuccess: () => {
         form.reset();
         router.push("/quotations");
@@ -156,7 +160,7 @@ const CreateQuotationForm = () => {
           <CardTitle className="text-xl font-bold flex gap-7 items-center">
             Add a new quotation
           </CardTitle>
-          {enquiry && (
+          {enquiryIdInitialValue && (
             <p className="text-sm text-muted-foreground">
               Creating Quotation for Enquiry -{" "}
               <span className="font-semibold">
@@ -197,7 +201,7 @@ const CreateQuotationForm = () => {
                                   "sm:w-[300px] w-full justify-between disabled:text-slate-800",
                                   !field.value && "text-muted-foreground"
                                 )}
-                                disabled={!!customer}
+                                disabled={!!enquiryIdInitialValue}
                               >
                                 {customer
                                   ? customer.name
@@ -206,7 +210,7 @@ const CreateQuotationForm = () => {
                                       ({ id }) => id === field.value
                                     )?.name
                                   : "Select Customer"}
-                                {!customer && (
+                                {!enquiryIdInitialValue && (
                                   <ChevronsUpDown className="opacity-50" />
                                 )}
                               </Button>
@@ -228,7 +232,9 @@ const CreateQuotationForm = () => {
                                       onSelect={() => {
                                         form.setValue("customerId", id);
                                         form.setValue("customerName", name);
+                                        form.setValue("enquiryNumber", "");
                                         setCustomerSelectOpen(false);
+                                        setSelectedCustomerId(id);
                                       }}
                                     >
                                       {name}
@@ -277,7 +283,7 @@ const CreateQuotationForm = () => {
                                   "sm:w-[300px] w-full justify-between disabled:text-slate-800",
                                   !field.value && "text-muted-foreground"
                                 )}
-                                disabled={!!enquiry}
+                                disabled={!!enquiryIdInitialValue}
                               >
                                 {enquiry
                                   ? enquiry.enquiryNumber
@@ -287,7 +293,7 @@ const CreateQuotationForm = () => {
                                         enquiryNumber === field.value
                                     )?.enquiryNumber
                                   : "Select Enquiry Number"}
-                                {!customer && (
+                                {!enquiryIdInitialValue && (
                                   <ChevronsUpDown className="opacity-50" />
                                 )}
                               </Button>
@@ -302,7 +308,7 @@ const CreateQuotationForm = () => {
                               <CommandList>
                                 <CommandEmpty>No Enquiry found.</CommandEmpty>
                                 <CommandGroup>
-                                  {enquiryList?.map(({ enquiryNumber }) => (
+                                  {enquiryList?.map(({ enquiryNumber, id }) => (
                                     <CommandItem
                                       value={enquiryNumber}
                                       key={enquiryNumber}
@@ -312,6 +318,7 @@ const CreateQuotationForm = () => {
                                           enquiryNumber
                                         );
                                         setEnquirySelectOpen(false);
+                                        setEnquiryId(id);
                                       }}
                                     >
                                       {enquiryNumber}

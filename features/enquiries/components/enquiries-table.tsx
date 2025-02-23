@@ -16,6 +16,7 @@ import {
 import {
   ArrowUpDown,
   CheckIcon,
+  CirclePlusIcon,
   CopyIcon,
   EyeIcon,
   MoreHorizontal,
@@ -76,6 +77,12 @@ const ActionsCell = ({ enquiry }: { enquiry: Enquiry }) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuItem
+          className="cursor-pointer text-xs sm:text-sm"
+          onClick={() => redirect(`/quotations/create?enquiry=${enquiry?.id}`)}
+        >
+          <CirclePlusIcon className="size-4" /> Create Quotation
+        </DropdownMenuItem>
         <DropdownMenuItem
           className="cursor-pointer"
           onClick={() => redirect(`enquiries/${enquiry?.id}`)}
@@ -206,7 +213,7 @@ const EnquiriesTable: React.FC = () => {
       customerId: false,
     });
   const [rowSelection, setRowSelection] = React.useState({});
-  const { data: enquiries, isLoading } = useEnquiries();
+  const { data: enquiries, isLoading } = useEnquiries({});
 
   const table = useReactTable({
     data: enquiries!,

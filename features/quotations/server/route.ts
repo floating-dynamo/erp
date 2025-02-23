@@ -4,6 +4,7 @@ import QuotationModel from "../model";
 import { createQuotationSchema } from "../schemas";
 import uuid4 from "uuid4";
 import EnquiryModel from "@/features/enquiries/model";
+import { generateQuoteNumber } from "@/lib/utils";
 
 const app = new Hono()
   .get("/", async (c) => {
@@ -22,6 +23,15 @@ const app = new Hono()
 
       const parsedData = createQuotationSchema.parse(body);
       parsedData.id = uuid4();
+      const quotations = await QuotationModel.find();
+      parsedData.quoteNumber = generateQuoteNumber(
+        new Date().toISOString(),
+        `${quotations.length + 1}`
+      );
+      parsedData.totalAmount = parsedData.items.reduce(
+        (acc, prev) => prev.amount + acc,
+        0
+      );
 
       // Fetch the enquiry and set isQuotationCreated to true
       const enquiry = await EnquiryModel.findOne({
