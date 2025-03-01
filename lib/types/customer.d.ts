@@ -30,3 +30,8 @@ export interface AddCustomerResponse {
   message: string;
   success: boolean;
 }
+
+export interface EditPromiseResponse {
+  message: string;
+  success: boolean;
+}

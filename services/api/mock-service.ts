@@ -1,11 +1,11 @@
-import { IApiService } from "@/lib/types";
-import { CUSTOMERS_MOCK_DATA } from "./mocks/customers";
-import { Customer } from "@/features/customers/schemas";
-import { Enquiry } from "@/features/enquiries/schemas";
-import { ENQUIRIES_MOCK_DATA } from "./mocks/enquiries";
-import axios from "axios";
-import { Quotation } from "@/features/quotations/schemas";
-import QUOTATIONS_MOCK_DATA from "./mocks/quotations";
+import { IApiService } from '@/lib/types';
+import { CUSTOMERS_MOCK_DATA } from './mocks/customers';
+import { Customer } from '@/features/customers/schemas';
+import { Enquiry } from '@/features/enquiries/schemas';
+import { ENQUIRIES_MOCK_DATA } from './mocks/enquiries';
+import axios from 'axios';
+import { Quotation } from '@/features/quotations/schemas';
+import QUOTATIONS_MOCK_DATA from './mocks/quotations';
 
 const customers: Customer[] = CUSTOMERS_MOCK_DATA;
 const enquiries: Enquiry[] = ENQUIRIES_MOCK_DATA;
@@ -26,7 +26,7 @@ const mockService: IApiService = {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
-          message: "Customer added successfully",
+          message: 'Customer added successfully',
           success: true,
         });
       }, 1000);
@@ -37,6 +37,22 @@ const mockService: IApiService = {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(customer);
+      }, 1000);
+    });
+  },
+  editCustomer({ id, data }) {
+    const customer = customers.find((customer) => customer.id === id) || null;
+    const updatedCustomer = { ...customer, ...data };
+    const index = customers.findIndex((customer) => customer.id === id);
+    if (index !== -1) {
+      customers[index] = updatedCustomer;
+    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          message: 'Customer details edited',
+          success: true,
+        });
       }, 1000);
     });
   },
@@ -54,7 +70,7 @@ const mockService: IApiService = {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
-          message: "Enquiry added successfully",
+          message: 'Enquiry added successfully',
           success: true,
         });
       }, 1000);
@@ -70,7 +86,7 @@ const mockService: IApiService = {
   },
   async getCountries() {
     try {
-      const countries = await axios.get("/api/countries");
+      const countries = await axios.get('/api/countries');
       return countries.data;
     } catch (error) {
       console.error(error);
@@ -99,9 +115,9 @@ const mockService: IApiService = {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
-          message: "Quotation added successfully",
+          message: 'Quotation added successfully',
           success: true,
-          quoteNumber: quotation.quoteNumber || "",
+          quoteNumber: quotation.quoteNumber || '',
         });
       }, 1000);
     });

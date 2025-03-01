@@ -1,10 +1,14 @@
-import { Customer } from "@/features/customers/schemas";
-import { AddCustomerResponse, GetCusomtersResponse } from "./types/customer";
-import { AddEnquiryResponse, GetEnquiriesResponse } from "./types/requirement";
-import { Enquiry } from "@/features/enquiries/schemas";
-import { GetCountriesResponse } from "./types/index";
-import { AddQuotationResponse, GetQuotationsResponse } from "./types/quotation";
-import { Quotation } from "@/features/quotations/schemas";
+import { Customer } from '@/features/customers/schemas';
+import {
+  AddCustomerResponse,
+  EditPromiseResponse,
+  GetCusomtersResponse,
+} from './types/customer';
+import { AddEnquiryResponse, GetEnquiriesResponse } from './types/requirement';
+import { Enquiry } from '@/features/enquiries/schemas';
+import { GetCountriesResponse } from './types/index';
+import { AddQuotationResponse, GetQuotationsResponse } from './types/quotation';
+import { Quotation } from '@/features/quotations/schemas';
 
 export interface IApiService {
   // Customer Endpoints
@@ -15,6 +19,13 @@ export interface IApiService {
     customer: Customer;
   }) => Promise<AddCustomerResponse>;
   getCustomerById: ({ id }: { id: string }) => Promise<Customer | null>;
+  editCustomer: ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: Customer;
+  }) => Promise<EditPromiseResponse>;
 
   // Enquiry Endpoints
   getEnquiries: ({
@@ -42,6 +53,6 @@ export interface IApiService {
 }
 
 export enum MetaDataType {
-  UOM = "uom",
-  CURRENCY = "currency",
+  UOM = 'uom',
+  CURRENCY = 'currency',
 }

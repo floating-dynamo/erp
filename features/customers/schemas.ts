@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // Define the schema for CustomerAddress
 export const customerAddressSchema = z.object({
@@ -12,7 +12,7 @@ export const customerAddressSchema = z.object({
 
 // Define the schema for CustomerPOC
 export const customerPOCSchema = z.object({
-  name: z.string().trim().min(1, "Required"),
+  name: z.string().trim().min(1, 'Required'),
   mobile: z.number().optional(),
   email: z.string().email(),
 });
@@ -20,7 +20,7 @@ export const customerPOCSchema = z.object({
 // Define the schema for Customer
 export const createCustomerSchema = z.object({
   id: z.string().optional(),
-  name: z.string().trim().min(1, "Required"),
+  name: z.string().trim().min(1, 'Required'),
   address: customerAddressSchema.optional(),
   contactDetails: z.string().optional(),
   poc: z.array(customerPOCSchema).optional(),
@@ -30,9 +30,11 @@ export const createCustomerSchema = z.object({
   image: z
     .union([
       z.instanceof(File),
-      z.string().transform((value) => (value === "" ? undefined : value)),
+      z.string().transform((value) => (value === '' ? undefined : value)),
     ])
     .optional(),
 });
+
+export const updateCustomerSchema = createCustomerSchema.partial();
 
 export type Customer = z.infer<typeof createCustomerSchema>;

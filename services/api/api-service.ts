@@ -1,11 +1,11 @@
-import { IApiService } from "@/lib/types";
-import axios from "axios";
+import { IApiService } from '@/lib/types';
+import axios from 'axios';
 
 const apiService: IApiService = {
   // Customer Endpoints
   async getCustomers() {
     try {
-      const customers = await axios.get("/api/customers");
+      const customers = await axios.get('/api/customers');
       return customers.data;
     } catch (error) {
       console.error(error);
@@ -14,17 +14,14 @@ const apiService: IApiService = {
   },
   async addCustomer({ customer }) {
     try {
-      await axios.post("/api/customers", customer);
+      await axios.post('/api/customers', customer);
       return {
-        message: "Customer added successfully",
+        message: 'Customer added successfully',
         success: true,
       };
     } catch (error) {
       console.error(error);
-      return {
-        message: "Something went wrong",
-        success: false,
-      };
+      throw new Error(`Error adding new customer ${(error as Error).message}`);
     }
   },
   async getCustomerById({ id }) {
@@ -33,12 +30,26 @@ const apiService: IApiService = {
       return customer.data;
     } catch (error) {
       console.error(error);
+      throw new Error(
+        `Error fetching customer details ${(error as Error).message}`
+      );
+    }
+  },
+  async editCustomer({ id, data }) {
+    try {
+      const response = await axios.patch(`/api/customers/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(
+        `Error editing customer details ${(error as Error).message}`
+      );
     }
   },
   // Enquiry Endpoints
   async getEnquiries({ customerId }) {
     try {
-      const enquiries = await axios.get("/api/enquiries", {
+      const enquiries = await axios.get('/api/enquiries', {
         params: {
           customerId,
         },
@@ -46,22 +57,19 @@ const apiService: IApiService = {
       return enquiries.data;
     } catch (error) {
       console.error(error);
-      return null;
+      throw new Error(`Error fetching customers ${(error as Error).message}`);
     }
   },
   async addEnquiry({ enquiry }) {
     try {
-      await axios.post("/api/enquiries", enquiry);
+      await axios.post('/api/enquiries', enquiry);
       return {
-        message: "Enquiry added successfully",
+        message: 'Enquiry added successfully',
         success: true,
       };
     } catch (error) {
       console.error(error);
-      return {
-        message: "Something went wrong",
-        success: false,
-      };
+      throw new Error(`Error adding new eqnuiry ${(error as Error).message}`);
     }
   },
   async getEnquiryById({ id }) {
@@ -75,7 +83,7 @@ const apiService: IApiService = {
   // Quotation Endpoints
   async getQuotations() {
     try {
-      const quotations = await axios.get("/api/quotations");
+      const quotations = await axios.get('/api/quotations');
       return quotations.data;
     } catch (error) {
       console.error(error);
@@ -84,19 +92,15 @@ const apiService: IApiService = {
   },
   async addQuotation({ quotation }) {
     try {
-      const { data } = await axios.post("/api/quotations", quotation);
+      const { data } = await axios.post('/api/quotations', quotation);
       return {
-        message: "Quotation added successfully",
+        message: 'Quotation added successfully',
         success: true,
         quoteNumber: data?.quoteNumber,
       };
     } catch (error) {
       console.error(error);
-      return {
-        message: "Something went wrong",
-        success: false,
-        quoteNumber: "",
-      };
+      throw new Error(`Error adding new enquiry ${(error as Error).message}`);
     }
   },
   async getQuotationById({ id }) {
@@ -109,9 +113,9 @@ const apiService: IApiService = {
   },
   // Misc Endpoints
   async getCountries() {
-    console.log("GET COUNTRIES WAS CALLED");
+    console.log('GET COUNTRIES WAS CALLED');
     try {
-      const countries = await axios.get("/api/countries");
+      const countries = await axios.get('/api/countries');
       return countries.data;
     } catch (error) {
       console.error(error);
