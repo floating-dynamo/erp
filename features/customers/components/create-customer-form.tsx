@@ -44,6 +44,8 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import { useGetCustomerDetails } from '../api/use-get-customer-details';
+import { useEditCustomer } from '../api/use-edit-customer';
 
 // Infer the form schema type
 type CreateCustomerFormSchema = z.infer<typeof createCustomerSchema>;
@@ -51,18 +53,28 @@ type CreateCustomerFormSchema = z.infer<typeof createCustomerSchema>;
 interface CreateCustomerFormProps {
   onCancel?: () => void;
   showBackButton?: boolean;
+  customerId?: string;
 }
 
 export const CreateCustomerForm = ({
   onCancel,
+  customerId,
   showBackButton = false,
 }: CreateCustomerFormProps) => {
-  const { mutate: addCustomer, isPending } = useAddCustomer();
+  const { data: customerData, isFetching: isFetchingCustomer } =
+    useGetCustomerDetails({ id: customerId || '' });
+  const { mutate: addCustomer, isPending: isPendingAddCustomer } =
+    useAddCustomer();
+  const { mutate: editCustomer, isPending: isPendingEditCustomer } =
+    useEditCustomer();
   const { data: countriesData, isLoading: isFetchingCountries } =
     useCountries();
   const router = useRouter();
   const [countrySelectOpen, setCountrySelectOpen] = useState(false);
   const [stateSelectOpen, setStateSelectOpen] = useState(false);
+  const isEdit = !!customerId;
+  const isPending = isPendingAddCustomer || isPendingEditCustomer;
+
   const form = useForm<CreateCustomerFormSchema>({
     resolver: zodResolver(createCustomerSchema),
     defaultValues: {
@@ -81,6 +93,12 @@ export const CreateCustomerForm = ({
   });
   const inputRef = useRef<HTMLInputElement>(null);
   const [countryStates, setCountryStates] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (isEdit && customerData) {
+      form.reset(customerData);
+    }
+  }, [isEdit, customerData, form]);
 
   useEffect(() => {
     if (countriesData) {
@@ -110,12 +128,25 @@ export const CreateCustomerForm = ({
       image: values.image instanceof File ? values.image : '',
     };
     console.log('Customer: ', finalValues);
-    addCustomer(finalValues, {
-      onSuccess: () => {
-        form.reset();
-        router.push('/customers');
-      },
-    });
+    if (isEdit) {
+      console.log('Editing Customer Details...');
+      editCustomer(
+        { id: customerId, customer: finalValues },
+        {
+          onSuccess: () => {
+            form.reset();
+            router.push(`/customers/${customerId}`);
+          },
+        }
+      );
+    } else {
+      addCustomer(finalValues, {
+        onSuccess: () => {
+          form.reset();
+          router.push('/customers');
+        },
+      });
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,7 +156,7 @@ export const CreateCustomerForm = ({
     }
   };
 
-  if (isFetchingCountries) {
+  if (isFetchingCountries || isFetchingCustomer) {
     return <Loader />;
   }
 
@@ -144,7 +175,7 @@ export const CreateCustomerForm = ({
               <ArrowLeft className="size-4" />
             </Button>
           )}
-          Add a new customer
+          {isEdit ? 'Edit the customer details' : 'Add a new customer'}
         </CardTitle>
       </CardHeader>
       <div className="px-7">
@@ -212,7 +243,7 @@ export const CreateCustomerForm = ({
                   )
               )}
 
-              <div className='flex items-start gap-8'>
+              <div className="flex items-start gap-8">
                 {/* Address - Country */}
                 <FormField
                   control={form.control}
@@ -583,7 +614,7 @@ export const CreateCustomerForm = ({
             {/* Submit Button */}
             <div className="flex items-center lg:justify-end justify-center w-full">
               <Button type="submit" disabled={isPending}>
-                Submit
+                {isEdit ? 'Update' : 'Submit'}
               </Button>
             </div>
           </form>

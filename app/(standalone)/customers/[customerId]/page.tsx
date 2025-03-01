@@ -1,17 +1,17 @@
-"use client";
-import Loader from "@/components/loader";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+'use client';
+import Loader from '@/components/loader';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useGetCustomerDetails } from "@/features/customers/api/use-get-customer-details";
-import { useToast } from "@/hooks/use-toast";
-import { cn, generateCsv, generatePDF } from "@/lib/utils";
+} from '@/components/ui/tooltip';
+import { useGetCustomerDetails } from '@/features/customers/api/use-get-customer-details';
+import { useToast } from '@/hooks/use-toast';
+import { cn, generateCsv, generatePDF } from '@/lib/utils';
 import {
   ArrowLeftIcon,
   Building2Icon,
@@ -24,16 +24,16 @@ import {
   PhoneIcon,
   UserIcon,
   UserRoundX,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { redirect } from "next/navigation";
-import { use } from "react";
+} from '@/components/ui/dropdown-menu';
+import { redirect } from 'next/navigation';
+import { use } from 'react';
 
 interface CustomerDetailsPageProps {
   params: Promise<{ customerId: string }>;
@@ -48,7 +48,7 @@ export default function CustomerDetailsPage({
   });
   const { toast } = useToast();
   const customerDetailsElementId = `customer-details-${customerId}`;
-  const exportPdfFileName = (customer?.name || "NA").split(" ").join("_");
+  const exportPdfFileName = (customer?.name || 'NA').split(' ').join('_');
 
   if (isFetching) {
     return <Loader text="Loading customer details" />;
@@ -59,15 +59,19 @@ export default function CustomerDetailsPage({
   }
 
   function copyCustomerId() {
-    navigator.clipboard.writeText(customer?.id || "");
+    navigator.clipboard.writeText(customer?.id || '');
     toast({
-      title: "Customer ID Copied",
+      title: 'Customer ID Copied',
       description: customer?.id,
     });
   }
 
   function backToCustomersPage() {
-    redirect("/customers");
+    redirect('/customers');
+  }
+
+  function navigateToEditCustomer() {
+    redirect(`/customers/edit/${customer?.id}`);
   }
 
   return (
@@ -115,7 +119,10 @@ export default function CustomerDetailsPage({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm">
+            <DropdownMenuItem
+              onClick={navigateToEditCustomer}
+              className="cursor-pointer text-xs sm:text-sm"
+            >
               <PenIcon className="size-4" /> Edit Customer
             </DropdownMenuItem>
             <Separator className="my-2" />
@@ -130,7 +137,7 @@ export default function CustomerDetailsPage({
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer text-xs sm:text-sm"
-              onClick={() => generateCsv({ data: customer, type: "Customer" })}
+              onClick={() => generateCsv({ data: customer, type: 'Customer' })}
             >
               <DownloadIcon className="size-3" /> Save (.csv)
             </DropdownMenuItem>
@@ -139,9 +146,9 @@ export default function CustomerDetailsPage({
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         <CompanyDetailsCard
-          contactDetails={customer?.contactDetails || "NA"}
-          gstNumber={customer?.gstNumber || "NA"}
-          vendorId={customer?.vendorId || "NA"}
+          contactDetails={customer?.contactDetails || 'NA'}
+          gstNumber={customer?.gstNumber || 'NA'}
+          vendorId={customer?.vendorId || 'NA'}
         />
         <AddressDetailsCard {...customer?.address} />
         <PocDetailsCard poc={customer?.poc || []} />
@@ -188,11 +195,11 @@ const CompanyDetailsCard = ({
 };
 
 const AddressDetailsCard = ({
-  address1 = "",
-  address2 = "",
-  city = "",
-  state = "",
-  country = "",
+  address1 = '',
+  address2 = '',
+  city = '',
+  state = '',
+  country = '',
   pincode,
   className,
 }: {
@@ -293,7 +300,7 @@ const PocDetailsCard = ({
 
 const CustomerNotFound = () => {
   function backToCustomerListing() {
-    redirect("/customers");
+    redirect('/customers');
   }
 
   return (
@@ -304,7 +311,7 @@ const CustomerNotFound = () => {
       </p>
       <Button
         onClick={backToCustomerListing}
-        variant={"outline"}
+        variant={'outline'}
         className="md:text-lg"
       >
         <ArrowLeftIcon className="size-4" />

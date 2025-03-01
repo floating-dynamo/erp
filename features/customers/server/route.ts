@@ -3,6 +3,8 @@ import { Hono } from 'hono';
 import CustomerModel from '../model';
 import { createCustomerSchema, updateCustomerSchema } from '../schemas';
 import uuid4 from 'uuid4';
+import EnquiryModel from '@/features/enquiries/model';
+import QuotationModel from '@/features/quotations/model';
 
 const app = new Hono()
   .get('/', async (c) => {
@@ -63,8 +65,8 @@ const app = new Hono()
 
       const parsedData = updateCustomerSchema.parse(body);
 
-      const updatedCustomer = await CustomerModel.findByIdAndUpdate(
-        id,
+      const updatedCustomer = await CustomerModel.findOneAndUpdate(
+        { id },
         parsedData,
         { new: true }
       );
@@ -72,6 +74,16 @@ const app = new Hono()
       if (!updatedCustomer) {
         return c.json({ error: 'Customer not found' }, 404);
       }
+
+      await EnquiryModel.findOneAndUpdate(
+        { customerId: id },
+        { customerName: updatedCustomer.name }
+      );
+
+      await QuotationModel.findOneAndUpdate(
+        { customerId: id },
+        { customerName: updatedCustomer.name }
+      );
 
       return c.json(
         {

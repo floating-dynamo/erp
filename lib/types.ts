@@ -1,7 +1,7 @@
 import { Customer } from '@/features/customers/schemas';
 import {
   AddCustomerResponse,
-  EditPromiseResponse,
+  EditCustomerResponse,
   GetCusomtersResponse,
 } from './types/customer';
 import { AddEnquiryResponse, GetEnquiriesResponse } from './types/requirement';
@@ -25,7 +25,7 @@ export interface IApiService {
   }: {
     id: string;
     data: Customer;
-  }) => Promise<EditPromiseResponse>;
+  }) => Promise<EditCustomerResponse>;
 
   // Enquiry Endpoints
   getEnquiries: ({
