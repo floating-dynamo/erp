@@ -1,10 +1,10 @@
-"use client";
-import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { createCustomerSchema, customerAddressSchema } from "../schemas";
-import { z } from "zod";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+'use client';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { createCustomerSchema, customerAddressSchema } from '../schemas';
+import { z } from 'zod';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormField,
@@ -12,9 +12,9 @@ import {
   FormLabel,
   FormMessage,
   FormControl,
-} from "@/components/ui/form";
-import { Separator } from "@/components/ui/separator";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+} from '@/components/ui/form';
+import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   ArrowLeft,
   Check,
@@ -22,20 +22,20 @@ import {
   ImageIcon,
   PlusCircle,
   TrashIcon,
-} from "lucide-react";
-import { useAddCustomer } from "../api/use-add-customer";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useRef } from "react";
-import { useCountries } from "../api/use-countries";
-import Loader from "@/components/loader";
+} from 'lucide-react';
+import { useAddCustomer } from '../api/use-add-customer';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useEffect, useRef, useState } from 'react';
+import { useCountries } from '../api/use-countries';
+import Loader from '@/components/loader';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import {
   Command,
   CommandEmpty,
@@ -43,7 +43,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
+} from '@/components/ui/command';
 
 // Infer the form schema type
 type CreateCustomerFormSchema = z.infer<typeof createCustomerSchema>;
@@ -61,37 +61,39 @@ export const CreateCustomerForm = ({
   const { data: countriesData, isLoading: isFetchingCountries } =
     useCountries();
   const router = useRouter();
+  const [countrySelectOpen, setCountrySelectOpen] = useState(false);
+  const [stateSelectOpen, setStateSelectOpen] = useState(false);
   const form = useForm<CreateCustomerFormSchema>({
     resolver: zodResolver(createCustomerSchema),
     defaultValues: {
-      name: "",
+      name: '',
       address: {
-        address1: "",
-        city: "",
-        state: "",
-        country: "",
+        address1: '',
+        city: '',
+        state: '',
+        country: '',
       },
-      gstNumber: "",
-      vendorId: "",
-      customerType: "",
+      gstNumber: '',
+      vendorId: '',
+      customerType: '',
       poc: [],
     },
   });
   const inputRef = useRef<HTMLInputElement>(null);
-  // TODO: States as combobox
-  // const [countryStates, setCountryStates] = useState<string[]>([]);
+  const [countryStates, setCountryStates] = useState<string[]>([]);
 
-  // useEffect(() => {
-  //   if (countriesData) {
-  //     const currentCountry = form.getValues("address.country");
-  //     console.log("Current Country ", currentCountry);
-  //     const cities =
-  //       countriesData?.data?.find(
-  //         (country) => country.country === currentCountry
-  //       )?.cities || [];
-  //     setCountryStates(cities);
-  //   }
-  // }, [countriesData]);
+  useEffect(() => {
+    if (countriesData) {
+      const currentCountry = form.getValues('address.country');
+      console.log('Current Country ', currentCountry);
+      const cities =
+        countriesData?.data?.find(
+          (country) => country.country === currentCountry
+        )?.cities || [];
+      setCountryStates(cities);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countriesData, form.watch('address.country')]);
 
   const {
     fields: pocFields,
@@ -99,19 +101,19 @@ export const CreateCustomerForm = ({
     remove: removePOC,
   } = useFieldArray({
     control: form.control,
-    name: "poc",
+    name: 'poc',
   });
 
   const onSubmit = (values: CreateCustomerFormSchema) => {
     const finalValues = {
       ...values,
-      image: values.image instanceof File ? values.image : "",
+      image: values.image instanceof File ? values.image : '',
     };
-    console.log("Customer: ", finalValues);
+    console.log('Customer: ', finalValues);
     addCustomer(finalValues, {
       onSuccess: () => {
         form.reset();
-        router.push("/customers");
+        router.push('/customers');
       },
     });
   };
@@ -119,7 +121,7 @@ export const CreateCustomerForm = ({
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      form.setValue("image", file);
+      form.setValue('image', file);
     }
   };
 
@@ -177,8 +179,8 @@ export const CreateCustomerForm = ({
                 >
               ).map(
                 (key) =>
-                  // key !== "state" &&
-                  key !== "country" && (
+                  key !== 'state' &&
+                  key !== 'country' && (
                     <FormField
                       key={key}
                       control={form.control}
@@ -193,14 +195,14 @@ export const CreateCustomerForm = ({
                               {...field}
                               placeholder={`Enter ${key}`}
                               onChange={(e) => {
-                                if (key === "pincode") {
-                                  field.onChange(Number(e.target.value) || "");
+                                if (key === 'pincode') {
+                                  field.onChange(Number(e.target.value) || '');
                                 } else {
                                   field.onChange(e.target.value);
                                 }
                               }}
-                              value={field.value ?? ""}
-                              type={key === "pincode" ? "number" : "text"}
+                              value={field.value ?? ''}
+                              type={key === 'pincode' ? 'number' : 'text'}
                             />
                           </FormControl>
                           <FormMessage />
@@ -209,141 +211,154 @@ export const CreateCustomerForm = ({
                     />
                   )
               )}
-              {/* Address - State */}
-              {/* <FormField
-                control={form.control}
-                name="address.state"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>State</FormLabel>
-                    <FormControl>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              className={cn(
-                                "w-full justify-between",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value
-                                ? countryStates?.find(
-                                    (state) => state === field.value
-                                  )
-                                : "Select State"}
-                              <ChevronsUpDown className="opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="sm:w-[300px] w-[200px] p-0">
-                          <Command>
-                            <CommandInput
-                              placeholder="Search State..."
-                              className="h-9"
-                            />
-                            <CommandList>
-                              <CommandEmpty>No State found.</CommandEmpty>
-                              <CommandGroup>
-                                {countryStates?.map((state) => (
-                                  <CommandItem
-                                    value={state}
-                                    key={state}
-                                    onSelect={() => {
-                                      form.setValue("address.state", state);
-                                    }}
-                                  >
-                                    {state}
-                                    <Check
-                                      className={cn(
-                                        "ml-auto",
-                                        state === field.value
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              /> */}
-              {/* Address - Country */}
-              <FormField
-                control={form.control}
-                name="address.country"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Country</FormLabel>
-                    <FormControl>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              className={cn(
-                                "w-full justify-between",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value
-                                ? countriesData?.data?.find(
-                                    (country) => country.country === field.value
-                                  )?.country
-                                : "Select Country"}
-                              <ChevronsUpDown className="opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="sm:w-[300px] w-[200px] p-0">
-                          <Command>
-                            <CommandInput
-                              placeholder="Search Country..."
-                              className="h-9"
-                            />
-                            <CommandList>
-                              <CommandEmpty>No Country found.</CommandEmpty>
-                              <CommandGroup>
-                                {countriesData?.data?.map((country) => (
-                                  <CommandItem
-                                    value={country.country}
-                                    key={country.country}
-                                    onSelect={() => {
-                                      form.setValue(
-                                        "address.country",
-                                        country.country
-                                      );
-                                    }}
-                                  >
-                                    {country?.country}
-                                    <Check
-                                      className={cn(
-                                        "ml-auto",
+
+              <div className='flex items-start gap-8'>
+                {/* Address - Country */}
+                <FormField
+                  control={form.control}
+                  name="address.country"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col w-1/2">
+                      <FormLabel>Country</FormLabel>
+                      <FormControl>
+                        <Popover
+                          open={countrySelectOpen}
+                          onOpenChange={setCountrySelectOpen}
+                        >
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  'w-full justify-between',
+                                  !field.value && 'text-muted-foreground'
+                                )}
+                              >
+                                {field.value
+                                  ? countriesData?.data?.find(
+                                      (country) =>
                                         country.country === field.value
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                                    )?.country
+                                  : 'Select Country'}
+                                <ChevronsUpDown className="opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="sm:w-[300px] w-[200px] p-0">
+                            <Command>
+                              <CommandInput
+                                placeholder="Search Country..."
+                                className="h-9"
+                              />
+                              <CommandList>
+                                <CommandEmpty>No Country found.</CommandEmpty>
+                                <CommandGroup>
+                                  {countriesData?.data?.map((country) => (
+                                    <CommandItem
+                                      value={country.country}
+                                      key={country.country}
+                                      onSelect={() => {
+                                        form.setValue(
+                                          'address.country',
+                                          country.country
+                                        );
+                                        setCountrySelectOpen(false);
+                                      }}
+                                    >
+                                      {country?.country}
+                                      <Check
+                                        className={cn(
+                                          'ml-auto',
+                                          country.country === field.value
+                                            ? 'opacity-100'
+                                            : 'opacity-0'
+                                        )}
+                                      />
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Address - State */}
+                <FormField
+                  control={form.control}
+                  name="address.state"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col w-1/2">
+                      <FormLabel>State</FormLabel>
+                      <FormControl>
+                        <Popover
+                          open={stateSelectOpen}
+                          onOpenChange={setStateSelectOpen}
+                        >
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  'w-full justify-between',
+                                  !field.value && 'text-muted-foreground'
+                                )}
+                              >
+                                {field.value
+                                  ? countryStates?.find(
+                                      (state) => state === field.value
+                                    )
+                                  : 'Select State'}
+                                <ChevronsUpDown className="opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="sm:w-[300px] w-[200px] p-0">
+                            <Command>
+                              <CommandInput
+                                placeholder="Search State..."
+                                className="h-9"
+                              />
+                              <CommandList>
+                                <CommandEmpty>No State found.</CommandEmpty>
+                                <CommandGroup>
+                                  {countryStates?.map((state) => (
+                                    <CommandItem
+                                      value={state}
+                                      key={state}
+                                      onSelect={() => {
+                                        form.setValue('address.state', state);
+                                        setStateSelectOpen(false);
+                                      }}
+                                    >
+                                      {state}
+                                      <Check
+                                        className={cn(
+                                          'ml-auto',
+                                          state === field.value
+                                            ? 'opacity-100'
+                                            : 'opacity-0'
+                                        )}
+                                      />
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             {/* POC Section */}
@@ -433,12 +448,12 @@ export const CreateCustomerForm = ({
               {/* Add POC Button */}
               <Button
                 type="button"
-                variant={"tertiary"}
+                variant={'tertiary'}
                 onClick={() =>
                   addPOC({
-                    name: "",
+                    name: '',
                     mobile: undefined,
-                    email: "",
+                    email: '',
                   })
                 }
               >
@@ -533,13 +548,13 @@ export const CreateCustomerForm = ({
                         <Button
                           type="button"
                           disabled={isPending}
-                          variant={"destructive"}
-                          size={"xs"}
+                          variant={'destructive'}
+                          size={'xs'}
                           className="w-fit mt-2"
                           onClick={() => {
                             field.onChange(null);
                             if (inputRef.current) {
-                              inputRef.current.value = "";
+                              inputRef.current.value = '';
                             }
                           }}
                         >
@@ -549,8 +564,8 @@ export const CreateCustomerForm = ({
                         <Button
                           type="button"
                           disabled={isPending}
-                          variant={"tertiary"}
-                          size={"xs"}
+                          variant={'tertiary'}
+                          size={'xs'}
                           className="w-fit mt-2"
                           onClick={() => inputRef.current?.click()}
                         >
