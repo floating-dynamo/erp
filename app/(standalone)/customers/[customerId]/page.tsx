@@ -298,7 +298,7 @@ const PocDetailsCard = ({
   );
 };
 
-const CustomerNotFound = () => {
+export const CustomerNotFound = () => {
   function backToCustomerListing() {
     redirect('/customers');
   }

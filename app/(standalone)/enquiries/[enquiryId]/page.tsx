@@ -285,7 +285,7 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
 
 export default EnquiryDetailsPage;
 
-const EnquiryNotFound = () => {
+export const EnquiryNotFound = () => {
   function backToEnquiryListing() {
     redirect('/enquiries');
   }

@@ -78,6 +78,7 @@ const apiService: IApiService = {
       return enquiry.data;
     } catch (error) {
       console.error(error);
+      throw new Error(`Error fetching the eqnuiry ${(error as Error).message}`);
     }
   },
   // Quotation Endpoints

@@ -51,6 +51,7 @@ import Loader from '@/components/loader';
 import { useCustomers } from '@/features/customers/api/use-customers';
 import { useGetCustomerDetails } from '@/features/customers/api/use-get-customer-details';
 import { useGetEnquiryDetails } from '../api/use-get-enquiry-details';
+import { EnquiryNotFound } from '@/app/(standalone)/enquiries/[enquiryId]/page';
 
 interface CreateEnquiryFormProps {
   onCancel?: () => void;
@@ -65,8 +66,11 @@ export const CreateEnquiryForm = ({
   enquiryId,
   showBackButton = false,
 }: CreateEnquiryFormProps) => {
-  const { data: enquiryData, isFetching: isFetchingEnquiry } =
-    useGetEnquiryDetails({ id: enquiryId || '' });
+  const {
+    data: enquiryData,
+    isFetching: isFetchingEnquiry,
+    status: fetchEnquiryStatus,
+  } = useGetEnquiryDetails({ id: enquiryId || '' });
   const { mutate: addEnquiry, isPending } = useAddEnquiry();
   const { data: customers, isLoading } = useCustomers();
   const searchParams = useSearchParams();
@@ -110,13 +114,17 @@ export const CreateEnquiryForm = ({
     const finalValues = {
       ...values,
     };
-    console.log('Customer: ', finalValues);
-    addEnquiry(finalValues, {
-      onSuccess: () => {
-        form.reset();
-        router.push('/enquiries');
-      },
-    });
+    console.log('Enquiry: ', finalValues);
+    if (isEdit) {
+      console.log('Editing enquiry');
+    } else {
+      addEnquiry(finalValues, {
+        onSuccess: () => {
+          form.reset();
+          router.push('/enquiries');
+        },
+      });
+    }
   };
 
   if ((isLoading && !customers && isFetchingCustomer) || isFetchingEnquiry) {
@@ -128,6 +136,10 @@ export const CreateEnquiryForm = ({
       value: customer.id,
       label: customer.name,
     })) || [];
+
+  if (fetchEnquiryStatus === 'error') {
+    return <EnquiryNotFound />;
+  }
 
   return (
     <Card className="w-full h-full border-none shadow-none">

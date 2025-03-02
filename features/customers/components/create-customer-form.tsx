@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/command';
 import { useGetCustomerDetails } from '../api/use-get-customer-details';
 import { useEditCustomer } from '../api/use-edit-customer';
+import { CustomerNotFound } from '@/app/(standalone)/customers/[customerId]/page';
 
 // Infer the form schema type
 type CreateCustomerFormSchema = z.infer<typeof createCustomerSchema>;
@@ -61,8 +62,11 @@ export const CreateCustomerForm = ({
   customerId,
   showBackButton = false,
 }: CreateCustomerFormProps) => {
-  const { data: customerData, isFetching: isFetchingCustomer } =
-    useGetCustomerDetails({ id: customerId || '' });
+  const {
+    data: customerData,
+    isFetching: isFetchingCustomer,
+    status: fetchCustomerStatus,
+  } = useGetCustomerDetails({ id: customerId || '' });
   const { mutate: addCustomer, isPending: isPendingAddCustomer } =
     useAddCustomer();
   const { mutate: editCustomer, isPending: isPendingEditCustomer } =
@@ -158,6 +162,10 @@ export const CreateCustomerForm = ({
 
   if (isFetchingCountries || isFetchingCustomer) {
     return <Loader />;
+  }
+
+  if (fetchCustomerStatus === 'error') {
+    return <CustomerNotFound />;
   }
 
   return (
