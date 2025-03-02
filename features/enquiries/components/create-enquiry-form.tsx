@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -12,12 +12,12 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { createEnquirySchema } from "../schemas";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+} from '@/components/ui/form';
+import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { createEnquirySchema } from '../schemas';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   ArrowLeft,
   CalendarIcon,
@@ -27,18 +27,18 @@ import {
   TrashIcon,
   UploadCloudIcon,
   XIcon,
-} from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { Calendar } from "@/components/ui/calendar";
-import { Textarea } from "@/components/ui/textarea";
-import { useAddEnquiry } from "../api/use-add-enquiry";
-import { useRouter, useSearchParams } from "next/navigation";
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Calendar } from '@/components/ui/calendar';
+import { Textarea } from '@/components/ui/textarea';
+import { useAddEnquiry } from '../api/use-add-enquiry';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import {
   Command,
   CommandEmpty,
@@ -46,31 +46,37 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import Loader from "@/components/loader";
-import { useCustomers } from "@/features/customers/api/use-customers";
-import { useGetCustomerDetails } from "@/features/customers/api/use-get-customer-details";
+} from '@/components/ui/command';
+import Loader from '@/components/loader';
+import { useCustomers } from '@/features/customers/api/use-customers';
+import { useGetCustomerDetails } from '@/features/customers/api/use-get-customer-details';
+import { useGetEnquiryDetails } from '../api/use-get-enquiry-details';
 
 interface CreateEnquiryFormProps {
   onCancel?: () => void;
   showBackButton?: boolean;
+  enquiryId?: string;
 }
 
 type ZodCreateEnquirySchema = z.infer<typeof createEnquirySchema>;
 
 export const CreateEnquiryForm = ({
   onCancel,
+  enquiryId,
   showBackButton = false,
 }: CreateEnquiryFormProps) => {
+  const { data: enquiryData, isFetching: isFetchingEnquiry } =
+    useGetEnquiryDetails({ id: enquiryId || '' });
   const { mutate: addEnquiry, isPending } = useAddEnquiry();
   const { data: customers, isLoading } = useCustomers();
   const searchParams = useSearchParams();
-  const customerId = searchParams.get("customer") || "";
+  const customerId = searchParams.get('customer') || '';
   const { data: customer, isFetching: isFetchingCustomer } =
     useGetCustomerDetails({
-      id: customerId || "",
+      id: customerId || '',
     });
   const [customerSelectOpen, setCustomerSelectOpen] = useState(false);
+  const isEdit = !!enquiryId;
 
   const form = useForm<ZodCreateEnquirySchema>({
     resolver: zodResolver(createEnquirySchema),
@@ -79,12 +85,16 @@ export const CreateEnquiryForm = ({
   const router = useRouter();
 
   useEffect(() => {
+    if (isEdit && enquiryData) {
+      form.reset(enquiryData);
+    }
+  }, [isEdit, enquiryData, form]);
+
+  useEffect(() => {
     form.reset({
-      customerName: customer?.name || "",
+      customerName: customer?.name || '',
       customerId: customer?.id,
-      items: [
-        { itemCode: undefined, itemDescription: "", quantity: undefined },
-      ],
+      items: [{ itemCode: 0, itemDescription: '', quantity: 0 }],
       isQotationCreated: false,
     });
   }, [customer, form]);
@@ -92,7 +102,7 @@ export const CreateEnquiryForm = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      form.setValue("file", file);
+      form.setValue('file', file);
     }
   };
 
@@ -100,16 +110,16 @@ export const CreateEnquiryForm = ({
     const finalValues = {
       ...values,
     };
-    console.log("Customer: ", finalValues);
+    console.log('Customer: ', finalValues);
     addEnquiry(finalValues, {
       onSuccess: () => {
         form.reset();
-        router.push("/enquiries");
+        router.push('/enquiries');
       },
     });
   };
 
-  if (isLoading && !customers && isFetchingCustomer) {
+  if ((isLoading && !customers && isFetchingCustomer) || isFetchingEnquiry) {
     return <Loader />;
   }
 
@@ -130,7 +140,7 @@ export const CreateEnquiryForm = ({
               size="icon"
               onClick={onCancel}
               disabled={false}
-              className={cn(!onCancel && "invisible")}
+              className={cn(!onCancel && 'invisible')}
             >
               <ArrowLeft className="size-4" />
             </Button>
@@ -164,8 +174,8 @@ export const CreateEnquiryForm = ({
                               variant="outline"
                               role="combobox"
                               className={cn(
-                                "sm:w-[300px] w-full justify-between disabled:text-slate-700",
-                                !field.value && "text-muted-foreground"
+                                'sm:w-[300px] w-full justify-between disabled:text-slate-700',
+                                !field.value && 'text-muted-foreground'
                               )}
                               disabled={!!customer}
                             >
@@ -175,7 +185,7 @@ export const CreateEnquiryForm = ({
                                 ? customerSelectData.find(
                                     (customer) => customer.value === field.value
                                   )?.label
-                                : "Select Customer"}
+                                : 'Select Customer'}
                               <ChevronsUpDown className="opacity-50" />
                             </Button>
                           </FormControl>
@@ -195,11 +205,11 @@ export const CreateEnquiryForm = ({
                                     key={customer.value}
                                     onSelect={() => {
                                       form.setValue(
-                                        "customerId",
+                                        'customerId',
                                         customer.value
                                       );
                                       form.setValue(
-                                        "customerName",
+                                        'customerName',
                                         customer.label
                                       );
                                       setCustomerSelectOpen(false);
@@ -208,10 +218,10 @@ export const CreateEnquiryForm = ({
                                     {customer.label}
                                     <Check
                                       className={cn(
-                                        "ml-auto",
+                                        'ml-auto',
                                         customer.value === field.value
-                                          ? "opacity-100"
-                                          : "opacity-0"
+                                          ? 'opacity-100'
+                                          : 'opacity-0'
                                       )}
                                     />
                                   </CommandItem>
@@ -257,16 +267,16 @@ export const CreateEnquiryForm = ({
                           <Button
                             variant="outline"
                             className={cn(
-                              "w-full justify-start text-left",
-                              !field.value && "text-muted-foreground"
+                              'w-full justify-start text-left',
+                              !field.value && 'text-muted-foreground'
                             )}
                           >
                             <CalendarIcon />
                             {field.value
-                              ? new Intl.DateTimeFormat("en-US").format(
+                              ? new Intl.DateTimeFormat('en-US').format(
                                   new Date(field.value)
                                 )
-                              : "Pick a date"}
+                              : 'Pick a date'}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="p-0">
@@ -278,7 +288,7 @@ export const CreateEnquiryForm = ({
                             onSelect={(date) => {
                               const selectedDate = date
                                 ? date.toISOString()
-                                : "";
+                                : '';
                               field.onChange(selectedDate);
                             }}
                           />
@@ -295,7 +305,7 @@ export const CreateEnquiryForm = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Quotation Due Date{" "}
+                      Quotation Due Date{' '}
                       <span className="text-orange-500">*</span>
                     </FormLabel>
                     <FormControl>
@@ -304,16 +314,16 @@ export const CreateEnquiryForm = ({
                           <Button
                             variant="outline"
                             className={cn(
-                              "w-full justify-start text-left",
-                              !field.value && "text-muted-foreground"
+                              'w-full justify-start text-left',
+                              !field.value && 'text-muted-foreground'
                             )}
                           >
                             <CalendarIcon />
                             {field.value
-                              ? new Intl.DateTimeFormat("en-US").format(
+                              ? new Intl.DateTimeFormat('en-US').format(
                                   new Date(field.value)
                                 )
-                              : "Pick a date"}
+                              : 'Pick a date'}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="p-0">
@@ -325,7 +335,7 @@ export const CreateEnquiryForm = ({
                             onSelect={(date) => {
                               const selectedDate = date
                                 ? date.toISOString()
-                                : "";
+                                : '';
                               field.onChange(selectedDate);
                             }}
                           />
@@ -358,7 +368,7 @@ export const CreateEnquiryForm = ({
                                 {...field}
                                 type="number"
                                 placeholder="Enter item code"
-                                value={item.itemCode || ""}
+                                value={item.itemCode || ''}
                                 onChange={(e) =>
                                   field.onChange(
                                     (field.value || []).map((itm, i) =>
@@ -377,14 +387,14 @@ export const CreateEnquiryForm = ({
                             {/* Item Description */}
                             <div>
                               <FormLabel className="text-xs text-muted-foreground">
-                                Description{" "}
+                                Description{' '}
                                 <span className="text-orange-500">*</span>
                               </FormLabel>
                               <Input
                                 {...field}
                                 type="text"
                                 placeholder="Enter item description"
-                                value={item.itemDescription || ""}
+                                value={item.itemDescription || ''}
                                 onChange={(e) =>
                                   field.onChange(
                                     (field.value || []).map((itm, i) =>
@@ -403,14 +413,14 @@ export const CreateEnquiryForm = ({
                             {/* Quantity */}
                             <div>
                               <FormLabel className="text-xs text-muted-foreground">
-                                Quantity{" "}
+                                Quantity{' '}
                                 <span className="text-orange-500">*</span>
                               </FormLabel>
                               <Input
                                 {...field}
                                 type="number"
                                 placeholder="Enter quantity"
-                                value={item.quantity || ""}
+                                value={item.quantity || ''}
                                 onChange={(e) =>
                                   field.onChange(
                                     (field.value || []).map((itm, i) =>
@@ -451,13 +461,13 @@ export const CreateEnquiryForm = ({
                         {/* Add Item Button */}
                         <Button
                           type="button"
-                          variant={"tertiary"}
+                          variant={'tertiary'}
                           onClick={() =>
                             field.onChange([
                               ...(field.value || []),
                               {
                                 itemCode: undefined,
-                                itemDescription: "",
+                                itemDescription: '',
                                 quantity: undefined,
                               },
                             ])
@@ -517,8 +527,8 @@ export const CreateEnquiryForm = ({
                           <Button
                             type="button"
                             disabled={false}
-                            variant={"tertiary"}
-                            size={"xs"}
+                            variant={'tertiary'}
+                            size={'xs'}
                             className="w-fit mt-2"
                             onClick={() => inputRef.current?.click()}
                           >
@@ -535,7 +545,7 @@ export const CreateEnquiryForm = ({
                               onClick={() => {
                                 field.onChange(null);
                                 if (inputRef.current) {
-                                  inputRef.current.value = "";
+                                  inputRef.current.value = '';
                                 }
                               }}
                             >
@@ -552,7 +562,7 @@ export const CreateEnquiryForm = ({
             <Separator className="my-7" />
             <div className="flex items-center justify-end">
               <Button type="submit" size="lg" disabled={isPending}>
-                Create Enquiry
+                {isEdit ? 'Update Enquiry' : 'Create Enquiry'}
               </Button>
             </div>
           </form>

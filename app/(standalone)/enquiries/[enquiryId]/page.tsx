@@ -1,16 +1,16 @@
-"use client";
-import Loader from "@/components/loader";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+'use client';
+import Loader from '@/components/loader';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useGetEnquiryDetails } from "@/features/enquiries/api/use-get-enquiry-details";
-import { useToast } from "@/hooks/use-toast";
-import { formatDate, generateCsv, generatePDF } from "@/lib/utils";
+} from '@/components/ui/tooltip';
+import { useGetEnquiryDetails } from '@/features/enquiries/api/use-get-enquiry-details';
+import { useToast } from '@/hooks/use-toast';
+import { formatDate, generateCsv, generatePDF } from '@/lib/utils';
 import {
   ArrowLeftIcon,
   Building2,
@@ -23,7 +23,7 @@ import {
   Package,
   PenIcon,
   ScrollText,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,9 +31,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { redirect } from "next/navigation";
-import React, { use } from "react";
+} from '@/components/ui/dropdown-menu';
+import { redirect } from 'next/navigation';
+import React, { use } from 'react';
 
 interface EnquiryDetailsPageProps {
   params: Promise<{ enquiryId: string }>;
@@ -47,8 +47,8 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
   const { toast } = useToast();
   const enquiryDetailsElementId = `enquiry-details-${enquiryId}`;
   const exportPdfFileName =
-    (enquiry?.customerName || "NA").split(" ").join("_") +
-    "_Enquiry_" +
+    (enquiry?.customerName || 'NA').split(' ').join('_') +
+    '_Enquiry_' +
     enquiry?.enquiryNumber;
 
   if (isFetching) {
@@ -60,23 +60,27 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
   }
 
   function backToEnquiriesPage() {
-    redirect("/enquiries");
+    redirect('/enquiries');
   }
 
   function copyEnquiryId() {
-    navigator.clipboard.writeText(enquiry?.id || "");
+    navigator.clipboard.writeText(enquiry?.id || '');
     toast({
-      title: "Enquiry ID Copied",
+      title: 'Enquiry ID Copied',
       description: enquiry?.id,
     });
   }
 
   function copyCustomerId() {
-    navigator.clipboard.writeText(enquiry?.customerId || "");
+    navigator.clipboard.writeText(enquiry?.customerId || '');
     toast({
-      title: "Customer ID Copied",
+      title: 'Customer ID Copied',
       description: enquiry?.customerId,
     });
+  }
+
+  function navigateToEditEnquiry() {
+    redirect(`/enquiries/edit/${enquiryId}`);
   }
 
   return (
@@ -96,7 +100,7 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
           <div className="flex flex-col">
             <div className="flex gap-4 items-center flex-wrap">
               <h1 className="text-xl sm:text-3xl font-bold">
-                {enquiry.enquiryNumber || "NA"}
+                {enquiry.enquiryNumber || 'NA'}
               </h1>
               <TooltipProvider>
                 <Tooltip>
@@ -113,7 +117,7 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
               </TooltipProvider>
             </div>
             <p className="text-muted-foreground text-xs sm:text-sm">
-              Due:{" "}
+              Due:{' '}
               <span className="font-semibold">
                 {formatDate(new Date(enquiry?.quotationDueDate))}
               </span>
@@ -129,7 +133,10 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm">
+            <DropdownMenuItem
+              className="cursor-pointer text-xs sm:text-sm"
+              onClick={() => navigateToEditEnquiry()}
+            >
               <PenIcon className="size-4" /> Edit Enquiry
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -152,7 +159,7 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer text-xs sm:text-sm"
-              onClick={() => generateCsv({ data: enquiry, type: "Enquiry" })}
+              onClick={() => generateCsv({ data: enquiry, type: 'Enquiry' })}
             >
               <DownloadIcon className="size-3" /> Save (.csv)
             </DropdownMenuItem>
@@ -190,8 +197,8 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
             </div>
             <div data-html2canvas-ignore>
               <Button
-                size={"sm"}
-                variant={"ghost"}
+                size={'sm'}
+                variant={'ghost'}
                 onClick={() => redirect(`/customers/${enquiry.customerId}`)}
               >
                 View Customer
@@ -280,7 +287,7 @@ export default EnquiryDetailsPage;
 
 const EnquiryNotFound = () => {
   function backToEnquiryListing() {
-    redirect("/enquiries");
+    redirect('/enquiries');
   }
 
   return (
@@ -291,7 +298,7 @@ const EnquiryNotFound = () => {
       </p>
       <Button
         onClick={backToEnquiryListing}
-        variant={"outline"}
+        variant={'outline'}
         className="md:text-lg"
       >
         <ArrowLeftIcon className="size-4" />
