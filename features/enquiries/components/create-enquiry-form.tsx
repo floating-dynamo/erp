@@ -84,6 +84,17 @@ export const CreateEnquiryForm = ({
 
   const form = useForm<ZodCreateEnquirySchema>({
     resolver: zodResolver(createEnquirySchema),
+    defaultValues: {
+      customerId: '',
+      customerName: '',
+      enquiryNumber: '',
+      enquiryDate: '',
+      quotationDueDate: '',
+      items: [{ itemCode: 0, itemDescription: '', quantity: 0 }],
+      termsAndConditions: '',
+      file: undefined,
+      isQotationCreated: false,
+    },
   });
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -189,7 +200,7 @@ export const CreateEnquiryForm = ({
                                 'sm:w-[300px] w-full justify-between disabled:text-slate-700',
                                 !field.value && 'text-muted-foreground'
                               )}
-                              disabled={!!customer}
+                              disabled={!!customer || isEdit}
                             >
                               {customer
                                 ? customer.name

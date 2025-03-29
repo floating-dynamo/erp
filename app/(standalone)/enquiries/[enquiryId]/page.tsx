@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useGetEnquiryDetails } from '@/features/enquiries/api/use-get-enquiry-details';
 import { useToast } from '@/hooks/use-toast';
-import { formatDate, generateCsv, generatePDF } from '@/lib/utils';
+import { formatDate, generateCsv } from '@/lib/utils';
 import {
   ArrowLeftIcon,
   Building2,
@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { redirect } from 'next/navigation';
 import React, { use } from 'react';
+import EnquiryDetailsPDFExport from '@/features/enquiries/components/enquiry-details-pdf-export';
 
 interface EnquiryDetailsPageProps {
   params: Promise<{ enquiryId: string }>;
@@ -46,10 +47,10 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
   });
   const { toast } = useToast();
   const enquiryDetailsElementId = `enquiry-details-${enquiryId}`;
-  const exportPdfFileName =
-    (enquiry?.customerName || 'NA').split(' ').join('_') +
-    '_Enquiry_' +
-    enquiry?.enquiryNumber;
+  // const exportPdfFileName =
+  //   (enquiry?.customerName || 'NA').split(' ').join('_') +
+  //   '_Enquiry_' +
+  //   enquiry?.enquiryNumber;
 
   if (isFetching) {
     return <Loader text="Loading enquiry details" />;
@@ -149,14 +150,11 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Export</DropdownMenuLabel>
-            <DropdownMenuItem
-              className="cursor-pointer text-xs sm:text-sm"
-              onClick={() =>
-                generatePDF(enquiryDetailsElementId, exportPdfFileName)
-              }
-            >
-              <DownloadIcon className="size-3" /> Save (.pdf)
-            </DropdownMenuItem>
+            <EnquiryDetailsPDFExport enquiry={enquiry}>
+              <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm">
+                <DownloadIcon className="size-3" /> Save (.pdf)
+              </DropdownMenuItem>
+            </EnquiryDetailsPDFExport>
             <DropdownMenuItem
               className="cursor-pointer text-xs sm:text-sm"
               onClick={() => generateCsv({ data: enquiry, type: 'Enquiry' })}

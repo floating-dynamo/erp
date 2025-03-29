@@ -1,5 +1,5 @@
-import { CreateEnquiryForm } from '@/features/enquiries/components/create-enquiry-form';
 import React, { use } from 'react';
+import { CreateEnquiryForm } from '@/features/enquiries/components/create-enquiry-form';
 
 interface EditEnquiryPageProps {
   params: Promise<{ enquiryId: string }>;

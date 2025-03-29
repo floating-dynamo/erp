@@ -1,10 +1,10 @@
-import { Customer } from "@/features/customers/schemas";
-import { Enquiry } from "@/features/enquiries/schemas";
-import { Quotation } from "@/features/quotations/schemas";
-import { clsx, type ClassValue } from "clsx";
-import dayjs from "dayjs";
-import { twMerge } from "tailwind-merge";
-import { MetaDataType } from "./types";
+import { Customer } from '@/features/customers/schemas';
+import { Enquiry } from '@/features/enquiries/schemas';
+import { Quotation } from '@/features/quotations/schemas';
+import { clsx, type ClassValue } from 'clsx';
+import dayjs from 'dayjs';
+import { twMerge } from 'tailwind-merge';
+import { MetaDataType } from './types';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -14,115 +14,115 @@ export const generateCsv = ({
   data,
   type,
 }:
-  | { data: Customer; type: "Customer" }
-  | { data: Enquiry; type: "Enquiry" }
-  | { data: Quotation; type: "Quotation" }) => {
+  | { data: Customer; type: 'Customer' }
+  | { data: Enquiry; type: 'Enquiry' }
+  | { data: Quotation; type: 'Quotation' }) => {
   if (!data) return;
   let headers: string[] = [];
   const rows: (string | number | undefined)[][] = [];
-  let fileName = "";
+  let fileName = '';
 
   switch (type) {
-    case "Customer": {
+    case 'Customer': {
       headers = [
-        "Customer ID",
-        "Name",
-        "Customer Type",
-        "Vendor ID",
-        "GST Number",
-        "Contact Number",
-        "Address Line 1",
-        "Address Line 2",
-        "City",
-        "State",
-        "Country",
-        "Pincode",
-        "POC Name",
-        "POC Email",
-        "POC Mobile",
+        'Customer ID',
+        'Name',
+        'Customer Type',
+        'Vendor ID',
+        'GST Number',
+        'Contact Number',
+        'Address Line 1',
+        'Address Line 2',
+        'City',
+        'State',
+        'Country',
+        'Pincode',
+        'POC Name',
+        'POC Email',
+        'POC Mobile',
       ];
 
       rows.push([
         data.id,
         data.name,
         data.customerType,
-        data.vendorId || "NA",
-        data.gstNumber || "NA",
-        data.contactDetails || "NA",
-        data.address?.address1 || "NA",
-        data.address?.address2 || "NA",
-        data.address?.city || "NA",
-        data.address?.state || "NA",
-        data.address?.country || "NA",
-        data.address?.pincode || "NA",
-        data.poc?.map((p) => p.name).join(", ") || "NA",
-        data.poc?.map((p) => p.email).join(", ") || "NA",
-        data.poc?.map((p) => p.mobile || "NA").join(", ") || "NA",
+        data.vendorId || 'NA',
+        data.gstNumber || 'NA',
+        data.contactDetails || 'NA',
+        data.address?.address1 || 'NA',
+        data.address?.address2 || 'NA',
+        data.address?.city || 'NA',
+        data.address?.state || 'NA',
+        data.address?.country || 'NA',
+        data.address?.pincode || 'NA',
+        data.poc?.map((p) => p.name).join(', ') || 'NA',
+        data.poc?.map((p) => p.email).join(', ') || 'NA',
+        data.poc?.map((p) => p.mobile || 'NA').join(', ') || 'NA',
       ]);
 
-      fileName = `${data.name.replace(/\s/g, "_")}.csv`;
+      fileName = `${data.name.replace(/\s/g, '_')}.csv`;
 
       break;
     }
-    case "Enquiry": {
+    case 'Enquiry': {
       headers = [
-        "Enquiry ID",
-        "Customer ID",
-        "Customer Name",
-        "Enquiry Number",
-        "Enquiry Date",
-        "Quotation Due Date",
-        "Item Code",
-        "Item Description",
-        "Quantity",
-        "Terms and Conditions",
-        "Is Quotation Created",
+        'Enquiry ID',
+        'Customer ID',
+        'Customer Name',
+        'Enquiry Number',
+        'Enquiry Date',
+        'Quotation Due Date',
+        'Item Code',
+        'Item Description',
+        'Quantity',
+        'Terms and Conditions',
+        'Is Quotation Created',
       ];
 
       data.items.map((item) => {
         rows.push([
-          data.id || "NA",
+          data.id || 'NA',
           data.customerId,
-          data.customerName || "NA",
+          data.customerName || 'NA',
           data.enquiryNumber,
           formatDate(new Date(data.enquiryDate)),
           formatDate(new Date(data.quotationDueDate)),
-          item.itemCode || "NA",
+          item.itemCode || 'NA',
           item.itemDescription,
           item.quantity,
-          data?.termsAndConditions?.replace(/\n/g, " ") || "NA" || "NA",
-          data.isQotationCreated ? "Yes" : "No",
+          data?.termsAndConditions?.replace(/\n/g, ' ') || 'NA' || 'NA',
+          data.isQotationCreated ? 'Yes' : 'No',
         ]);
       });
 
-      fileName = `${data.customerName?.replace(/\s/g, "_")}_Enquiry_${
+      fileName = `${data.customerName?.replace(/\s/g, '_')}_Enquiry_${
         data.enquiryNumber
       }.csv`;
       break;
     }
 
-    case "Quotation": {
+    case 'Quotation': {
       headers = [
-        "Quotation ID",
-        "Customer ID",
-        "Customer Name",
-        "Enquiry Number",
-        "Quotation Date",
-        "Quote Number",
-        "Item Code",
-        "Item Description",
-        "Material Consideration",
-        "Quantity",
-        "UOM",
-        "Rate",
-        "Currency",
-        "Amount",
-        "Remarks",
-        "Total Amount",
-        "Terms and Conditions",
-        "Company GSTIN",
-        "Company PAN",
-        "Company Name",
+        'Quotation ID',
+        'Customer ID',
+        'Customer Name',
+        'Enquiry Number',
+        'Quotation Date',
+        'Quote Number',
+        'Item Code',
+        'Item Description',
+        'Material Consideration',
+        'Quantity',
+        'UOM',
+        'Rate',
+        'Currency',
+        'Amount',
+        'Remarks',
+        'Total Amount',
+        'Terms and Conditions',
+        'Company GSTIN',
+        'Company PAN',
+        'Company Name',
       ];
 
       data.items.forEach((item) => {
@@ -131,45 +131,45 @@ export const generateCsv = ({
           data.customerId,
           data.customerName,
           data.enquiryNumber,
-          formatDate(new Date(data?.quotationDate || "")),
+          formatDate(new Date(data?.quotationDate || '')),
           data.quoteNumber,
           item.itemCode,
           item.itemDescription,
-          item.materialConsideration || "NA",
+          item.materialConsideration || 'NA',
           item.quantity,
           item.uom,
           item.rate,
           item.currency,
           item.amount,
-          item.remarks || "NA",
+          item.remarks || 'NA',
           data.totalAmount,
-          data.termsAndConditions?.replace(/\n/g, " ") || "NA",
+          data.termsAndConditions?.replace(/\n/g, ' ') || 'NA',
           data.myCompanyGSTIN,
           data.myCompanyPAN,
           data.myCompanyName,
         ]);
       });
 
-      fileName = `Quotation_${data.customerName.replace(/\s/g, "_")}.csv`;
+      fileName = `Quotation_${data.customerName.replace(/\s/g, '_')}.csv`;
       break;
     }
   }
 
   const csvContent =
-    "data:text/csv;charset=utf-8," +
-    [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
+    'data:text/csv;charset=utf-8,' +
+    [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
 
   const encodedUri = encodeURI(csvContent);
-  const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", fileName);
+  const link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', fileName);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 };
 
 export const generatePDF = async (componentId: string, filename: string) => {
-  const html2pdf = await import("html2pdf.js");
+  const html2pdf = await import('html2pdf.js');
   const element = document.getElementById(componentId);
   html2pdf.default().from(element).set({ margin: 20 }).save(`${filename}.pdf`);
 };
@@ -180,7 +180,7 @@ export function capitalizeFirstLetter(str: string) {
 }
 
 export const generateQuoteNumber = (isoDate: string, enquiryNumber: string) => {
-  const quoteNumDateFormat = "YY/MM/DD";
+  const quoteNumDateFormat = 'YY/MM/DD';
   const date = dayjs(isoDate);
   const formattedDate = date.format(quoteNumDateFormat);
   return `QUO/${formattedDate}/${enquiryNumber}`;
@@ -190,8 +190,24 @@ export function formatDate(date: Date) {
   return dayjs(date).format(getDateDisplayFormat());
 }
 
+export const formatCurrency = (
+  amount: number | undefined,
+  currency: string = 'USD'
+) => {
+  if (amount === undefined) return '';
+
+  // Use Intl API to format currency
+  const formatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 2,
+  });
+
+  return formatter.format(amount);
+};
+
 export function getDateDisplayFormat() {
-  return "DD-MMM-YY";
+  return 'DD-MMM-YY';
 }
 
 export function getMetaData(
@@ -200,20 +216,45 @@ export function getMetaData(
   switch (type) {
     case MetaDataType.UOM:
       return [
-        { value: "Kg", label: "Kilograms (Kg)" },
-        { value: "g", label: "Grams (g)" },
-        { value: "L", label: "Litres (L)" },
-        { value: "mL", label: "Mili Litres (mL)" },
-        { value: "Dz", label: "Dozen (Dz)" },
-        { value: "m", label: "Meter (m)" },
-        { value: "mm", label: "Milimeter (mm)" },
+        { value: 'Kg', label: 'Kilograms (Kg)' },
+        { value: 'g', label: 'Grams (g)' },
+        { value: 'L', label: 'Litres (L)' },
+        { value: 'mL', label: 'Mili Litres (mL)' },
+        { value: 'Dz', label: 'Dozen (Dz)' },
+        { value: 'm', label: 'Meter (m)' },
+        { value: 'mm', label: 'Milimeter (mm)' },
       ];
     case MetaDataType.CURRENCY:
       return [
-        { value: "INR", label: "Indian Rupees (INR)" },
-        { value: "USD", label: "US Dollars (USD)" },
-        { value: "GBP", label: "British Pound (GBP)" },
-        { value: "SGD", label: "Singapore Dollar (SGD)" },
+        { value: 'INR', label: 'Indian Rupees (INR)' },
+        { value: 'USD', label: 'US Dollars (USD)' },
+        { value: 'GBP', label: 'British Pound (GBP)' },
+        { value: 'SGD', label: 'Singapore Dollar (SGD)' },
       ];
   }
+}
+
+export function getCustomerPdfFileName({ name }: { name: string }) {
+  return `${name.replace(/\s/g, '_')}_Customer.pdf`;
+}
+
+export function getEnquiryPdfFileName({
+  customerName,
+  enquiryNumber,
+}: {
+  customerName: string;
+  enquiryNumber: string;
+}) {
+  return `${customerName.replace(/\s/g, '_')}_Enquiry_${enquiryNumber}.pdf`;
+}
+
+export function getQuotationPdfFileName({
+  customerName,
+  quoteNumber,
+}: {
+  customerName: string;
+  quoteNumber?: string;
+}) {
+  if (!quoteNumber) return `Quotation_${customerName.replace(/\s/g, '_')}.pdf`;
+  return `Quotation_${quoteNumber}_${customerName.replace(/\s/g, '_')}.pdf`;
 }

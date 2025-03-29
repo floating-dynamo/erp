@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   Building2,
@@ -10,29 +10,30 @@ import {
   MoreHorizontalIcon,
   PenIcon,
   DownloadIcon,
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { use } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { useGetQuotationDetails } from "@/features/quotations/api/use-get-quotation-details";
-import Loader from "@/components/loader";
-import { formatDate, generateCsv, generatePDF } from "@/lib/utils";
-import { redirect } from "next/navigation";
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { use } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { useGetQuotationDetails } from '@/features/quotations/api/use-get-quotation-details';
+import Loader from '@/components/loader';
+import { formatDate, generateCsv } from '@/lib/utils';
+import { redirect } from 'next/navigation';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from '@/components/ui/tooltip';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
+} from '@/components/ui/dropdown-menu';
+import { Separator } from '@/components/ui/separator';
+import QuotationDetailsPDFExport from '@/features/quotations/components/quotation-details-pdf-export';
 
 interface QuotationDetailsPageProps {
   params: Promise<{ quotationId: string }>;
@@ -45,8 +46,6 @@ function QuotationDetails({ params }: QuotationDetailsPageProps) {
   });
   const { toast } = useToast();
   const quotationDetailsElementId = `quotation-details-${quotationId}`;
-  const exportPdfFileName =
-    "Quote_" + (quotation?.customerName || "NA").split(" ").join("_");
 
   if (isFetching) {
     return <Loader text="Loading quotation details" />;
@@ -55,13 +54,13 @@ function QuotationDetails({ params }: QuotationDetailsPageProps) {
   if (!quotation) return <p>Quotation not found.</p>;
 
   function backToQuotationsPage() {
-    redirect("/quotations");
+    redirect('/quotations');
   }
 
   function copyQuotationId() {
-    navigator.clipboard.writeText(quotation?.id || "");
+    navigator.clipboard.writeText(quotation?.id || '');
     toast({
-      title: "Quotation ID Copied",
+      title: 'Quotation ID Copied',
       description: quotation?.id,
     });
   }
@@ -100,7 +99,7 @@ function QuotationDetails({ params }: QuotationDetailsPageProps) {
               </TooltipProvider>
             </div>
             <p className="text-muted-foreground text-xs sm:text-sm">
-              Created on: {formatDate(new Date(quotation?.quotationDate || ""))}
+              Created on: {formatDate(new Date(quotation?.quotationDate || ''))}
             </p>
           </div>
         </div>
@@ -118,18 +117,15 @@ function QuotationDetails({ params }: QuotationDetailsPageProps) {
             </DropdownMenuItem>
             <Separator className="my-2" />
             <DropdownMenuLabel>Export</DropdownMenuLabel>
+            <QuotationDetailsPDFExport quotation={quotation}>
+              <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm">
+                <DownloadIcon className="size-3" /> Save (.pdf)
+              </DropdownMenuItem>
+            </QuotationDetailsPDFExport>
             <DropdownMenuItem
               className="cursor-pointer text-xs sm:text-sm"
               onClick={() =>
-                generatePDF(quotationDetailsElementId, exportPdfFileName)
-              }
-            >
-              <DownloadIcon className="size-3" /> Save (.pdf)
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="cursor-pointer text-xs sm:text-sm"
-              onClick={() =>
-                generateCsv({ data: quotation, type: "Quotation" })
+                generateCsv({ data: quotation, type: 'Quotation' })
               }
             >
               <DownloadIcon className="size-3" /> Save (.csv)
@@ -155,8 +151,8 @@ function QuotationDetails({ params }: QuotationDetailsPageProps) {
             </div>
             <div data-html2canvas-ignore>
               <Button
-                size={"sm"}
-                variant={"ghost"}
+                size={'sm'}
+                variant={'ghost'}
                 onClick={() => redirect(`/customers/${quotation.customerId}`)}
               >
                 View Customer

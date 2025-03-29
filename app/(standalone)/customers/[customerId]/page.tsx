@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useGetCustomerDetails } from '@/features/customers/api/use-get-customer-details';
 import { useToast } from '@/hooks/use-toast';
-import { cn, generateCsv, generatePDF } from '@/lib/utils';
+import { cn, generateCsv } from '@/lib/utils';
 import {
   ArrowLeftIcon,
   Building2Icon,
@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { redirect } from 'next/navigation';
 import { use } from 'react';
+import CustomerDetailsPDFExport from '@/features/customers/components/customer-details-pdf-export';
 
 interface CustomerDetailsPageProps {
   params: Promise<{ customerId: string }>;
@@ -48,7 +49,6 @@ export default function CustomerDetailsPage({
   });
   const { toast } = useToast();
   const customerDetailsElementId = `customer-details-${customerId}`;
-  const exportPdfFileName = (customer?.name || 'NA').split(' ').join('_');
 
   if (isFetching) {
     return <Loader text="Loading customer details" />;
@@ -127,14 +127,11 @@ export default function CustomerDetailsPage({
             </DropdownMenuItem>
             <Separator className="my-2" />
             <DropdownMenuLabel>Export</DropdownMenuLabel>
-            <DropdownMenuItem
-              className="cursor-pointer text-xs sm:text-sm"
-              onClick={() =>
-                generatePDF(customerDetailsElementId, exportPdfFileName)
-              }
-            >
-              <DownloadIcon className="size-3" /> Save (.pdf)
-            </DropdownMenuItem>
+            <CustomerDetailsPDFExport customer={customer}>
+              <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm">
+                <DownloadIcon className="size-3" /> Save (.pdf)
+              </DropdownMenuItem>
+            </CustomerDetailsPDFExport>
             <DropdownMenuItem
               className="cursor-pointer text-xs sm:text-sm"
               onClick={() => generateCsv({ data: customer, type: 'Customer' })}
