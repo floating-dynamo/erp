@@ -1,5 +1,5 @@
-"use client";
-import React from "react";
+'use client';
+import React from 'react';
 
 import {
   ColumnDef,
@@ -12,7 +12,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table";
+} from '@tanstack/react-table';
 import {
   ArrowUpDown,
   CheckIcon,
@@ -21,9 +21,9 @@ import {
   EyeIcon,
   MoreHorizontal,
   XIcon,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +31,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -39,14 +39,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Enquiry } from "../schemas";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { useEnquiries } from "../api/use-enquiries";
-import Loader from "@/components/loader";
-import { formatDate } from "@/lib/utils";
-import { redirect } from "next/navigation";
+} from '@/components/ui/table';
+import { Enquiry } from '../schemas';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { useEnquiries } from '../api/use-enquiries';
+import Loader from '@/components/loader';
+import { formatDate } from '@/lib/utils';
+import { redirect } from 'next/navigation';
+import Fuse from 'fuse.js';
 
 const ActionsCell = ({ enquiry }: { enquiry: Enquiry }) => {
   const { toast } = useToast();
@@ -54,7 +55,7 @@ const ActionsCell = ({ enquiry }: { enquiry: Enquiry }) => {
   const handleCopyEnquiryId = () => {
     navigator.clipboard.writeText(enquiry.id!);
     toast({
-      title: "Enquiry ID copied",
+      title: 'Enquiry ID copied',
       description: enquiry.id,
     });
   };
@@ -62,7 +63,7 @@ const ActionsCell = ({ enquiry }: { enquiry: Enquiry }) => {
   const handleCopyCustomerId = () => {
     navigator.clipboard.writeText(enquiry.customerId!);
     toast({
-      title: "Customer ID copied",
+      title: 'Customer ID copied',
       description: enquiry.customerId,
     });
   };
@@ -109,16 +110,16 @@ const ActionsCell = ({ enquiry }: { enquiry: Enquiry }) => {
 
 const columns: ColumnDef<Enquiry>[] = [
   {
-    accessorKey: "customerId",
+    accessorKey: 'customerId',
   },
   {
-    accessorKey: "customerName",
+    accessorKey: 'customerName',
     header: ({ column }) => {
       return (
         <Button
           variant="outline"
-          size={"sm"}
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          size={'sm'}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Customer Name
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -126,24 +127,24 @@ const columns: ColumnDef<Enquiry>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="ml-4">{row.getValue("customerName")}</div>
+      <div className="ml-4">{row.getValue('customerName')}</div>
     ),
   },
   {
-    accessorKey: "enquiryNumber",
-    header: "Enquiry Number",
+    accessorKey: 'enquiryNumber',
+    header: 'Enquiry Number',
     cell: ({ row }) => (
-      <div className="ml-4">{row.getValue("enquiryNumber")}</div>
+      <div className="ml-4">{row.getValue('enquiryNumber')}</div>
     ),
   },
   {
-    accessorKey: "enquiryDate",
+    accessorKey: 'enquiryDate',
     header: ({ column }) => {
       return (
         <Button
           variant="outline"
-          size={"sm"}
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          size={'sm'}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Enquiry Date
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -151,17 +152,17 @@ const columns: ColumnDef<Enquiry>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="ml-4">{formatDate(row.getValue("enquiryDate"))}</div>
+      <div className="ml-4">{formatDate(row.getValue('enquiryDate'))}</div>
     ),
   },
   {
-    accessorKey: "quotationDueDate",
+    accessorKey: 'quotationDueDate',
     header: ({ column }) => {
       return (
         <Button
           variant="outline"
-          size={"sm"}
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          size={'sm'}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Quotation Due Date
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -169,17 +170,17 @@ const columns: ColumnDef<Enquiry>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="ml-4">{formatDate(row.getValue("quotationDueDate"))}</div>
+      <div className="ml-4">{formatDate(row.getValue('quotationDueDate'))}</div>
     ),
   },
   {
-    accessorKey: "isQotationCreated",
+    accessorKey: 'isQotationCreated',
     header: ({ column }) => {
       return (
         <Button
           variant="outline"
-          size={"sm"}
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          size={'sm'}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Quotation Created
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -188,7 +189,7 @@ const columns: ColumnDef<Enquiry>[] = [
     },
     cell: ({ row }) => (
       <div className="ml-4">
-        {row.getValue("isQotationCreated") ? (
+        {row.getValue('isQotationCreated') ? (
           <CheckIcon className="size-4 text-green-700" />
         ) : (
           <XIcon className="size-4 text-red-500" />
@@ -197,7 +198,7 @@ const columns: ColumnDef<Enquiry>[] = [
     ),
   },
   {
-    id: "actions",
+    id: 'actions',
     enableHiding: false,
     cell: ({ row }) => <ActionsCell enquiry={row.original} />,
   },
@@ -213,10 +214,29 @@ const EnquiriesTable: React.FC = () => {
       customerId: false,
     });
   const [rowSelection, setRowSelection] = React.useState({});
+  const [searchQuery, setSearchQuery] = React.useState('');
   const { data: enquiries, isLoading } = useEnquiries({});
 
+  const fuse = React.useMemo(() => {
+    return new Fuse(enquiries || [], {
+      keys: [
+        'customerName',
+        'enquiryNumber',
+        'customerId',
+        'enquiryDate',
+        'quotationDueDate',
+      ],
+      threshold: 0.0, // Adjust threshold for fuzzy matching
+    });
+  }, [enquiries]);
+
+  const filteredEnquiries = React.useMemo(() => {
+    if (!searchQuery) return enquiries;
+    return fuse.search(searchQuery).map((result) => result.item);
+  }, [searchQuery, fuse, enquiries]);
+
   const table = useReactTable({
-    data: enquiries!,
+    data: filteredEnquiries ?? [],
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -242,13 +262,9 @@ const EnquiriesTable: React.FC = () => {
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Search Enquiries by Customer Name"
-          value={
-            (table.getColumn("customerName")?.getFilterValue() as string) ?? ""
-          }
-          onChange={(event) =>
-            table.getColumn("customerName")?.setFilterValue(event.target.value)
-          }
+          placeholder="Search Enquiry..."
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
           className="max-w-sm"
         />
       </div>
@@ -277,7 +293,7 @@ const EnquiriesTable: React.FC = () => {
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
+                  data-state={row.getIsSelected() && 'selected'}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
