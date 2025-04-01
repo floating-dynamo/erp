@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import * as React from "react";
+import * as React from 'react';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -12,16 +12,16 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table";
+} from '@tanstack/react-table';
 import {
   ArrowUpDown,
   CopyIcon,
   EyeIcon,
   MoreHorizontal,
   PlusCircleIcon,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +29,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -37,13 +37,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Customer } from "../schemas";
-import { Input } from "@/components/ui/input";
-import { useCustomers } from "../api/use-customers";
-import Loader from "@/components/loader";
-import { redirect } from "next/navigation";
-import { useToast } from "@/hooks/use-toast";
+} from '@/components/ui/table';
+import { Customer } from '../schemas';
+import { Input } from '@/components/ui/input';
+import { useCustomers } from '../api/use-customers';
+import Loader from '@/components/loader';
+import { redirect } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
+import Fuse from 'fuse.js';
 
 const ActionsCell = ({ customer }: { customer: Customer }) => {
   const { toast } = useToast();
@@ -51,7 +52,7 @@ const ActionsCell = ({ customer }: { customer: Customer }) => {
   const handleCopyCustomerId = () => {
     navigator.clipboard.writeText(customer.id!);
     toast({
-      title: "Customer ID copied",
+      title: 'Customer ID copied',
       description: customer.id,
     });
   };
@@ -92,52 +93,52 @@ const ActionsCell = ({ customer }: { customer: Customer }) => {
 
 const columns: ColumnDef<Customer>[] = [
   {
-    accessorKey: "name",
+    accessorKey: 'name',
     header: ({ column }) => {
       return (
         <Button
           variant="outline"
-          size={"sm"}
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          size={'sm'}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Name
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
-    cell: ({ row }) => <div>{row.getValue("name")}</div>,
+    cell: ({ row }) => <div>{row.getValue('name')}</div>,
   },
   {
-    accessorKey: "address.city",
-    header: "City",
+    accessorKey: 'address.city',
+    header: 'City',
     cell: ({ row }) => {
       const address = row.original.address;
       return address ? <div>{address.city}</div> : null;
     },
   },
   {
-    accessorKey: "address.state",
-    header: "State",
+    accessorKey: 'address.state',
+    header: 'State',
     cell: ({ row }) => {
       const address = row.original.address;
       return address ? <div>{address.state}</div> : null;
     },
   },
   {
-    accessorKey: "gstNumber",
-    header: "GST Number",
-    cell: ({ row }) => <div>{row.getValue("gstNumber")}</div>,
+    accessorKey: 'gstNumber',
+    header: 'GST Number',
+    cell: ({ row }) => <div>{row.getValue('gstNumber')}</div>,
   },
   {
-    accessorKey: "vendorId",
-    header: "Vendor ID",
-    cell: ({ row }) => <div>{row.getValue("vendorId")}</div>,
+    accessorKey: 'vendorId',
+    header: 'Vendor ID',
+    cell: ({ row }) => <div>{row.getValue('vendorId')}</div>,
   },
   {
-    accessorKey: "id",
+    accessorKey: 'id',
   },
   {
-    id: "actions",
+    id: 'actions',
     enableHiding: false,
     cell: ({ row }) => <ActionsCell customer={row.original} />,
   },
@@ -153,10 +154,23 @@ export default function CustomerTable() {
       id: false,
     });
   const [rowSelection, setRowSelection] = React.useState({});
+  const [searchQuery, setSearchQuery] = React.useState('');
   const { data: customers = [], isLoading } = useCustomers();
 
+  const fuse = React.useMemo(() => {
+    return new Fuse(customers || [], {
+      keys: ['name', 'address.city', 'address.state', 'gstNumber', 'vendorId'], // Fields to search
+      threshold: 0.3, // Adjust threshold for fuzzy matching
+    });
+  }, [customers]);
+
+  const filteredCustomers = React.useMemo(() => {
+    if (!searchQuery) return customers;
+    return fuse.search(searchQuery).map((result) => result.item);
+  }, [searchQuery, fuse, customers]);
+
   const table = useReactTable({
-    data: customers ?? [],
+    data: filteredCustomers ?? [],
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -182,11 +196,9 @@ export default function CustomerTable() {
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Search Customers by name"
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
+          placeholder="Search Customer..."
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
           className="max-w-sm"
         />
       </div>
@@ -215,7 +227,7 @@ export default function CustomerTable() {
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
+                  data-state={row.getIsSelected() && 'selected'}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
