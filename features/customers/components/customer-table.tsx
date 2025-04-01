@@ -160,7 +160,7 @@ export default function CustomerTable() {
   const fuse = React.useMemo(() => {
     return new Fuse(customers || [], {
       keys: ['name', 'address.city', 'address.state', 'gstNumber', 'vendorId'],
-      threshold: 0.0, // Adjust threshold for fuzzy matching
+      threshold: 0.1, // Adjust threshold for fuzzy matching
     });
   }, [customers]);
 

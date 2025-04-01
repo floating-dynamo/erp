@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import * as React from "react";
+import * as React from 'react';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -12,10 +12,10 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table";
-import { ArrowUpDown, CopyIcon, EyeIcon, MoreHorizontal } from "lucide-react";
+} from '@tanstack/react-table';
+import { ArrowUpDown, CopyIcon, EyeIcon, MoreHorizontal } from 'lucide-react';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +23,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -31,13 +31,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Quotation } from "../schemas";
-import { Input } from "@/components/ui/input";
-import Loader from "@/components/loader";
-import { useToast } from "@/hooks/use-toast";
-import { useQuotations } from "../api/use-quotations";
-import { redirect } from "next/navigation";
+} from '@/components/ui/table';
+import { Quotation } from '../schemas';
+import { Input } from '@/components/ui/input';
+import Loader from '@/components/loader';
+import { useToast } from '@/hooks/use-toast';
+import { useQuotations } from '../api/use-quotations';
+import { redirect } from 'next/navigation';
+import Fuse from 'fuse.js';
 
 const ActionsCell = ({ quotation }: { quotation: Quotation }) => {
   const { toast } = useToast();
@@ -45,7 +46,7 @@ const ActionsCell = ({ quotation }: { quotation: Quotation }) => {
   const handleCopyCustomerId = () => {
     navigator.clipboard.writeText(quotation.customerId!);
     toast({
-      title: "Customer ID copied",
+      title: 'Customer ID copied',
       description: quotation.customerId,
     });
   };
@@ -53,7 +54,7 @@ const ActionsCell = ({ quotation }: { quotation: Quotation }) => {
   const handleCopyEnquiryNumber = () => {
     navigator.clipboard.writeText(quotation.enquiryNumber!);
     toast({
-      title: "Enquiry Number copied",
+      title: 'Enquiry Number copied',
       description: quotation?.enquiryNumber,
     });
   };
@@ -61,7 +62,7 @@ const ActionsCell = ({ quotation }: { quotation: Quotation }) => {
   const handleCopyQuotationId = () => {
     navigator.clipboard.writeText(quotation.id!);
     toast({
-      title: "Quotation ID copied",
+      title: 'Quotation ID copied',
       description: quotation?.id,
     });
   };
@@ -108,45 +109,45 @@ const ActionsCell = ({ quotation }: { quotation: Quotation }) => {
 
 const columns: ColumnDef<Quotation>[] = [
   {
-    accessorKey: "customerName",
+    accessorKey: 'customerName',
     header: ({ column }) => {
       return (
         <Button
           variant="outline"
-          size={"sm"}
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          size={'sm'}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Customer Name
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
-    cell: ({ row }) => <div>{row.getValue("customerName")}</div>,
+    cell: ({ row }) => <div>{row.getValue('customerName')}</div>,
   },
   {
-    accessorKey: "enquiryNumber",
-    header: "Enquiry Number",
+    accessorKey: 'enquiryNumber',
+    header: 'Enquiry Number',
     cell: ({ row }) => {
-      const enquiryNumber = row.getValue("enquiryNumber") as string;
-      return enquiryNumber ? <div>{enquiryNumber}</div> : "NA";
+      const enquiryNumber = row.getValue('enquiryNumber') as string;
+      return enquiryNumber ? <div>{enquiryNumber}</div> : 'NA';
     },
   },
   {
-    accessorKey: "quoteNumber",
-    header: "Quote Number",
+    accessorKey: 'quoteNumber',
+    header: 'Quote Number',
     cell: ({ row }) => {
-      const quoteNumber = row.getValue("quoteNumber") as string;
-      return quoteNumber ? <div>{quoteNumber}</div> : "NA";
+      const quoteNumber = row.getValue('quoteNumber') as string;
+      return quoteNumber ? <div>{quoteNumber}</div> : 'NA';
     },
   },
   {
-    accessorKey: "totalAmount",
+    accessorKey: 'totalAmount',
     header: ({ column }) => {
       return (
         <Button
           variant="outline"
-          size={"sm"}
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          size={'sm'}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Total Amount
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -154,8 +155,8 @@ const columns: ColumnDef<Quotation>[] = [
       );
     },
     cell: ({ row }) => {
-      const totalAmount = row.getValue("totalAmount") as number;
-      const currency = row.original.items[0].currency || "INR";
+      const totalAmount = row.getValue('totalAmount') as number;
+      const currency = row.original.items[0].currency || 'INR';
       return (
         <div>
           {currency} {totalAmount}
@@ -164,10 +165,10 @@ const columns: ColumnDef<Quotation>[] = [
     },
   },
   {
-    accessorKey: "id",
+    accessorKey: 'id',
   },
   {
-    id: "actions",
+    id: 'actions',
     enableHiding: false,
     cell: ({ row }) => <ActionsCell quotation={row.original} />,
   },
@@ -183,10 +184,24 @@ export default function QuotationsTable() {
       id: false,
     });
   const [rowSelection, setRowSelection] = React.useState({});
+  const [searchQuery, setSearchQuery] = React.useState('');
   const { data: quotations = [], isLoading } = useQuotations();
 
+  // Fuse.js configuration
+  const fuse = React.useMemo(() => {
+    return new Fuse(quotations ?? [], {
+      keys: ['customerName', 'enquiryNumber', 'quoteNumber', 'totalAmount'],
+      threshold: 0.1, // Adjust threshold for fuzzy matching
+    });
+  }, [quotations]);
+
+  const filteredQuotations = React.useMemo(() => {
+    if (!searchQuery) return quotations;
+    return fuse.search(searchQuery).map((result) => result.item);
+  }, [searchQuery, fuse, quotations]);
+
   const table = useReactTable({
-    data: quotations ?? [],
+    data: filteredQuotations ?? [],
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -213,12 +228,8 @@ export default function QuotationsTable() {
       <div className="flex items-center py-4">
         <Input
           placeholder="Search Customers by name"
-          value={
-            (table.getColumn("customerName")?.getFilterValue() as string) ?? ""
-          }
-          onChange={(event) =>
-            table.getColumn("customerName")?.setFilterValue(event.target.value)
-          }
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
           className="max-w-sm"
         />
       </div>
@@ -247,7 +258,7 @@ export default function QuotationsTable() {
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
+                  data-state={row.getIsSelected() && 'selected'}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

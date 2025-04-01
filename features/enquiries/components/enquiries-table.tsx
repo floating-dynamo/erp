@@ -217,18 +217,26 @@ const EnquiriesTable: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const { data: enquiries, isLoading } = useEnquiries({});
 
+  const processedEnquiries = React.useMemo(() => {
+    return enquiries?.map((enquiry) => ({
+      ...enquiry,
+      formattedEnquiryDate: formatDate(new Date(enquiry.enquiryDate)),
+      formattedQuotationDueDate: formatDate(new Date(enquiry.quotationDueDate)),
+    }));
+  }, [enquiries]);
+
   const fuse = React.useMemo(() => {
-    return new Fuse(enquiries || [], {
+    return new Fuse(processedEnquiries || [], {
       keys: [
         'customerName',
         'enquiryNumber',
         'customerId',
-        'enquiryDate',
-        'quotationDueDate',
+        'formattedEnquiryDate',
+        'formattedQuotationDueDate',
       ],
-      threshold: 0.0, // Adjust threshold for fuzzy matching
+      threshold: 0.1, // Adjust threshold for fuzzy matching
     });
-  }, [enquiries]);
+  }, [processedEnquiries]);
 
   const filteredEnquiries = React.useMemo(() => {
     if (!searchQuery) return enquiries;
