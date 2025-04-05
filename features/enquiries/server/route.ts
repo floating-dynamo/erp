@@ -1,14 +1,14 @@
-import { connectDB } from "@/lib/db";
-import { Hono } from "hono";
-import EnquiryModel from "../model";
-import { createEnquirySchema } from "../schemas";
-import uuid4 from "uuid4";
+import { connectDB } from '@/lib/db';
+import { Hono } from 'hono';
+import EnquiryModel from '../model';
+import { createEnquirySchema } from '../schemas';
+import uuid4 from 'uuid4';
 
 const app = new Hono()
-  .get("/", async (c) => {
+  .get('/', async (c) => {
     try {
       await connectDB();
-      const customerId = c.req.query("customerId");
+      const customerId = c.req.query('customerId');
       let enquiries;
 
       if (customerId) {
@@ -20,10 +20,10 @@ const app = new Hono()
       return c.json({ enquiries });
     } catch (error) {
       console.log(error);
-      return c.json({ error: "Failed to fetch enquiries" }, 500);
+      return c.json({ error: 'Failed to fetch enquiries' }, 500);
     }
   })
-  .post("/", async (c) => {
+  .post('/', async (c) => {
     try {
       const body = await c.req.json();
 
@@ -36,7 +36,7 @@ const app = new Hono()
       return c.json(
         {
           success: true,
-          message: "Enquiry added successfully",
+          message: 'Enquiry added successfully',
         },
         201
       );
@@ -45,24 +45,41 @@ const app = new Hono()
       return c.json(
         {
           success: false,
-          message: "Error adding enquiry",
+          message: 'Error adding enquiry',
         },
         400
       );
     }
   })
-  .get("/:id", async (c) => {
+  .get('/:id', async (c) => {
     try {
       const { id } = c.req.param();
       const enquiry = ((await EnquiryModel.find({ id })) || [])[0];
       if (!enquiry) {
-        return c.json({ error: "Enquiry not found" }, 404);
+        return c.json({ error: 'Enquiry not found' }, 404);
       }
       return c.json(enquiry);
     } catch (error) {
       console.log(error);
-      return c.json({ error: "Failed to fetch enquiry" }, 500);
+      return c.json({ error: 'Failed to fetch enquiry' }, 500);
+    }
+  })
+  .patch('/:id', async (c) => {
+    try {
+      const { id } = c.req.param();
+      const body = await c.req.json();
+
+      const parsedData = createEnquirySchema.parse(body);
+
+      const enquiry = ((await EnquiryModel.find({ id })) || [])[0];
+      if (!enquiry) {
+        return c.json({ error: 'Enquiry not found' }, 404);
+      }
+      await EnquiryModel.updateOne({ id }, { $set: parsedData });
+      return c.json({ success: true, message: 'Enquiry updated successfully' });
+    } catch (error) {
+      console.log(error);
+      return c.json({ error: 'Failed to update enquiry' }, 500);
     }
   });
-
 export default app;

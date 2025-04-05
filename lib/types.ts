@@ -4,7 +4,7 @@ import {
   EditCustomerResponse,
   GetCusomtersResponse,
 } from './types/customer';
-import { AddEnquiryResponse, GetEnquiriesResponse } from './types/requirement';
+import { AddEnquiryResponse, EditEnquiryResponse, GetEnquiriesResponse } from './types/requirement';
 import { Enquiry } from '@/features/enquiries/schemas';
 import { GetCountriesResponse } from './types/index';
 import { AddQuotationResponse, GetQuotationsResponse } from './types/quotation';
@@ -39,6 +39,13 @@ export interface IApiService {
     enquiry: Enquiry;
   }) => Promise<AddEnquiryResponse>;
   getEnquiryById: ({ id }: { id: string }) => Promise<Enquiry | null>;
+  editEnquiry: ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: Enquiry;
+  }) => Promise<EditEnquiryResponse>;
 
   // Quotation Endpoints
   getQuotations: () => Promise<GetQuotationsResponse>;

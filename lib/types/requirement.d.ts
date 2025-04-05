@@ -1,4 +1,4 @@
-import { Enquiry } from "@/features/enquiries/schemas";
+import { Enquiry } from '@/features/enquiries/schemas';
 
 export interface EnquiryItem {
   itemCode: string;
@@ -10,6 +10,11 @@ export interface GetEnquiriesResponse {
 }
 
 export interface AddEnquiryResponse {
+  message: string;
+  success: boolean;
+}
+
+export interface EditEnquiryResponse {
   message: string;
   success: boolean;
 }

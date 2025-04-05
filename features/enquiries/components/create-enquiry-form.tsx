@@ -52,6 +52,7 @@ import { useCustomers } from '@/features/customers/api/use-customers';
 import { useGetCustomerDetails } from '@/features/customers/api/use-get-customer-details';
 import { useGetEnquiryDetails } from '../api/use-get-enquiry-details';
 import { EnquiryNotFound } from '@/app/(standalone)/enquiries/[enquiryId]/page';
+import { useEditEnquiry } from '../api/use-edit-enquiry';
 
 interface CreateEnquiryFormProps {
   onCancel?: () => void;
@@ -71,8 +72,11 @@ export const CreateEnquiryForm = ({
     isFetching: isFetchingEnquiry,
     status: fetchEnquiryStatus,
   } = useGetEnquiryDetails({ id: enquiryId || '' });
-  const { mutate: addEnquiry, isPending } = useAddEnquiry();
+  const { mutate: addEnquiry, isPending: isPendingAddEnquiry } =
+    useAddEnquiry();
   const { data: customers, isLoading } = useCustomers();
+  const { mutate: editEnquiry, isPending: isPendingEditEnquiry } =
+    useEditEnquiry();
   const searchParams = useSearchParams();
   const customerId = searchParams.get('customer') || '';
   const { data: customer, isFetching: isFetchingCustomer } =
@@ -80,7 +84,9 @@ export const CreateEnquiryForm = ({
       id: customerId || '',
     });
   const [customerSelectOpen, setCustomerSelectOpen] = useState(false);
+  const [formKey, setFormKey] = useState(0)
   const isEdit = !!enquiryId;
+  const isPending = isPendingEditEnquiry || isPendingAddEnquiry;
 
   const form = useForm<ZodCreateEnquirySchema>({
     resolver: zodResolver(createEnquirySchema),
@@ -101,6 +107,8 @@ export const CreateEnquiryForm = ({
 
   useEffect(() => {
     if (isEdit && enquiryData) {
+      console.log('Editing Enquiry Data: ', enquiryData);
+      setFormKey((prevKey) => prevKey + 1);
       form.reset(enquiryData);
     }
   }, [isEdit, enquiryData, form]);
@@ -128,6 +136,18 @@ export const CreateEnquiryForm = ({
     console.log('Enquiry: ', finalValues);
     if (isEdit) {
       console.log('Editing enquiry');
+      editEnquiry(
+        {
+          id: enquiryId,
+          enquiry: finalValues,
+        },
+        {
+          onSuccess: () => {
+            form.reset();
+            router.push('/enquiries');
+          },
+        }
+      );
     } else {
       addEnquiry(finalValues, {
         onSuccess: () => {
@@ -175,7 +195,7 @@ export const CreateEnquiryForm = ({
         <Separator />
       </div>
       <CardContent className="p-7">
-        <Form {...form}>
+        <Form {...form} key={formKey}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="flex flex-col gap-y-4">
               <FormField

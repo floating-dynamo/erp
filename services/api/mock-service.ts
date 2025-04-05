@@ -84,6 +84,22 @@ const mockService: IApiService = {
       }, 1000);
     });
   },
+  editEnquiry({ id, data }) {
+    const enquiry = enquiries.find((enquiry) => enquiry.id === id) || null;
+    const updatedEnquiry = { ...enquiry, ...data };
+    const index = enquiries.findIndex((enquiry) => enquiry.id === id);
+    if (index !== -1) {
+      enquiries[index] = updatedEnquiry;
+    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          message: 'Enquiry details edited',
+          success: true,
+        });
+      }, 1000);
+    });
+  },
   async getCountries() {
     try {
       const countries = await axios.get('/api/countries');

@@ -81,6 +81,17 @@ const apiService: IApiService = {
       throw new Error(`Error fetching the eqnuiry ${(error as Error).message}`);
     }
   },
+  async editEnquiry({ id, data }) {
+    try {
+      const response = await axios.patch(`/api/enquiries/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(
+        `Error editing enquiry details ${(error as Error).message}`
+      );
+    }
+  },
   // Quotation Endpoints
   async getQuotations() {
     try {

@@ -1,44 +1,39 @@
 import APIService from '@/services/api';
 import { QueryClient, useMutation } from '@tanstack/react-query';
-import { EditCustomerResponse } from '@/lib/types/customer';
-import { Customer } from '../schemas';
+import { EditEnquiryResponse } from '@/lib/types/requirement';
+import { Enquiry } from '../schemas';
 import { toast } from '@/hooks/use-toast';
 
-export const useEditCustomer = () => {
+export const useEditEnquiry = () => {
   const queryClient = new QueryClient();
 
   const mutation = useMutation<
-    EditCustomerResponse,
+    EditEnquiryResponse,
     Error,
-    { id: string; customer: Customer }
+    { id: string; enquiry: Enquiry }
   >({
-    mutationFn: async ({
-      id,
-      customer,
-    }: {
-      id: string;
-      customer: Customer;
-    }) => {
-      const response = await APIService.editCustomer({ id, data: customer });
+    mutationFn: async ({ id, enquiry }: { id: string; enquiry: Enquiry }) => {
+      const response = await APIService.editEnquiry({ id, data: enquiry });
       return response;
     },
     onSuccess: (_, { id }) => {
       toast({
-        title: 'Customer updated',
-        description: 'The customer has been edited successfully',
+        title: 'Enquiry edited',
+        description: 'The enquiry has been edited successfully',
       });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customers', id] });
       queryClient.invalidateQueries({ queryKey: ['enquiries'] });
+      queryClient.invalidateQueries({ queryKey: ['enquiries', id] });
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
     },
     onError: (err) => {
       toast({
-        title: 'Failed to update the customer',
-        description: 'An error occurred while updating the customer',
+        title: 'Failed to update the enquiry',
+        description: 'An error occurred while updating the enquiry',
         variant: 'destructive',
       });
-      console.error('Failed to update the customer: ', err);
+      console.error('Failed to create the enquiry: ', err);
     },
   });
 
