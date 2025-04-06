@@ -10,7 +10,17 @@ const app = new Hono()
   .get('/', async (c) => {
     try {
       await connectDB();
-      const customers = await CustomerModel.find();
+
+      const country = c.req.query('country');
+      const state = c.req.query('state');
+      const city = c.req.query('city');
+
+      const query: Record<string, string> = {};
+      if (country) query['address.country'] = country;
+      if (state) query['address.state'] = state;
+      if (city) query['address.city'] = city;
+
+      const customers = await CustomerModel.find(query);
       return c.json({ customers });
     } catch (error) {
       console.log(error);

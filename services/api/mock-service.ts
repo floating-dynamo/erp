@@ -12,11 +12,26 @@ const enquiries: Enquiry[] = ENQUIRIES_MOCK_DATA;
 const quotations: Quotation[] = QUOTATIONS_MOCK_DATA;
 
 const mockService: IApiService = {
-  async getCustomers() {
+  async getCustomers(queryString: string = '') {
+    const params = new URLSearchParams(queryString);
+    const country = params.get('country');
+    const state = params.get('state');
+    const city = params.get('city');
+
+    const filteredCustomers = customers?.filter((customer) => {
+      if (!customer?.address) return false;
+      const countryMatch = country
+        ? customer?.address.country === country
+        : true;
+      const stateMatch = state ? customer?.address.state === state : true;
+      const cityMatch = city ? customer?.address.city === city : true;
+      return countryMatch && stateMatch && cityMatch;
+    });
+
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
-          customers,
+          customers: filteredCustomers,
         });
       }, 1000);
     });

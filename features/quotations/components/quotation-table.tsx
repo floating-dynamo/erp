@@ -13,7 +13,14 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ArrowUpDown, CopyIcon, EyeIcon, MoreHorizontal } from 'lucide-react';
+import {
+  ArrowUpDown,
+  CopyIcon,
+  EyeIcon,
+  FilterIcon,
+  MoreHorizontal,
+  RefreshCwIcon,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -185,14 +192,25 @@ export default function QuotationsTable() {
     });
   const [rowSelection, setRowSelection] = React.useState({});
   const [searchQuery, setSearchQuery] = React.useState('');
-  const { data: quotations = [], isLoading } = useQuotations();
+  const {
+    data: quotations = [],
+    isLoading,
+    refetch: refetchQuotationData,
+  } = useQuotations();
+  const fuseQuotationSearchKeys = [
+    'customerName',
+    'enquiryNumber',
+    'quoteNumber',
+    'totalAmount',
+  ];
 
   // Fuse.js configuration
   const fuse = React.useMemo(() => {
     return new Fuse(quotations ?? [], {
-      keys: ['customerName', 'enquiryNumber', 'quoteNumber', 'totalAmount'],
+      keys: fuseQuotationSearchKeys,
       threshold: 0.1, // Adjust threshold for fuzzy matching
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quotations]);
 
   const filteredQuotations = React.useMemo(() => {
@@ -225,13 +243,21 @@ export default function QuotationsTable() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Search Customers by name"
-          value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)}
-          className="max-w-sm"
-        />
+      <div className="flex items-center py-4 gap-4 justify-between">
+        <div className="flex gap-2 items-center">
+          <Input
+            placeholder="Search Quotation..."
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="max-w-sm"
+          />
+          <Button>
+            <FilterIcon className="size-4" />
+          </Button>
+        </div>
+        <Button variant="secondary" onClick={() => refetchQuotationData()}>
+          <RefreshCwIcon className="size-4" /> Refresh Data
+        </Button>
       </div>
       <div className="rounded-md border">
         <Table>

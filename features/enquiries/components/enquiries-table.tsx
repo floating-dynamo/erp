@@ -19,7 +19,9 @@ import {
   CirclePlusIcon,
   CopyIcon,
   EyeIcon,
+  FilterIcon,
   MoreHorizontal,
+  RefreshCwIcon,
   XIcon,
 } from 'lucide-react';
 
@@ -215,7 +217,18 @@ const EnquiriesTable: React.FC = () => {
     });
   const [rowSelection, setRowSelection] = React.useState({});
   const [searchQuery, setSearchQuery] = React.useState('');
-  const { data: enquiries, isLoading } = useEnquiries({});
+  const {
+    data: enquiries,
+    isLoading,
+    refetch: refetchEnquiryData,
+  } = useEnquiries({});
+  const fuseEnquirySearchKeys = [
+    'customerName',
+    'enquiryNumber',
+    'customerId',
+    'formattedEnquiryDate',
+    'formattedQuotationDueDate',
+  ];
 
   const processedEnquiries = React.useMemo(() => {
     return enquiries?.map((enquiry) => ({
@@ -227,15 +240,10 @@ const EnquiriesTable: React.FC = () => {
 
   const fuse = React.useMemo(() => {
     return new Fuse(processedEnquiries || [], {
-      keys: [
-        'customerName',
-        'enquiryNumber',
-        'customerId',
-        'formattedEnquiryDate',
-        'formattedQuotationDueDate',
-      ],
+      keys: fuseEnquirySearchKeys,
       threshold: 0.1, // Adjust threshold for fuzzy matching
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [processedEnquiries]);
 
   const filteredEnquiries = React.useMemo(() => {
@@ -268,13 +276,21 @@ const EnquiriesTable: React.FC = () => {
 
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Search Enquiry..."
-          value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)}
-          className="max-w-sm"
-        />
+      <div className="flex items-center py-4 gap-4 justify-between">
+        <div className="flex gap-2 items-center">
+          <Input
+            placeholder="Search Enquiry..."
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="max-w-sm"
+          />
+          <Button variant="outline">
+            <FilterIcon className="size-4" />
+          </Button>
+        </div>
+        <Button variant="secondary" onClick={() => refetchEnquiryData()}>
+          <RefreshCwIcon className="size-4" /> Refresh Data
+        </Button>
       </div>
       <div className="rounded-md border">
         <Table>

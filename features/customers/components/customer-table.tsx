@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import React, { useState } from 'react';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -17,8 +17,12 @@ import {
   ArrowUpDown,
   CopyIcon,
   EyeIcon,
+  FilterIcon,
+  FilterX,
   MoreHorizontal,
   PlusCircleIcon,
+  RefreshCwIcon,
+  XIcon,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -45,6 +49,13 @@ import Loader from '@/components/loader';
 import { redirect } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import Fuse from 'fuse.js';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const ActionsCell = ({ customer }: { customer: Customer }) => {
   const { toast } = useToast();
@@ -144,6 +155,99 @@ const columns: ColumnDef<Customer>[] = [
   },
 ];
 
+const CustomerSearchFilters = ({
+  countries,
+  states,
+  cities,
+  selectedCountry,
+  setSelectedCountry,
+  selectedState,
+  setSelectedState,
+  selectedCity,
+  setSelectedCity,
+  clearFilters,
+}: {
+  countries: string[];
+  states: string[];
+  cities: string[];
+  selectedCountry: string;
+  setSelectedCountry: (value: string) => void;
+  selectedState: string;
+  setSelectedState: (value: string) => void;
+  selectedCity: string;
+  setSelectedCity: (value: string) => void;
+  clearFilters: () => void;
+}) => {
+  return (
+    <div>
+      <h2 className="text-lg font-semibold">Filter Customers</h2>
+      <div className="flex gap-4 p-4">
+        <div className="flex gap-4 items-center">
+          <label className="text-sm font-medium" htmlFor="country">
+            Country
+          </label>
+          <Select
+            value={selectedCountry}
+            onValueChange={(value) => setSelectedCountry(value)}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Select a country" />
+            </SelectTrigger>
+            <SelectContent>
+              {countries.map((country) => (
+                <SelectItem key={country} value={country}>
+                  {country}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex gap-4 items-center">
+          <label className="text-sm font-medium" htmlFor="state">
+            State
+          </label>
+          <Select
+            value={selectedState}
+            onValueChange={(value) => setSelectedState(value)}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Select a state" />
+            </SelectTrigger>
+            <SelectContent>
+              {states.map((state) => (
+                <SelectItem key={state} value={state}>
+                  {state}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex gap-4 items-center">
+          <label htmlFor="city">City</label>
+          <Select
+            value={selectedCity}
+            onValueChange={(value) => setSelectedCity(value)}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Select a city" />
+            </SelectTrigger>
+            <SelectContent>
+              {cities.map((city) => (
+                <SelectItem key={city} value={city}>
+                  {city}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button onClick={() => clearFilters()} variant="tertiaryDestuctive">
+          <XIcon className="size-4" /> Clear Filters
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 export default function CustomerTable() {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -155,13 +259,44 @@ export default function CustomerTable() {
     });
   const [rowSelection, setRowSelection] = React.useState({});
   const [searchQuery, setSearchQuery] = React.useState('');
-  const { data: customers = [], isLoading } = useCustomers();
+
+  const [showFilter, setShowFilter] = useState<boolean>(false);
+  const [filterCity, setFilterCity] = useState<string>('');
+  const [filterState, setFilterState] = useState<string>('');
+  const [filterCountry, setFilterCountry] = useState<string>('');
+
+  const clearFilters = (closeFiter: boolean = false) => {
+    setFilterCity('');
+    setFilterState('');
+    setFilterCountry('');
+    if (closeFiter) {
+      setShowFilter(false);
+    }
+  };
+
+  const {
+    data: customers = [],
+    isLoading,
+    refetch: refetchCustomerData,
+  } = useCustomers({
+    city: filterCity,
+    state: filterState,
+    country: filterCountry,
+  });
+  const fuseCustomerSearchKeys = [
+    'name',
+    'address.city',
+    'address.state',
+    'gstNumber',
+    'vendorId',
+  ];
 
   const fuse = React.useMemo(() => {
     return new Fuse(customers || [], {
-      keys: ['name', 'address.city', 'address.state', 'gstNumber', 'vendorId'],
+      keys: fuseCustomerSearchKeys,
       threshold: 0.1, // Adjust threshold for fuzzy matching
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customers]);
 
   const filteredCustomers = React.useMemo(() => {
@@ -188,20 +323,86 @@ export default function CustomerTable() {
     },
   });
 
+  const toggleFilter = () => {
+    setShowFilter((prev) => {
+      if (prev) {
+        clearFilters(true);
+      }
+      return !prev;
+    });
+  };
+
   if (isLoading) {
     return <Loader text="Fetching all customers" />;
   }
 
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Search Customer..."
-          value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)}
-          className="max-w-sm"
-        />
+      <div className="flex items-center py-4 gap-4 justify-between flex-wrap">
+        <div className="flex gap-2 items-center">
+          <Input
+            placeholder="Search Customer..."
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="max-w-sm"
+          />
+          <Button
+            variant={showFilter ? 'tertiaryDestuctive' : 'outline'}
+            onClick={() => toggleFilter()}
+          >
+            {showFilter ? (
+              <FilterX className="size-4" />
+            ) : (
+              <FilterIcon className="size-4" />
+            )}
+          </Button>
+        </div>
+        <Button variant="secondary" onClick={() => refetchCustomerData()}>
+          <RefreshCwIcon className="size-4" /> Refresh Data
+        </Button>
       </div>
+      {showFilter && customers && (
+        <div>
+          <CustomerSearchFilters
+            clearFilters={clearFilters}
+            cities={Array.from(
+              new Set(
+                customers
+                  ?.map(({ address: { city } }) => city)
+                  .filter(
+                    (city) => city !== undefined && city !== ' ' && city !== ''
+                  )
+              )
+            )}
+            countries={Array.from(
+              new Set(
+                customers
+                  ?.map(({ address: { country } }) => country)
+                  .filter(
+                    (country) =>
+                      country !== undefined && country !== ' ' && country !== ''
+                  )
+              )
+            )}
+            states={Array.from(
+              new Set(
+                customers
+                  ?.map(({ address: { state } }) => state)
+                  .filter(
+                    (state) =>
+                      state !== undefined && state !== ' ' && state !== ''
+                  )
+              )
+            )}
+            selectedCity={filterCity}
+            setSelectedCity={setFilterCity}
+            selectedCountry={filterCountry}
+            setSelectedCountry={setFilterCountry}
+            selectedState={filterState}
+            setSelectedState={setFilterState}
+          />
+        </div>
+      )}
       <div className="rounded-md border">
         <Table>
           <TableHeader>

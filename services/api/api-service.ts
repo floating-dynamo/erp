@@ -3,9 +3,9 @@ import axios from 'axios';
 
 const apiService: IApiService = {
   // Customer Endpoints
-  async getCustomers() {
+  async getCustomers(queryString: string = '') {
     try {
-      const customers = await axios.get('/api/customers');
+      const customers = await axios.get(`/api/customers${queryString}`);
       return customers.data;
     } catch (error) {
       console.error(error);

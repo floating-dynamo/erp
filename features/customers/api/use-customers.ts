@@ -1,11 +1,28 @@
-import APIService from "@/services/api";
-import { useQuery } from "@tanstack/react-query";
+import APIService from '@/services/api';
+import { useQuery } from '@tanstack/react-query';
 
-export const useCustomers = () => {
+export const useCustomers = (filters?: {
+  country?: string;
+  state?: string;
+  city?: string;
+}) => {
   const query = useQuery({
-    queryKey: ["customers"],
+    queryKey: ['customers', filters],
     queryFn: async () => {
-      const response = await APIService.getCustomers();
+      const queryParams = new URLSearchParams();
+
+      if (filters?.country) {
+        queryParams.append('country', filters.country);
+      }
+      if (filters?.state) {
+        queryParams.append('state', filters.state);
+      }
+      if (filters?.city) {
+        queryParams.append('city', filters.city);
+      }
+      const queryString = `?${queryParams.toString()}`;
+
+      const response = await APIService.getCustomers(queryString);
 
       if (!response) {
         return null;
