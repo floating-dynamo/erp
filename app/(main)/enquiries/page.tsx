@@ -15,7 +15,6 @@ const EnquiriesPage = () => {
         </Button>
       </div>
       <div>
-        <h3 className="font-bold text-xl">Enquiries Listing</h3>
         <EnquiriesTable />
       </div>
     </div>

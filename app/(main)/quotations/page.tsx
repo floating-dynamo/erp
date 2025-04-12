@@ -15,7 +15,6 @@ const QuotationsPage = () => {
         </Button>
       </div>
       <div>
-        <h3 className="font-bold text-xl">Quotations Listing</h3>
         <QuotationsTable />
       </div>
     </div>

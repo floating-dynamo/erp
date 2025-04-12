@@ -9,11 +9,12 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 import {
+  ArrowLeft,
+  ArrowRight,
   ArrowUpDown,
   CopyIcon,
   EyeIcon,
@@ -178,11 +179,31 @@ const CustomerSearchFilters = ({
   setSelectedCity: (value: string) => void;
   clearFilters: () => void;
 }) => {
+  const sanitizedCities = Array.from(
+    new Set(
+      cities.filter((city) => city !== undefined && city !== ' ' && city !== '')
+    )
+  );
+  const sanitizedStates = Array.from(
+    new Set(
+      states.filter(
+        (state) => state !== undefined && state !== ' ' && state !== ''
+      )
+    )
+  );
+  const sanitizedCountries = Array.from(
+    new Set(
+      countries.filter(
+        (country) => country !== undefined && country !== ' ' && country !== ''
+      )
+    )
+  );
+
   return (
     <div>
-      <h2 className="text-lg font-semibold">Filter Customers</h2>
-      <div className="flex gap-4 p-4">
-        <div className="flex gap-4 items-center">
+      <h2 className="text-md font-semibold">Select Filters</h2>
+      <div className="flex gap-4 p-4 flex-wrap">
+        <div className="flex gap-4 items-center flex-wrap">
           <label className="text-sm font-medium" htmlFor="country">
             Country
           </label>
@@ -194,7 +215,7 @@ const CustomerSearchFilters = ({
               <SelectValue placeholder="Select a country" />
             </SelectTrigger>
             <SelectContent>
-              {countries.map((country) => (
+              {sanitizedCountries.map((country) => (
                 <SelectItem key={country} value={country}>
                   {country}
                 </SelectItem>
@@ -214,7 +235,7 @@ const CustomerSearchFilters = ({
               <SelectValue placeholder="Select a state" />
             </SelectTrigger>
             <SelectContent>
-              {states.map((state) => (
+              {sanitizedStates.map((state) => (
                 <SelectItem key={state} value={state}>
                   {state}
                 </SelectItem>
@@ -232,7 +253,7 @@ const CustomerSearchFilters = ({
               <SelectValue placeholder="Select a city" />
             </SelectTrigger>
             <SelectContent>
-              {cities.map((city) => (
+              {sanitizedCities.map((city) => (
                 <SelectItem key={city} value={city}>
                   {city}
                 </SelectItem>
@@ -265,6 +286,9 @@ export default function CustomerTable() {
   const [filterState, setFilterState] = useState<string>('');
   const [filterCountry, setFilterCountry] = useState<string>('');
 
+  const [page, setPage] = React.useState(0);
+  const [limit] = React.useState(15);
+
   const clearFilters = (closeFiter: boolean = false) => {
     setFilterCity('');
     setFilterState('');
@@ -275,14 +299,20 @@ export default function CustomerTable() {
   };
 
   const {
-    data: customers = [],
+    data = { customers: [], total: 0, totalPages: 0 },
     isLoading,
     refetch: refetchCustomerData,
   } = useCustomers({
     city: filterCity,
     state: filterState,
     country: filterCountry,
+    page: page + 1,
+    limit: limit,
   });
+
+  const { customers, total, totalPages } = data || {};
+  console.log(customers, total, totalPages);
+
   const fuseCustomerSearchKeys = [
     'name',
     'address.city',
@@ -310,7 +340,9 @@ export default function CustomerTable() {
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    manualPagination: true,
+    pageCount: totalPages,
+    rowCount: total,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
@@ -365,35 +397,9 @@ export default function CustomerTable() {
         <div>
           <CustomerSearchFilters
             clearFilters={clearFilters}
-            cities={Array.from(
-              new Set(
-                customers
-                  ?.map(({ address: { city } }) => city)
-                  .filter(
-                    (city) => city !== undefined && city !== ' ' && city !== ''
-                  )
-              )
-            )}
-            countries={Array.from(
-              new Set(
-                customers
-                  ?.map(({ address: { country } }) => country)
-                  .filter(
-                    (country) =>
-                      country !== undefined && country !== ' ' && country !== ''
-                  )
-              )
-            )}
-            states={Array.from(
-              new Set(
-                customers
-                  ?.map(({ address: { state } }) => state)
-                  .filter(
-                    (state) =>
-                      state !== undefined && state !== ' ' && state !== ''
-                  )
-              )
-            )}
+            cities={customers?.map(({ address: { city } }) => city)}
+            countries={customers?.map(({ address: { country } }) => country)}
+            states={customers?.map(({ address: { state } }) => state)}
             selectedCity={filterCity}
             setSelectedCity={setFilterCity}
             selectedCountry={filterCountry}
@@ -453,30 +459,36 @@ export default function CustomerTable() {
           </TableBody>
         </Table>
       </div>
-      {/* <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+      <div className="flex items-center justify-between py-4">
+        <div>
+          <p className="text-sm text-muted-foreground">
+            Page {page + 1} of {totalPages} (Total Customers: {total})
+          </p>
         </div>
-        <div className="space-x-2">
+        <div className="space-x-2 flex items-center">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+            disabled={page === 0}
           >
-            Previous
+            <ArrowLeft className="size-4" /> Previous
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() =>
+              setPage((prev) =>
+                totalPages ? Math.min(prev + 1, totalPages - 1) : prev + 1
+              )
+            }
+            disabled={page + 1 === totalPages}
           >
             Next
+            <ArrowRight className="size-4" />
           </Button>
         </div>
-      </div> */}
+      </div>
     </div>
   );
 }

@@ -24,6 +24,10 @@ export interface CustomerPOC {
 
 export interface GetCusomtersResponse {
   customers: Customer[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export interface AddCustomerResponse {

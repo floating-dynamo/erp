@@ -41,7 +41,7 @@ const routes = [
   },
   {
     label: "My Company",
-    href: "/my-company",
+    href: "/companies",
     icon: Building2Icon,
     activeIcon: Building2Icon,
   },

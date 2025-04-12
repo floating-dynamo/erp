@@ -11,8 +11,14 @@ import {
 } from './types/requirement';
 import { Enquiry } from '@/features/enquiries/schemas';
 import { GetCountriesResponse } from './types/index';
-import { AddQuotationResponse, GetQuotationsResponse } from './types/quotation';
+import {
+  AddQuotationResponse,
+  EditQuotationResponse,
+  GetQuotationsResponse,
+} from './types/quotation';
 import { Quotation } from '@/features/quotations/schemas';
+import { Company } from '@/features/companies/schemas';
+import { GetCompaniesResponse } from './types/company';
 
 export interface IApiService {
   // Customer Endpoints
@@ -59,6 +65,21 @@ export interface IApiService {
     quotation: Quotation;
   }) => Promise<AddQuotationResponse>;
   getQuotationById: ({ id }: { id: string }) => Promise<Quotation | null>;
+  editQuotation: ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: Quotation;
+  }) => Promise<EditQuotationResponse>;
+
+  // Company Endpoints
+  addCompany: ({
+    company,
+  }: {
+    company: Company;
+  }) => Promise<AddCustomerResponse>;
+  getCompanies: () => Promise<GetCompaniesResponse>;
 
   getCountries: () => Promise<GetCountriesResponse>;
 }

@@ -5,11 +5,20 @@ export const useCustomers = (filters?: {
   country?: string;
   state?: string;
   city?: string;
+  page?: number;
+  limit?: number;
 }) => {
   const query = useQuery({
     queryKey: ['customers', filters],
     queryFn: async () => {
       const queryParams = new URLSearchParams();
+
+      if (filters?.page) {
+        queryParams.append('page', filters.page.toString());
+      }
+      if (filters?.limit) {
+        queryParams.append('limit', filters.limit.toString());
+      }
 
       if (filters?.country) {
         queryParams.append('country', filters.country);
@@ -20,6 +29,7 @@ export const useCustomers = (filters?: {
       if (filters?.city) {
         queryParams.append('city', filters.city);
       }
+
       const queryString = `?${queryParams.toString()}`;
 
       const response = await APIService.getCustomers(queryString);
@@ -28,8 +38,8 @@ export const useCustomers = (filters?: {
         return null;
       }
 
-      const { customers } = response;
-      return customers;
+      const { customers, total, limit, page, totalPages } = response;
+      return {customers, total, limit, page, totalPages};
     },
   });
 

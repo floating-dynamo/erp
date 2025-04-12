@@ -15,13 +15,24 @@ const app = new Hono()
       const state = c.req.query('state');
       const city = c.req.query('city');
 
+      const page = parseInt(c.req.query('page') || '1', 10);
+      const limit = parseInt(c.req.query('limit') || '10', 10);
+      const skip = (page - 1) * limit;
+
       const query: Record<string, string> = {};
       if (country) query['address.country'] = country;
       if (state) query['address.state'] = state;
       if (city) query['address.city'] = city;
 
-      const customers = await CustomerModel.find(query);
-      return c.json({ customers });
+      const customers = await CustomerModel.find(query).skip(skip).limit(limit);
+      const totalCustomers = await CustomerModel.countDocuments(query);
+      return c.json({
+        customers,
+        total: totalCustomers,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCustomers / limit),
+      });
     } catch (error) {
       console.log(error);
       return c.json({ error: 'Failed to fetch customers' }, 500);

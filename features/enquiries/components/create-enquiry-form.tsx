@@ -74,7 +74,8 @@ export const CreateEnquiryForm = ({
   } = useGetEnquiryDetails({ id: enquiryId || '' });
   const { mutate: addEnquiry, isPending: isPendingAddEnquiry } =
     useAddEnquiry();
-  const { data: customers, isLoading } = useCustomers();
+  const { data, isLoading } = useCustomers();
+  const { customers } = data || { customers: [] };
   const { mutate: editEnquiry, isPending: isPendingEditEnquiry } =
     useEditEnquiry();
   const searchParams = useSearchParams();
@@ -84,7 +85,7 @@ export const CreateEnquiryForm = ({
       id: customerId || '',
     });
   const [customerSelectOpen, setCustomerSelectOpen] = useState(false);
-  const [formKey, setFormKey] = useState(0)
+  const [formKey, setFormKey] = useState(0);
   const isEdit = !!enquiryId;
   const isPending = isPendingEditEnquiry || isPendingAddEnquiry;
 
