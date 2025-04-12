@@ -29,5 +29,11 @@ export const createQuotationSchema = z.object({
   myCompanyName: z.string().optional(), // MyCompany Name
 });
 
+// Define the schema for editing quotations
+export const editQuotationSchema = createQuotationSchema.extend({
+  id: z.string().min(1, "Quotation ID is required"),
+});
+
 // Export the types for usage
 export type Quotation = z.infer<typeof createQuotationSchema>;
+export type EditQuotationSchema = z.infer<typeof editQuotationSchema>;

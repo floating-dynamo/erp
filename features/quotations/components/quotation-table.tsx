@@ -251,7 +251,7 @@ export default function QuotationsTable() {
             onChange={(event) => setSearchQuery(event.target.value)}
             className="max-w-sm"
           />
-          <Button>
+          <Button variant="outline">
             <FilterIcon className="size-4" />
           </Button>
         </div>

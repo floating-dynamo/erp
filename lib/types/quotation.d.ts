@@ -9,3 +9,8 @@ export interface AddQuotationResponse {
   success: boolean;
   quoteNumber: string;
 }
+
+export interface EditQuotationResponse {
+  message: string;
+  success: boolean;
+}

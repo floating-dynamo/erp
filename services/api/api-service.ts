@@ -123,14 +123,44 @@ const apiService: IApiService = {
       console.error(error);
     }
   },
+  async editQuotation({ id, data }) {
+    try {
+      const response = await axios.patch(`/api/quotations/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error editing quotation ${(error as Error).message}`);
+    }
+  },
   // Misc Endpoints
   async getCountries() {
-    console.log('GET COUNTRIES WAS CALLED');
     try {
       const countries = await axios.get('/api/countries');
       return countries.data;
     } catch (error) {
       console.error(error);
+    }
+  },
+  // Company Endpoints
+  async addCompany({ company }) {
+    try {
+      await axios.post('/api/companies', company);
+      return {
+        message: 'Company added successfully',
+        success: true,
+      };
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error adding new company ${(error as Error).message}`);
+    }
+  },
+  async getCompanies() {
+    try {
+      const response = await axios.get('/api/companies');
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error fetching companies ${(error as Error).message}`);
     }
   },
 };

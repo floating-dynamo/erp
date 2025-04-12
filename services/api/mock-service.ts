@@ -6,10 +6,13 @@ import { ENQUIRIES_MOCK_DATA } from './mocks/enquiries';
 import axios from 'axios';
 import { Quotation } from '@/features/quotations/schemas';
 import QUOTATIONS_MOCK_DATA from './mocks/quotations';
+import { COMPANIES_MOCK_DATA } from './mocks/companies';
+import { Company } from '@/features/companies/schemas';
 
 const customers: Customer[] = CUSTOMERS_MOCK_DATA;
 const enquiries: Enquiry[] = ENQUIRIES_MOCK_DATA;
 const quotations: Quotation[] = QUOTATIONS_MOCK_DATA;
+const companies: Company[] = COMPANIES_MOCK_DATA;
 
 const mockService: IApiService = {
   async getCustomers(queryString: string = '') {
@@ -17,6 +20,8 @@ const mockService: IApiService = {
     const country = params.get('country');
     const state = params.get('state');
     const city = params.get('city');
+    const page = parseInt(params.get('page') || '1', 10);
+    const limit = parseInt(params.get('limit') || '10', 10);
 
     const filteredCustomers = customers?.filter((customer) => {
       if (!customer?.address) return false;
@@ -28,10 +33,20 @@ const mockService: IApiService = {
       return countryMatch && stateMatch && cityMatch;
     });
 
+    const totalCustomers = filteredCustomers?.length || 0;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedCustomers = filteredCustomers?.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(totalCustomers / limit);
+
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
-          customers: filteredCustomers,
+          customers: paginatedCustomers,
+          total: totalCustomers,
+          page,
+          limit,
+          totalPages,
         });
       }, 1000);
     });
@@ -149,6 +164,43 @@ const mockService: IApiService = {
           message: 'Quotation added successfully',
           success: true,
           quoteNumber: quotation.quoteNumber || '',
+        });
+      }, 1000);
+    });
+  },
+  async editQuotation({ id, data }) {
+    const quotation =
+      quotations.find((quotation) => quotation.id === id) || null;
+    const updatedQuotation = { ...quotation, ...data };
+    const index = quotations.findIndex((quotation) => quotation.id === id);
+    if (index !== -1) {
+      quotations[index] = updatedQuotation;
+    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          message: 'Quotations details edited',
+          success: true,
+        });
+      }, 1000);
+    });
+  },
+  async getCompanies() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          companies,
+        });
+      }, 1000);
+    });
+  },
+  async addCompany({ company }) {
+    companies.push(company);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          message: 'Company added successfully',
+          success: true,
         });
       }, 1000);
     });

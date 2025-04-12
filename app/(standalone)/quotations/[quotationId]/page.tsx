@@ -65,6 +65,10 @@ function QuotationDetails({ params }: QuotationDetailsPageProps) {
     });
   }
 
+  function handleEditQuotation() {
+    redirect(`/quotations/edit/${quotationId}`);
+  }
+
   return (
     <div className="w-full lg:max-w-4xl" id={quotationDetailsElementId}>
       <div className="flex items-center justify-between mb-6">
@@ -112,7 +116,10 @@ function QuotationDetails({ params }: QuotationDetailsPageProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm">
+            <DropdownMenuItem
+              onClick={handleEditQuotation}
+              className="cursor-pointer text-xs sm:text-sm"
+            >
               <PenIcon className="size-4" /> Edit Quotation
             </DropdownMenuItem>
             <Separator className="my-2" />

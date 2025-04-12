@@ -1,5 +1,5 @@
-import Loader from "@/components/loader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Loader from '@/components/loader';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -7,29 +7,29 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Separator } from "@/components/ui/separator";
-import { useGetCustomerDetails } from "@/features/customers/api/use-get-customer-details";
-import { useGetEnquiryDetails } from "@/features/enquiries/api/use-get-enquiry-details";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
-import { z } from "zod";
-import { createQuotationSchema } from "../schemas";
+} from '@/components/ui/form';
+import { Separator } from '@/components/ui/separator';
+import { useGetCustomerDetails } from '@/features/customers/api/use-get-customer-details';
+import { useGetEnquiryDetails } from '@/features/enquiries/api/use-get-enquiry-details';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import { useFieldArray, useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { createQuotationSchema } from '../schemas';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 import {
   CalendarIcon,
   Check,
   ChevronsUpDown,
   PlusCircleIcon,
   TrashIcon,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   Command,
   CommandEmpty,
@@ -37,46 +37,61 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { cn, getMetaData } from "@/lib/utils";
-import { useCustomers } from "@/features/customers/api/use-customers";
-import { useEnquiries } from "@/features/enquiries/api/use-enquiries";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import { useAddQuotation } from "../api/use-add-quotation";
-import { MetaDataType } from "@/lib/types";
+} from '@/components/ui/command';
+import { cn, getMetaData } from '@/lib/utils';
+import { useCustomers } from '@/features/customers/api/use-customers';
+import { useEnquiries } from '@/features/enquiries/api/use-enquiries';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Calendar } from '@/components/ui/calendar';
+import { useAddQuotation } from '../api/use-add-quotation';
+import { MetaDataType } from '@/lib/types';
+import { useGetQuotationDetails } from '../api/use-get-quotation-details';
+import { useEditQuotation } from '../api/use-edit-quotation';
 
 type CreateQuotationFormSchema = z.infer<typeof createQuotationSchema>;
 
-const CreateQuotationForm = () => {
+interface CreateQuotationFormProps {
+  quotationId?: string;
+}
+
+const CreateQuotationForm = ({ quotationId }: CreateQuotationFormProps) => {
   const searchParams = useSearchParams();
-  const enquiryIdInitialValue = searchParams.get("enquiry") || "";
+  const enquiryIdInitialValue = searchParams.get('enquiry') || '';
   const [enquiryId, setEnquiryId] = useState<string | undefined>(
     enquiryIdInitialValue
   );
+  const isEdit = !!quotationId;
 
   const { data: enquiry, isFetching: isFetchingEnquiry } = useGetEnquiryDetails(
-    { id: enquiryId ?? "" }
+    { id: enquiryId ?? '' }
   );
   const { data: customer, isFetching: isFetchingCustomer } =
     useGetCustomerDetails({
-      id: enquiry?.customerId || "",
+      id: enquiry?.customerId || '',
     });
-  const { data: customerList, isFetching: isFetchingCustomerList } =
-    useCustomers();
+  const { mutate: editQuotation } = useEditQuotation();
+  const { data, isFetching: isFetchingCustomerList } = useCustomers();
+  const customerList = data?.customers || [];
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>();
   const {
     data: enquiryList,
     isFetching: isFetchingEnquiryList,
     refetch: refetchEnquiry,
   } = useEnquiries({ customerId: selectedCustomerId });
+  const { data: quotationData, isFetching: isFetchingQuotation } =
+    useGetQuotationDetails({
+      id: quotationId || '',
+    });
   const [customerSelectOpen, setCustomerSelectOpen] = useState(false);
   const [enquirySelectOpen, setEnquirySelectOpen] = useState(false);
   const { mutate: addQuotation, isPending } = useAddQuotation();
   const uomMetaData = getMetaData(MetaDataType.UOM);
   const currencyMetaData = getMetaData(MetaDataType.CURRENCY);
   const router = useRouter();
+
+  const disableCustomerSelect = !!enquiryIdInitialValue || isEdit;
+  const disableEnquirySelect = !!enquiryIdInitialValue || isEdit;
 
   const form = useForm<CreateQuotationFormSchema>({
     resolver: zodResolver(createQuotationSchema),
@@ -88,39 +103,48 @@ const CreateQuotationForm = () => {
     remove: removeItem,
   } = useFieldArray({
     control: form.control,
-    name: "items",
+    name: 'items',
   });
 
   useEffect(() => {
-    form.reset({
-      customerId: enquiry?.customerId || "",
-      enquiryNumber: enquiry?.enquiryNumber || "",
-      customerName: enquiry?.customerName || "",
-      items: enquiry
-        ? enquiry?.items?.map(({ itemCode, itemDescription, quantity }) => ({
-            itemDescription,
-            quantity,
-            itemCode: itemCode || 0,
-            amount: 0,
-            rate: 0,
-            currency: "",
-            materialConsideration: "",
-            uom: "",
-          }))
-        : [
-            {
-              itemDescription: "",
-              quantity: 0,
-              itemCode: 0,
+    if (isEdit && quotationData) {
+      form.reset({
+        ...quotationData,
+        items: quotationData.items.map((item) => ({
+          ...item,
+        })),
+      });
+    } else {
+      form.reset({
+        customerId: enquiry?.customerId || '',
+        enquiryNumber: enquiry?.enquiryNumber || '',
+        customerName: enquiry?.customerName || '',
+        items: enquiry
+          ? enquiry?.items?.map(({ itemCode, itemDescription, quantity }) => ({
+              itemDescription,
+              quantity,
+              itemCode: itemCode || 0,
               amount: 0,
               rate: 0,
-              currency: "",
-              materialConsideration: "",
-              uom: "",
-            },
-          ],
-    });
-  }, [enquiry, form]);
+              currency: '',
+              materialConsideration: '',
+              uom: '',
+            }))
+          : [
+              {
+                itemDescription: '',
+                quantity: 0,
+                itemCode: 0,
+                amount: 0,
+                rate: 0,
+                currency: '',
+                materialConsideration: '',
+                uom: '',
+              },
+            ],
+      });
+    }
+  }, [enquiry, form, quotationData, isEdit]);
 
   useEffect(() => {
     if (selectedCustomerId) {
@@ -132,7 +156,8 @@ const CreateQuotationForm = () => {
     isFetchingEnquiry ||
     isFetchingCustomer ||
     isFetchingCustomerList ||
-    isFetchingEnquiryList
+    isFetchingEnquiryList ||
+    isFetchingQuotation
   ) {
     return <Loader />;
   }
@@ -144,13 +169,35 @@ const CreateQuotationForm = () => {
       amount: item.rate * item.quantity,
     }));
 
-    console.log("Quotation: ", values);
-    addQuotation(values, {
-      onSuccess: () => {
-        form.reset();
-        router.push("/quotations");
-      },
-    });
+    console.log('Quotation: ', values);
+    if (isEdit && quotationId) {
+      editQuotation(
+        {
+          id: quotationId,
+          quotation: {
+            id: quotationId,
+            ...values,
+            totalAmount: values.items.reduce(
+              (acc, prev) => prev.amount + acc,
+              0
+            ),
+          },
+        },
+        {
+          onSuccess: () => {
+            form.reset();
+            router.push('/quotations');
+          },
+        }
+      );
+    } else {
+      addQuotation(values, {
+        onSuccess: () => {
+          form.reset();
+          router.push('/quotations');
+        },
+      });
+    }
   };
 
   return (
@@ -158,13 +205,15 @@ const CreateQuotationForm = () => {
       <Card className="w-full h-full border-none shadow-none">
         <CardHeader className="flex px-7 py-3">
           <CardTitle className="text-xl font-bold flex gap-7 items-center">
-            Add a new quotation
+            {isEdit
+              ? `Editing Quotation - ${quotationData?.quoteNumber}`
+              : 'Add a new quotation'}
           </CardTitle>
           {enquiryIdInitialValue && (
             <p className="text-sm text-muted-foreground">
-              Creating Quotation for Enquiry -{" "}
+              Creating Quotation for Enquiry -{' '}
               <span className="font-semibold">
-                {enquiry?.enquiryNumber || "NA"}
+                {enquiry?.enquiryNumber || 'NA'}
               </span>
             </p>
           )}
@@ -198,10 +247,10 @@ const CreateQuotationForm = () => {
                                 variant="outline"
                                 role="combobox"
                                 className={cn(
-                                  "sm:w-[300px] w-full justify-between disabled:text-slate-800",
-                                  !field.value && "text-muted-foreground"
+                                  'sm:w-[300px] w-full justify-between disabled:text-slate-800',
+                                  !field.value && 'text-muted-foreground'
                                 )}
-                                disabled={!!enquiryIdInitialValue}
+                                disabled={disableCustomerSelect}
                               >
                                 {customer
                                   ? customer.name
@@ -209,7 +258,7 @@ const CreateQuotationForm = () => {
                                   ? customerList?.find(
                                       ({ id }) => id === field.value
                                     )?.name
-                                  : "Select Customer"}
+                                  : 'Select Customer'}
                                 {!enquiryIdInitialValue && (
                                   <ChevronsUpDown className="opacity-50" />
                                 )}
@@ -230,9 +279,9 @@ const CreateQuotationForm = () => {
                                       value={name}
                                       key={id}
                                       onSelect={() => {
-                                        form.setValue("customerId", id);
-                                        form.setValue("customerName", name);
-                                        form.setValue("enquiryNumber", "");
+                                        form.setValue('customerId', id);
+                                        form.setValue('customerName', name);
+                                        form.setValue('enquiryNumber', '');
                                         setCustomerSelectOpen(false);
                                         setSelectedCustomerId(id);
                                       }}
@@ -240,10 +289,10 @@ const CreateQuotationForm = () => {
                                       {name}
                                       <Check
                                         className={cn(
-                                          "ml-auto",
+                                          'ml-auto',
                                           id === field.value
-                                            ? "opacity-100"
-                                            : "opacity-0"
+                                            ? 'opacity-100'
+                                            : 'opacity-0'
                                         )}
                                       />
                                     </CommandItem>
@@ -266,7 +315,7 @@ const CreateQuotationForm = () => {
                   render={({ field }) => (
                     <FormItem className="flex flex-col bg-white py-4">
                       <FormLabel>
-                        Enquiry Number{" "}
+                        Enquiry Number{' '}
                         <span className="text-orange-500">*</span>
                       </FormLabel>
                       <FormControl>
@@ -280,10 +329,10 @@ const CreateQuotationForm = () => {
                                 variant="outline"
                                 role="combobox"
                                 className={cn(
-                                  "sm:w-[300px] w-full justify-between disabled:text-slate-800",
-                                  !field.value && "text-muted-foreground"
+                                  'sm:w-[300px] w-full justify-between disabled:text-slate-800',
+                                  !field.value && 'text-muted-foreground'
                                 )}
-                                disabled={!!enquiryIdInitialValue}
+                                disabled={disableEnquirySelect}
                               >
                                 {enquiry
                                   ? enquiry.enquiryNumber
@@ -292,7 +341,7 @@ const CreateQuotationForm = () => {
                                       ({ enquiryNumber }) =>
                                         enquiryNumber === field.value
                                     )?.enquiryNumber
-                                  : "Select Enquiry Number"}
+                                  : 'Select Enquiry Number'}
                                 {!enquiryIdInitialValue && (
                                   <ChevronsUpDown className="opacity-50" />
                                 )}
@@ -314,7 +363,7 @@ const CreateQuotationForm = () => {
                                       key={enquiryNumber}
                                       onSelect={() => {
                                         form.setValue(
-                                          "enquiryNumber",
+                                          'enquiryNumber',
                                           enquiryNumber
                                         );
                                         setEnquirySelectOpen(false);
@@ -324,10 +373,10 @@ const CreateQuotationForm = () => {
                                       {enquiryNumber}
                                       <Check
                                         className={cn(
-                                          "ml-auto",
+                                          'ml-auto',
                                           enquiryNumber === field.value
-                                            ? "opacity-100"
-                                            : "opacity-0"
+                                            ? 'opacity-100'
+                                            : 'opacity-0'
                                         )}
                                       />
                                     </CommandItem>
@@ -350,7 +399,7 @@ const CreateQuotationForm = () => {
                   render={({ field }) => (
                     <FormItem className="flex flex-col items-start justify-center min-w-72 py-4">
                       <FormLabel>
-                        Quotation Date{" "}
+                        Quotation Date{' '}
                         <span className="text-orange-500">*</span>
                       </FormLabel>
                       <FormControl>
@@ -359,16 +408,16 @@ const CreateQuotationForm = () => {
                             <Button
                               variant="outline"
                               className={cn(
-                                "w-full justify-start text-left",
-                                !field.value && "text-muted-foreground"
+                                'w-full justify-start text-left',
+                                !field.value && 'text-muted-foreground'
                               )}
                             >
                               <CalendarIcon />
                               {field.value
-                                ? new Intl.DateTimeFormat("en-US").format(
+                                ? new Intl.DateTimeFormat('en-US').format(
                                     new Date(field.value)
                                   )
-                                : "Pick a date"}
+                                : 'Pick a date'}
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="p-0">
@@ -380,7 +429,7 @@ const CreateQuotationForm = () => {
                               onSelect={(date) => {
                                 const selectedDate = date
                                   ? date.toISOString()
-                                  : "";
+                                  : '';
                                 field.onChange(selectedDate);
                               }}
                             />
@@ -434,7 +483,7 @@ const CreateQuotationForm = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            Description{" "}
+                            Description{' '}
                             <span className="text-orange-500">*</span>
                           </FormLabel>
                           <FormControl>
@@ -517,15 +566,15 @@ const CreateQuotationForm = () => {
                                     variant="outline"
                                     role="combobox"
                                     className={cn(
-                                      "w-full h-12 justify-between disabled:text-slate-800",
-                                      !field.value && "text-muted-foreground"
+                                      'w-full h-12 justify-between disabled:text-slate-800',
+                                      !field.value && 'text-muted-foreground'
                                     )}
                                   >
                                     {field.value
                                       ? uomMetaData?.find(
                                           (uom) => uom.value === field.value
                                         )?.label
-                                      : "Select UOM"}
+                                      : 'Select UOM'}
                                     <ChevronsUpDown className="opacity-50" />
                                   </Button>
                                 </FormControl>
@@ -553,10 +602,10 @@ const CreateQuotationForm = () => {
                                           {label}
                                           <Check
                                             className={cn(
-                                              "ml-auto",
+                                              'ml-auto',
                                               value === field.value
-                                                ? "opacity-100"
-                                                : "opacity-0"
+                                                ? 'opacity-100'
+                                                : 'opacity-0'
                                             )}
                                           />
                                         </CommandItem>
@@ -587,8 +636,8 @@ const CreateQuotationForm = () => {
                                     variant="outline"
                                     role="combobox"
                                     className={cn(
-                                      "w-full h-12 justify-between disabled:text-slate-800",
-                                      !field.value && "text-muted-foreground"
+                                      'w-full h-12 justify-between disabled:text-slate-800',
+                                      !field.value && 'text-muted-foreground'
                                     )}
                                   >
                                     {field.value
@@ -596,7 +645,7 @@ const CreateQuotationForm = () => {
                                           (currency) =>
                                             currency.value === field.value
                                         )?.label
-                                      : "Select Currency"}
+                                      : 'Select Currency'}
                                     <ChevronsUpDown className="opacity-50" />
                                   </Button>
                                 </FormControl>
@@ -627,10 +676,10 @@ const CreateQuotationForm = () => {
                                             {label}
                                             <Check
                                               className={cn(
-                                                "ml-auto",
+                                                'ml-auto',
                                                 value === field.value
-                                                  ? "opacity-100"
-                                                  : "opacity-0"
+                                                  ? 'opacity-100'
+                                                  : 'opacity-0'
                                               )}
                                             />
                                           </CommandItem>
@@ -706,11 +755,11 @@ const CreateQuotationForm = () => {
                 {/* Add Item Button */}
                 <Button
                   type="button"
-                  variant={"tertiary"}
+                  variant={'tertiary'}
                   onClick={() =>
                     addItem({
                       itemCode: 0,
-                      itemDescription: "",
+                      itemDescription: '',
                       quantity: 0,
                       amount: 0,
                       rate: 0,
@@ -725,7 +774,7 @@ const CreateQuotationForm = () => {
               <div className="flex w-full mt-6">
                 <FormField
                   control={form.control}
-                  name={"termsAndConditions"}
+                  name={'termsAndConditions'}
                   render={({ field }) => (
                     <FormItem className="w-full">
                       <FormLabel>Terms And Conditions</FormLabel>
@@ -750,7 +799,7 @@ const CreateQuotationForm = () => {
                 disabled={isPending}
                 className="w-full md:w-fit"
               >
-                Create Quotation
+                {isEdit ? 'Update Quotation' : 'Create Quotation'}
               </Button>
             </div>
           </form>

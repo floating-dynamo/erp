@@ -1,7 +1,7 @@
 import { connectDB } from "@/lib/db";
 import { Hono } from "hono";
 import QuotationModel from "../model";
-import { createQuotationSchema } from "../schemas";
+import { createQuotationSchema, editQuotationSchema } from "../schemas";
 import uuid4 from "uuid4";
 import EnquiryModel from "@/features/enquiries/model";
 import { generateQuoteNumber } from "@/lib/utils";
@@ -76,6 +76,39 @@ const app = new Hono()
     } catch (error) {
       console.log(error);
       return c.json({ error: "Failed to fetch quotation" }, 500);
+    }
+  })
+  .patch("/:id", async (c) => {
+    try {
+      await connectDB();
+      const { id } = c.req.param();
+      const body = await c.req.json();
+
+      const parsedData = editQuotationSchema.parse(body);
+
+      const updatedQuotation = await QuotationModel.findOneAndUpdate(
+        { id },
+        parsedData,
+        { new: true }
+      );
+
+      if (!updatedQuotation) {
+        return c.json({ error: "Quotation not found" }, 404);
+      }
+
+      return c.json({
+        message: "Quotation updated successfully",
+        success: true,
+      });
+    } catch (error) {
+      console.error(error);
+      return c.json(
+        {
+          message: "Error updating quotation",
+          success: false,
+        },
+        400
+      );
     }
   });
 
