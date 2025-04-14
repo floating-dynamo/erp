@@ -46,7 +46,7 @@ import {
 } from '@/components/ui/command';
 import { useGetCustomerDetails } from '../api/use-get-customer-details';
 import { useEditCustomer } from '../api/use-edit-customer';
-import { CustomerNotFound } from '@/app/(standalone)/customers/[customerId]/page';
+import { CustomerNotFound } from './customer-not-found';
 
 // Infer the form schema type
 type CreateCustomerFormSchema = z.infer<typeof createCustomerSchema>;

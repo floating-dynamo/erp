@@ -1,11 +1,13 @@
 import { CreateSupplierDcForm } from '@/features/supplier-dc/components/create-supplier-dc-form';
-import React from 'react';
+import React, { Suspense } from 'react';
 
 const CreateSupplierDcPage = () => {
   return (
-    <div className="w-full">
-      <CreateSupplierDcForm />
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <div className="w-full lg:max-w-4xl">
+        <CreateSupplierDcForm />
+      </div>
+    </Suspense>
   );
 };
 

@@ -51,8 +51,8 @@ import Loader from '@/components/loader';
 import { useCustomers } from '@/features/customers/api/use-customers';
 import { useGetCustomerDetails } from '@/features/customers/api/use-get-customer-details';
 import { useGetEnquiryDetails } from '../api/use-get-enquiry-details';
-import { EnquiryNotFound } from '@/app/(standalone)/enquiries/[enquiryId]/page';
 import { useEditEnquiry } from '../api/use-edit-enquiry';
+import { EnquiryNotFound } from './enquiry-not-found';
 
 interface CreateEnquiryFormProps {
   onCancel?: () => void;

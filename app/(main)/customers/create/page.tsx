@@ -1,18 +1,20 @@
-"use client";
-import React from "react";
+'use client';
+import React, { Suspense } from 'react';
 
-import { CreateCustomerForm } from "@/features/customers/components/create-customer-form";
-import { redirect } from "next/navigation";
+import { CreateCustomerForm } from '@/features/customers/components/create-customer-form';
+import { redirect } from 'next/navigation';
 
 const CreateCustomersPage = () => {
   return (
-    <div className="w-full lg:max-w-4xl">
-      <CreateCustomerForm
-        onCancel={() => {
-          redirect("/customers");
-        }}
-      />
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <div className="w-full lg:max-w-4xl">
+        <CreateCustomerForm
+          onCancel={() => {
+            redirect('/customers');
+          }}
+        />
+      </div>
+    </Suspense>
   );
 };
 

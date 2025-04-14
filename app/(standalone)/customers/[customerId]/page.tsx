@@ -23,7 +23,6 @@ import {
   PenIcon,
   PhoneIcon,
   UserIcon,
-  UserRoundX,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -35,6 +34,7 @@ import {
 import { redirect } from 'next/navigation';
 import { use } from 'react';
 import CustomerDetailsPDFExport from '@/features/customers/components/customer-details-pdf-export';
+import { CustomerNotFound } from '@/features/customers/components/customer-not-found';
 
 interface CustomerDetailsPageProps {
   params: Promise<{ customerId: string }>;
@@ -292,28 +292,5 @@ const PocDetailsCard = ({
         </div>
       </CardContent>
     </Card>
-  );
-};
-
-export const CustomerNotFound = () => {
-  function backToCustomerListing() {
-    redirect('/customers');
-  }
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4">
-      <UserRoundX className="size-12 text-slate-500" />
-      <p className="text-muted-foreground text-lg text-center md:text-2xl">
-        Customer data not found
-      </p>
-      <Button
-        onClick={backToCustomerListing}
-        variant={'outline'}
-        className="md:text-lg"
-      >
-        <ArrowLeftIcon className="size-4" />
-        Back to Customer Listing
-      </Button>
-    </div>
   );
 };
