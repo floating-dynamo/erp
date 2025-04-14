@@ -8,11 +8,14 @@ import { Quotation } from '@/features/quotations/schemas';
 import QUOTATIONS_MOCK_DATA from './mocks/quotations';
 import { COMPANIES_MOCK_DATA } from './mocks/companies';
 import { Company } from '@/features/companies/schemas';
+import { SupplierDc } from '@/features/supplier-dc/schemas';
+import { SUPPLIER_DCS_MOCK_DATA } from './mocks/supplier-dcs';
 
 const customers: Customer[] = CUSTOMERS_MOCK_DATA;
 const enquiries: Enquiry[] = ENQUIRIES_MOCK_DATA;
 const quotations: Quotation[] = QUOTATIONS_MOCK_DATA;
 const companies: Company[] = COMPANIES_MOCK_DATA;
+const supplierDcs: SupplierDc[] = SUPPLIER_DCS_MOCK_DATA;
 
 const mockService: IApiService = {
   async getCustomers(queryString: string = '') {
@@ -200,6 +203,26 @@ const mockService: IApiService = {
       setTimeout(() => {
         resolve({
           message: 'Company added successfully',
+          success: true,
+        });
+      }, 1000);
+    });
+  },
+  async getSupplierDcs() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          supplierDcs,
+        });
+      }, 1000);
+    });
+  },
+  async addSupplierDc({ supplierDc }) {
+    supplierDcs.push(supplierDc);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          message: 'Supplier DC added successfully',
           success: true,
         });
       }, 1000);

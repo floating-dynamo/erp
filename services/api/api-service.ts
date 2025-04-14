@@ -163,6 +163,32 @@ const apiService: IApiService = {
       throw new Error(`Error fetching companies ${(error as Error).message}`);
     }
   },
+  // Supplier DC endpoints
+  async getSupplierDcs() {
+    try {
+      const response = await axios.get('/api/supplier-dcs');
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(
+        `Error fetching supplier dcs ${(error as Error).message}`
+      );
+    }
+  },
+  async addSupplierDc({ supplierDc }) {
+    try {
+      await axios.post('/api/supplier-dcs', supplierDc);
+      return {
+        message: 'Supplier DC added successfully',
+        success: true,
+      };
+    } catch (error) {
+      console.error(error);
+      throw new Error(
+        `Error adding new supplier dc ${(error as Error).message}`
+      );
+    }
+  },
 };
 
 export default apiService;

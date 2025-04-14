@@ -19,6 +19,11 @@ import {
 import { Quotation } from '@/features/quotations/schemas';
 import { Company } from '@/features/companies/schemas';
 import { GetCompaniesResponse } from './types/company';
+import {
+  AddSupplierDcResponse,
+  GetSupplierDcsResponse,
+} from './types/supplier-dc';
+import { SupplierDc } from '@/features/supplier-dc/schemas';
 
 export interface IApiService {
   // Customer Endpoints
@@ -80,6 +85,14 @@ export interface IApiService {
     company: Company;
   }) => Promise<AddCustomerResponse>;
   getCompanies: () => Promise<GetCompaniesResponse>;
+
+  // Supplier DC Endpoints
+  getSupplierDcs: () => Promise<GetSupplierDcsResponse>;
+  addSupplierDc: ({
+    supplierDc,
+  }: {
+    supplierDc: SupplierDc;
+  }) => Promise<AddSupplierDcResponse>;
 
   getCountries: () => Promise<GetCountriesResponse>;
 }
