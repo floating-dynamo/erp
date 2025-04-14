@@ -143,21 +143,6 @@ export const CreateSupplierDcForm = () => {
                     </FormItem>
                   )}
                 />
-              </div>
-              <div className="flex gap-3 w-full items-center flex-wrap">
-                {/* <FormField
-                  control={form.control}
-                  name="dcNo"
-                  render={({ field }) => (
-                    <FormItem className="w-full md:w-1/3">
-                      <FormLabel>DC No.</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter DC No." />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                /> */}
                 <FormField
                   control={form.control}
                   name="date"
@@ -204,6 +189,19 @@ export const CreateSupplierDcForm = () => {
                   )}
                 />
               </div>
+              {/* <FormField
+                  control={form.control}
+                  name="dcNo"
+                  render={({ field }) => (
+                    <FormItem className="w-full md:w-1/3">
+                      <FormLabel>DC No.</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter DC No." />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                /> */}
               <FormField
                 control={form.control}
                 name="workOrders"
@@ -340,6 +338,7 @@ export const CreateSupplierDcForm = () => {
                             onCheckedChange={(checked) =>
                               field.onChange(checked)
                             }
+                            disabled={form.watch('nonreturnable')}
                           />
                           <label
                             htmlFor="returnable"
@@ -363,6 +362,7 @@ export const CreateSupplierDcForm = () => {
                           <Checkbox
                             id="nonreturnable"
                             checked={field.value}
+                            disabled={form.watch('returnable')}
                             onCheckedChange={(checked) =>
                               field.onChange(checked)
                             }
