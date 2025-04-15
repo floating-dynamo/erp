@@ -5,6 +5,9 @@ import { clsx, type ClassValue } from 'clsx';
 import dayjs from 'dayjs';
 import { twMerge } from 'tailwind-merge';
 import { MetaDataType } from './types';
+import { SupplierDc } from '@/features/supplier-dc/schemas';
+import * as XLSX from 'xlsx-js-style';
+import { saveAs } from 'file-saver';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -258,3 +261,115 @@ export function getQuotationPdfFileName({
   if (!quoteNumber) return `Quotation_${customerName.replace(/\s/g, '_')}.pdf`;
   return `Quotation_${quoteNumber}_${customerName.replace(/\s/g, '_')}.pdf`;
 }
+
+export const generateSupplierDCExcel = (data: SupplierDc) => {
+  const wsData: (string | number)[][] = [];
+
+  wsData[1] = [
+    '',
+    `DELIVERY CHALLAN [ Returnable (${
+      data.returnable ? 'X' : ' '
+    }) / Non Returnable (${data.nonreturnable ? 'X' : ' '}) ]`,
+  ];
+
+  wsData[2] = ['', 'From,', data.from, '', '', '', 'To,', data.to];
+
+  wsData[6] = ['', 'DC No.', data.dcNo ?? '', '', '', '', 'GSTIN:', data.gstIn];
+  wsData[7] = [
+    '',
+    'Date',
+    formatDate(new Date(data.date)),
+    '',
+    '',
+    '',
+    'Our PO Ref:',
+    data.poRef,
+  ];
+
+  wsData[8] = [
+    '',
+    'Sl. No.',
+    'W O No.',
+    'Description',
+    '',
+    'Qty',
+    'Purpose',
+    '',
+    '',
+    'Remarks',
+  ];
+
+  data.workOrders.forEach((wo, index) => {
+    wsData[9 + index] = [
+      '',
+      index + 1,
+      wo.woNumber,
+      wo.woDescription,
+      '',
+      wo.qty,
+      wo.purpose ?? '',
+      '',
+      '',
+      wo.remarks ?? '',
+    ];
+  });
+
+  wsData[18] = [
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    'Prepared By:',
+    '',
+    'Authorised Signatory',
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Apply bold styling to the "DELIVERY CHALLAN" row
+  ws['B2'].s = {
+    font: {
+      bold: true,
+      sz: 18,
+    },
+    fill: {
+      fgColor: { rgb: 'B4C6E7' },
+    },
+    border: {
+      top: { style: 'thin', color: { rgb: '000000' } },
+      bottom: { style: 'thin', color: { rgb: '000000' } },
+      left: { style: 'thin', color: { rgb: '000000' } },
+      right: { style: 'thin', color: { rgb: '000000' } },
+    },
+  };
+
+  ws['!merges'] = [
+    // Header
+    { s: { r: 1, c: 1 }, e: { r: 1, c: 9 } },
+    // GSTIN
+    { s: { r: 6, c: 7 }, e: { r: 6, c: 9 } },
+    // PO Ref
+    { s: { r: 7, c: 7 }, e: { r: 7, c: 9 } },
+    // Purpose
+    { s: { r: 8, c: 6 }, e: { r: 8, c: 8 } },
+    // Description
+    { s: { r: 8, c: 3 }, e: { r: 8, c: 4 } },
+    // Prepared By
+    { s: { r: 18, c: 6 }, e: { r: 18, c: 7 } },
+    // Authorised Signatory
+    { s: { r: 18, c: 8 }, e: { r: 18, c: 9 } },
+  ];
+
+  // Auto-fit column widths
+  ws['!cols'] = wsData.map(() => ({ wch: 20 }));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Supplier DC');
+
+  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([wbout], { type: 'application/octet-stream' });
+
+  saveAs(blob, `Supplier_DC_${data.dcNo}.xlsx`);
+};

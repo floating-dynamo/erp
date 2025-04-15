@@ -16,6 +16,7 @@ import {
 import {
   ArrowUpDown,
   CopyIcon,
+  DownloadIcon,
   EyeIcon,
   FilterIcon,
   MoreHorizontal,
@@ -46,7 +47,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSupplierDcs } from '../api/use-supplier-dcs';
 import { redirect } from 'next/navigation';
 import Fuse from 'fuse.js';
-import { formatDate } from '@/lib/utils';
+import { formatDate, generateSupplierDCExcel } from '@/lib/utils';
 
 const ActionsCell = ({ supplierDc }: { supplierDc: SupplierDc }) => {
   const { toast } = useToast();
@@ -67,6 +68,10 @@ const ActionsCell = ({ supplierDc }: { supplierDc: SupplierDc }) => {
     });
   };
 
+  const handleDownloadExcel = (supplierDc: SupplierDc) => {
+    generateSupplierDCExcel(supplierDc);
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -82,6 +87,12 @@ const ActionsCell = ({ supplierDc }: { supplierDc: SupplierDc }) => {
           onClick={() => redirect(`supplier-dc/${supplierDc?.id}`)}
         >
           <EyeIcon className="size-3" /> View Supplier DC
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => handleDownloadExcel(supplierDc)}
+        >
+          <DownloadIcon className="size-3" /> Download Excel Sheet
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

@@ -30,6 +30,7 @@
     "cmdk": "^1.0.4",
     "date-fns": "^3.6.0",
     "dayjs": "^1.11.13",
+    "file-saver": "^2.0.5",
     "fuse.js": "^7.1.0",
     "hono": "^4.7.2",
     "html2pdf.js": "^0.10.2",
@@ -44,10 +45,12 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "uuid4": "^2.0.3",
+    "xlsx-js-style": "^1.2.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/file-saver": "^2.0.7",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
