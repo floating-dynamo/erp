@@ -228,6 +228,15 @@ const mockService: IApiService = {
       }, 1000);
     });
   },
+  async getSupplierDCById({ id }) {
+    const supplierDc =
+      supplierDcs.find((supplierDc) => supplierDc.id === id) || null;
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(supplierDc);
+      }, 1000);
+    });
+  },
 };
 
 export default mockService;

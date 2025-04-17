@@ -84,7 +84,7 @@ const ActionsCell = ({ supplierDc }: { supplierDc: SupplierDc }) => {
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={() => redirect(`supplier-dc/${supplierDc?.id}`)}
+          onClick={() => redirect(`supplier-dcs/${supplierDc?.id}`)}
         >
           <EyeIcon className="size-3" /> View Supplier DC
         </DropdownMenuItem>

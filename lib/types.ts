@@ -93,6 +93,7 @@ export interface IApiService {
   }: {
     supplierDc: SupplierDc;
   }) => Promise<AddSupplierDcResponse>;
+  getSupplierDCById: ({ id }: { id: string }) => Promise<SupplierDc | null>;
 
   getCountries: () => Promise<GetCountriesResponse>;
 }

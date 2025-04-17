@@ -42,6 +42,20 @@ const app = new Hono()
         400
       );
     }
+  })
+  .get('/:id', async (c) => {
+    try {
+      const { id } = c.req.param();
+      await connectDB();
+      const supplierDc = await SuppplierDcModel.findOne({ id });
+      if (!supplierDc) {
+        return c.json({ error: 'Supplier DC not found' }, 404);
+      }
+      return c.json(supplierDc);
+    } catch (error) {
+      console.log(error);
+      return c.json({ error: 'Failed to fetch supplier DC' }, 500);
+    }
   });
 
 export default app;

@@ -189,6 +189,17 @@ const apiService: IApiService = {
       );
     }
   },
+  async getSupplierDCById({ id }) {
+    try {
+      const response = await axios.get(`/api/supplier-dcs/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(
+        `Error fetching supplier dc details ${(error as Error).message}`
+      );
+    }
+  },
 };
 
 export default apiService;
