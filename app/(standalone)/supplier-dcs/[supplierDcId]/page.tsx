@@ -11,14 +11,25 @@ import {
 } from '@/components/ui/tooltip';
 import { useGetSupplierDCDetails } from '@/features/supplier-dc/api/use-get-supplier-dc-details';
 import { useToast } from '@/hooks/use-toast';
-import { formatDate } from '@/lib/utils';
+import { formatDate, generateCsv } from '@/lib/utils';
 import {
   ArrowLeftIcon,
   Building2,
   Calendar,
   Copy,
+  DownloadIcon,
+  MoreHorizontalIcon,
   Package,
+  PenIcon,
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { redirect } from 'next/navigation';
 import React, { use } from 'react';
 
@@ -52,6 +63,10 @@ const SupplierDcDetailsPage = ({ params }: SupplierDcDetailsPageProps) => {
       title: 'Supplier DC ID Copied',
       description: supplierDc?.id,
     });
+  }
+
+  function navigateToEditSupplierDc() {
+    redirect(`/supplier-dcs/edit/${supplierDcId}`);
   }
 
   return (
@@ -94,6 +109,38 @@ const SupplierDcDetailsPage = ({ params }: SupplierDcDetailsPageProps) => {
             </p>
           </div>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild data-html2canvas-ignore>
+            <Button variant="outline" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontalIcon className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem
+              className="cursor-pointer text-xs sm:text-sm"
+              onClick={() => navigateToEditSupplierDc()}
+            >
+              <PenIcon className="size-4" /> Edit Enquiry
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Export</DropdownMenuLabel>
+            {/* <EnquiryDetailsPDFExport enquiry={enquiry}> */}
+            {/* <DropdownMenuItem className="cursor-pointer text-xs sm:text-sm">
+              <DownloadIcon className="size-3" /> Save (.pdf)
+            </DropdownMenuItem> */}
+            {/* </EnquiryDetailsPDFExport> */}
+            <DropdownMenuItem
+              className="cursor-pointer text-xs sm:text-sm"
+              onClick={() =>
+                generateCsv({ data: supplierDc, type: 'SupplierDc' })
+              }
+            >
+              <DownloadIcon className="size-3" /> Save (.csv)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

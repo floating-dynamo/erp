@@ -19,7 +19,8 @@ export const generateCsv = ({
 }:
   | { data: Customer; type: 'Customer' }
   | { data: Enquiry; type: 'Enquiry' }
-  | { data: Quotation; type: 'Quotation' }) => {
+  | { data: Quotation; type: 'Quotation' }
+  | { data: SupplierDc; type: 'SupplierDc' }) => {
   if (!data) return;
   let headers: string[] = [];
   const rows: (string | number | undefined)[][] = [];
@@ -103,7 +104,6 @@ export const generateCsv = ({
       }.csv`;
       break;
     }
-
     case 'Quotation': {
       headers = [
         'Quotation ID',
@@ -154,6 +154,43 @@ export const generateCsv = ({
       });
 
       fileName = `Quotation_${data.customerName.replace(/\s/g, '_')}.csv`;
+      break;
+    }
+    case 'SupplierDc': {
+      headers = [
+        'Supplier DC ID',
+        'From',
+        'To',
+        'GSTIN',
+        'PO Ref',
+        'DC No',
+        'Date',
+        'Sl No',
+        'WO No',
+        'Description',
+        'Qty',
+        'Purpose',
+        'Remarks',
+      ];
+
+      data.workOrders.forEach((wo, index) => {
+        rows.push([
+          data.id,
+          data.from,
+          data.to,
+          data.gstIn,
+          data.poRef,
+          data.dcNo,
+          formatDate(new Date(data.date)),
+          index + 1,
+          wo.woNumber,
+          wo.woDescription,
+          wo.qty,
+          wo.purpose || 'NA',
+          wo.remarks || 'NA',
+        ]);
+      });
+      fileName = `Supplier_DC_${data.dcNo}.csv`;
       break;
     }
   }
