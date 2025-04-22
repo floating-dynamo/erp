@@ -56,6 +56,25 @@ const app = new Hono()
       console.log(error);
       return c.json({ error: 'Failed to fetch supplier DC' }, 500);
     }
+  })
+  .patch('/:id', async (c) => {
+    try {
+      const { id } = c.req.param();
+      const body = await c.req.json();
+
+      const parsedData = supplierDcSchema.parse(body);
+      await SuppplierDcModel.updateOne({ id }, { $set: parsedData });
+      return c.json(
+        { message: 'Supplier DC updated successfully', success: true },
+        200
+      );
+    } catch (error) {
+      console.error(error);
+      return c.json(
+        { message: 'Error updating supplier DC', success: false, error },
+        400
+      );
+    }
   });
 
 export default app;

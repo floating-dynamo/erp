@@ -237,6 +237,23 @@ const mockService: IApiService = {
       }, 1000);
     });
   },
+  async editSupplierDc({ id, data }) {
+    const supplierDc =
+      supplierDcs.find((supplierDc) => supplierDc.id === id) || null;
+    const updatedSupplierDc = { ...supplierDc, ...data };
+    const index = supplierDcs.findIndex((supplierDc) => supplierDc.id === id);
+    if (index !== -1) {
+      supplierDcs[index] = updatedSupplierDc;
+    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          message: 'Supplier DC details edited',
+          success: true,
+        });
+      }, 1000);
+    });
+  },
 };
 
 export default mockService;

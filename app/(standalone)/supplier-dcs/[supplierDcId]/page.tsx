@@ -122,7 +122,7 @@ const SupplierDcDetailsPage = ({ params }: SupplierDcDetailsPageProps) => {
               className="cursor-pointer text-xs sm:text-sm"
               onClick={() => navigateToEditSupplierDc()}
             >
-              <PenIcon className="size-4" /> Edit Enquiry
+              <PenIcon className="size-4" /> Edit Supplier DC
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Export</DropdownMenuLabel>

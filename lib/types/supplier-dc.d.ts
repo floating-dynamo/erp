@@ -8,3 +8,8 @@ export interface AddSupplierDcResponse {
   message: string;
   success: boolean;
 }
+
+export interface EditSupplierDcResponse {
+  message: string;
+  success: boolean;
+}

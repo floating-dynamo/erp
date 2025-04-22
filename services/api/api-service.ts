@@ -200,6 +200,17 @@ const apiService: IApiService = {
       );
     }
   },
+  async editSupplierDc({ id, data }) {
+    try {
+      const response = await axios.patch(`/api/supplier-dcs/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(
+        `Error editing supplier dc details ${(error as Error).message}`
+      );
+    }
+  },
 };
 
 export default apiService;

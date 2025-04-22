@@ -23,3 +23,4 @@ export const supplierDcSchema = z.object({
 
 export type createSupplierDcSchema = z.infer<typeof supplierDcSchema>;
 export type SupplierDc = createSupplierDcSchema;
+export type EditSupplierDcSchema = z.infer<typeof supplierDcSchema>;

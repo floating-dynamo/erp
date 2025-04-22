@@ -29,13 +29,27 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
+import { useEditSupplierDc } from '../api/use-edit-supplier-dc';
+import { useGetSupplierDCDetails } from '../api/use-get-supplier-dc-details';
 
-export const CreateSupplierDcForm = () => {
+interface CreateSupplierDcFormProps {
+  supplierDcId?: string;
+}
+
+export const CreateSupplierDcForm = ({
+  supplierDcId,
+}: CreateSupplierDcFormProps) => {
   const [formKey, setFormKey] = useState(0);
   const router = useRouter();
   const { mutate: addSupplierDc, isPending: isPendingAddSupplierDc } =
     useAddSupplierDc();
   type ZodCreateSupplierDcSchema = z.infer<typeof supplierDcSchema>;
+  const isEdit = !!supplierDcId;
+  const { mutate: editSupplierDc, isPending: isPendingEditSupplierDc } =
+    useEditSupplierDc();
+  const { data: supplierDcData } = useGetSupplierDCDetails({
+    id: supplierDcId || '',
+  });
 
   const form = useForm({
     resolver: zodResolver(supplierDcSchema),
@@ -54,16 +68,24 @@ export const CreateSupplierDcForm = () => {
     },
   });
 
-  const isPending = isPendingAddSupplierDc;
+  const isPending = isPendingAddSupplierDc || isPendingEditSupplierDc;
 
   useEffect(() => {
+    if (isEdit && supplierDcData) {
+      form.reset(supplierDcData);
+    }
     setFormKey((prevKey) => prevKey + 1);
   }, []);
 
   const onSubmit = (values: ZodCreateSupplierDcSchema) => {
     console.log('Supplier DC:', values);
-    addSupplierDc(values);
-    router.push('/supplier-dcs');
+    if (isEdit) {
+      editSupplierDc({ id: supplierDcId!, supplierDc: values });
+      router.push(`/supplier-dcs/${supplierDcId}`);
+    } else {
+      addSupplierDc(values);
+      router.push('/supplier-dcs');
+    }
   };
 
   return (
@@ -384,7 +406,7 @@ export const CreateSupplierDcForm = () => {
             <Separator className="my-7" />
             <div className="flex items-center justify-end">
               <Button disabled={isPending} type="submit">
-                Create Supplier DC
+                {isEdit ? 'Update Supplier DC' : 'Create Supplier DC'}
               </Button>
             </div>
           </form>

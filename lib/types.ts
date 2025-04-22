@@ -21,6 +21,7 @@ import { Company } from '@/features/companies/schemas';
 import { GetCompaniesResponse } from './types/company';
 import {
   AddSupplierDcResponse,
+  EditSupplierDcResponse,
   GetSupplierDcsResponse,
 } from './types/supplier-dc';
 import { SupplierDc } from '@/features/supplier-dc/schemas';
@@ -94,6 +95,13 @@ export interface IApiService {
     supplierDc: SupplierDc;
   }) => Promise<AddSupplierDcResponse>;
   getSupplierDCById: ({ id }: { id: string }) => Promise<SupplierDc | null>;
+  editSupplierDc: ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: SupplierDc;
+  }) => Promise<EditSupplierDcResponse>;
 
   getCountries: () => Promise<GetCountriesResponse>;
 }
