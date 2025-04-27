@@ -1,9 +1,10 @@
-import APIService from "@/services/api";
-import { useQuery } from "@tanstack/react-query";
+import { QueryKeyString } from '@/lib/types';
+import APIService from '@/services/api';
+import { useQuery } from '@tanstack/react-query';
 
 export const useQuotations = () => {
   const query = useQuery({
-    queryKey: ["quotations"],
+    queryKey: [QueryKeyString.QUOTATIONS],
     queryFn: async () => {
       const response = await APIService.getQuotations();
 

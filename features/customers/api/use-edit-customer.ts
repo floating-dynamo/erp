@@ -3,6 +3,7 @@ import { QueryClient, useMutation } from '@tanstack/react-query';
 import { EditCustomerResponse } from '@/lib/types/customer';
 import { Customer } from '../schemas';
 import { toast } from '@/hooks/use-toast';
+import { QueryKeyString } from '@/lib/types';
 
 export const useEditCustomer = () => {
   const queryClient = new QueryClient();
@@ -27,10 +28,12 @@ export const useEditCustomer = () => {
         title: 'Customer updated',
         description: 'The customer has been edited successfully',
       });
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
-      queryClient.invalidateQueries({ queryKey: ['customers', id] });
-      queryClient.invalidateQueries({ queryKey: ['enquiries'] });
-      queryClient.invalidateQueries({ queryKey: ['quotations'] });
+      queryClient.invalidateQueries({ queryKey: [QueryKeyString.CUSTOMERS] });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeyString.CUSTOMERS, id],
+      });
+      queryClient.invalidateQueries({ queryKey: [QueryKeyString.ENQUIRIES] });
+      queryClient.invalidateQueries({ queryKey: [QueryKeyString.QUOTATIONS] });
     },
     onError: (err) => {
       toast({

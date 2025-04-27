@@ -1,3 +1,4 @@
+import { QueryKeyString } from '@/lib/types';
 import APIService from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
 
@@ -9,7 +10,7 @@ export const useCustomers = (filters?: {
   limit?: number;
 }) => {
   const query = useQuery({
-    queryKey: ['customers', filters],
+    queryKey: [QueryKeyString.CUSTOMERS, filters],
     queryFn: async () => {
       const queryParams = new URLSearchParams();
 
@@ -39,7 +40,7 @@ export const useCustomers = (filters?: {
       }
 
       const { customers, total, limit, page, totalPages } = response;
-      return {customers, total, limit, page, totalPages};
+      return { customers, total, limit, page, totalPages };
     },
   });
 

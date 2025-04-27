@@ -27,7 +27,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
 import { useEditSupplierDc } from '../api/use-edit-supplier-dc';
 import { useGetSupplierDCDetails } from '../api/use-get-supplier-dc-details';
@@ -186,9 +186,7 @@ export const CreateSupplierDcForm = ({
                             >
                               <CalendarIcon />
                               {field.value
-                                ? new Intl.DateTimeFormat('en-US').format(
-                                    new Date(field.value)
-                                  )
+                                ? formatDate(new Date(field.value))
                                 : 'Pick a date'}
                             </Button>
                           </PopoverTrigger>

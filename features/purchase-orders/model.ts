@@ -16,6 +16,7 @@ const PurchoseOrderSchema = new Schema<PurchaseOrder>({
       quantity: { type: Number, required: true, min: 0 },
     },
   ],
+  deliveryDate: { type: String, required: false },
   poDate: { type: String, required: false },
   poMonth: { type: String, required: false },
   poNumber: { type: String, required: false },

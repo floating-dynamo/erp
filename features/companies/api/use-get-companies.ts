@@ -1,9 +1,10 @@
+import { QueryKeyString } from '@/lib/types';
 import APIService from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
 
 export const useGetCompanies = () => {
   const query = useQuery({
-    queryKey: ['companies'],
+    queryKey: [QueryKeyString.COMPANIES],
     queryFn: async () => {
       try {
         const response = await APIService.getCompanies();

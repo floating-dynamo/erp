@@ -38,7 +38,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { cn, getMetaData } from '@/lib/utils';
+import { cn, formatDate, getMetaData } from '@/lib/utils';
 import { useCustomers } from '@/features/customers/api/use-customers';
 import { useEnquiries } from '@/features/enquiries/api/use-enquiries';
 import { Input } from '@/components/ui/input';
@@ -414,9 +414,7 @@ const CreateQuotationForm = ({ quotationId }: CreateQuotationFormProps) => {
                             >
                               <CalendarIcon />
                               {field.value
-                                ? new Intl.DateTimeFormat('en-US').format(
-                                    new Date(field.value)
-                                  )
+                                ? formatDate(new Date(field.value))
                                 : 'Pick a date'}
                             </Button>
                           </PopoverTrigger>

@@ -226,6 +226,20 @@ const apiService: IApiService = {
       );
     }
   },
+  async addPurchaseOrder({ purchaseOrder }) {
+    try {
+      await axios.post('/api/purchase-orders', purchaseOrder);
+      return {
+        message: 'Purchase Order added successfully',
+        success: true,
+      };
+    } catch (error) {
+      console.error(error);
+      throw new Error(
+        `Error adding new Purchase Order ${(error as Error).message}`
+      );
+    }
+  },
 };
 
 export default apiService;

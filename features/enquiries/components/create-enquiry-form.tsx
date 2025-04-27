@@ -38,7 +38,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import {
   Command,
   CommandEmpty,
@@ -317,9 +317,7 @@ export const CreateEnquiryForm = ({
                           >
                             <CalendarIcon />
                             {field.value
-                              ? new Intl.DateTimeFormat('en-US').format(
-                                  new Date(field.value)
-                                )
+                              ? formatDate(new Date(field.value))
                               : 'Pick a date'}
                           </Button>
                         </PopoverTrigger>
@@ -364,9 +362,7 @@ export const CreateEnquiryForm = ({
                           >
                             <CalendarIcon />
                             {field.value
-                              ? new Intl.DateTimeFormat('en-US').format(
-                                  new Date(field.value)
-                                )
+                              ? formatDate(new Date(field.value))
                               : 'Pick a date'}
                           </Button>
                         </PopoverTrigger>

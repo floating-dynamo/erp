@@ -266,6 +266,17 @@ const mockService: IApiService = {
       }, 1000);
     });
   },
+  async addPurchaseOrder({ purchaseOrder }) {
+    purchaseOrders.push(purchaseOrder);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          message: 'Purchase Order added successfully',
+          success: true,
+        });
+      }, 1000);
+    });
+  },
 };
 
 export default mockService;

@@ -15,7 +15,7 @@ import {
 } from '@tanstack/react-table';
 import {
   ArrowUpDown,
-  CirclePlusIcon,
+  // CirclePlusIcon,
   CopyIcon,
   EyeIcon,
   FilterIcon,
@@ -48,6 +48,7 @@ import { formatDate } from '@/lib/utils';
 import { redirect } from 'next/navigation';
 import Fuse from 'fuse.js';
 import { usePurchaseOrders } from '../api/use-purchase-orders';
+import { CurrencySymbol } from '@/lib/types';
 
 const ActionsCell = ({ purchaseOrder }: { purchaseOrder: PurchaseOrder }) => {
   const { toast } = useToast();
@@ -55,7 +56,7 @@ const ActionsCell = ({ purchaseOrder }: { purchaseOrder: PurchaseOrder }) => {
   const handleCopyEnquiryId = () => {
     navigator.clipboard.writeText(purchaseOrder.id!);
     toast({
-      title: 'Enquiry ID copied',
+      title: 'PO ID copied',
       description: purchaseOrder.id,
     });
   };
@@ -78,14 +79,14 @@ const ActionsCell = ({ purchaseOrder }: { purchaseOrder: PurchaseOrder }) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem
+        {/* <DropdownMenuItem
           className="cursor-pointer text-xs sm:text-sm"
           onClick={() =>
             redirect(`/quotations/create?purchaseOrder=${purchaseOrder?.id}`)
           }
         >
           <CirclePlusIcon className="size-4" /> Create Quotation
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
         <DropdownMenuItem
           className="cursor-pointer"
           onClick={() => redirect(`purchaseOrders/${purchaseOrder?.id}`)}
@@ -149,6 +150,24 @@ const columns: ColumnDef<PurchaseOrder>[] = [
     ),
   },
   {
+    accessorKey: 'deliveryDate',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="outline"
+          size={'sm'}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Delivery Date
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => (
+      <div className="ml-4">{formatDate(row.getValue('deliveryDate'))}</div>
+    ),
+  },
+  {
     accessorKey: 'buyerName',
     header: ({ column }) => {
       return (
@@ -165,6 +184,27 @@ const columns: ColumnDef<PurchaseOrder>[] = [
     cell: ({ row }) => <div className="ml-4">{row.getValue('buyerName')}</div>,
   },
   {
+    accessorKey: 'items',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="outline"
+          size={'sm'}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Number of Items
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const items = row.getValue('items') as { itemCode: number }[];
+      return (
+        <div className="ml-4">{items.length > 0 ? items.length : 'NA'}</div>
+      );
+    },
+  },
+  {
     accessorKey: 'totalBasicValue',
     header: ({ column }) => {
       return (
@@ -173,7 +213,7 @@ const columns: ColumnDef<PurchaseOrder>[] = [
           size={'sm'}
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
-          Total Basic Value ($)
+          Total Basic Value ({CurrencySymbol.INR})
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
@@ -191,7 +231,7 @@ const columns: ColumnDef<PurchaseOrder>[] = [
           size={'sm'}
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
-          Total Value ($)
+          Total Value ({CurrencySymbol.INR})
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );

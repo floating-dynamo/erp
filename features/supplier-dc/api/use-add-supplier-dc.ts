@@ -3,6 +3,7 @@ import { QueryClient, useMutation } from '@tanstack/react-query';
 import { AddSupplierDcResponse } from '@/lib/types/supplier-dc';
 import { toast } from '@/hooks/use-toast';
 import { SupplierDc } from '../schemas';
+import { QueryKeyString } from '@/lib/types';
 
 export const useAddSupplierDc = () => {
   const queryClient = new QueryClient();
@@ -18,7 +19,9 @@ export const useAddSupplierDc = () => {
         description:
           'The Supplier Delivery Challan has been created successfully',
       });
-      queryClient.invalidateQueries({ queryKey: ['supplierDcs'] });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeyString.SUPPLIER_DCS],
+      });
     },
     onError: (err) => {
       toast({

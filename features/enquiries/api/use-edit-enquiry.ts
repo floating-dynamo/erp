@@ -3,6 +3,7 @@ import { QueryClient, useMutation } from '@tanstack/react-query';
 import { EditEnquiryResponse } from '@/lib/types/requirement';
 import { Enquiry } from '../schemas';
 import { toast } from '@/hooks/use-toast';
+import { QueryKeyString } from '@/lib/types';
 
 export const useEditEnquiry = () => {
   const queryClient = new QueryClient();
@@ -21,11 +22,15 @@ export const useEditEnquiry = () => {
         title: 'Enquiry edited',
         description: 'The enquiry has been edited successfully',
       });
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
-      queryClient.invalidateQueries({ queryKey: ['customers', id] });
-      queryClient.invalidateQueries({ queryKey: ['enquiries'] });
-      queryClient.invalidateQueries({ queryKey: ['enquiries', id] });
-      queryClient.invalidateQueries({ queryKey: ['quotations'] });
+      queryClient.invalidateQueries({ queryKey: [QueryKeyString.CUSTOMERS] });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeyString.CUSTOMERS, id],
+      });
+      queryClient.invalidateQueries({ queryKey: [QueryKeyString.ENQUIRIES] });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeyString.ENQUIRIES, id],
+      });
+      queryClient.invalidateQueries({ queryKey: [QueryKeyString.QUOTATIONS] });
     },
     onError: (err) => {
       toast({

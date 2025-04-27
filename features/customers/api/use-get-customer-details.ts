@@ -1,9 +1,10 @@
-import APIService from "@/services/api";
-import { useQuery } from "@tanstack/react-query";
+import { QueryKeyString } from '@/lib/types';
+import APIService from '@/services/api';
+import { useQuery } from '@tanstack/react-query';
 
 export const useGetCustomerDetails = ({ id }: { id: string }) => {
   const query = useQuery({
-    queryKey: ["customers", id],
+    queryKey: [QueryKeyString.CUSTOMERS, id],
     queryFn: async () => {
       const customer = await APIService.getCustomerById({ id });
 

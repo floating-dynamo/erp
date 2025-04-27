@@ -25,7 +25,37 @@ import {
   GetSupplierDcsResponse,
 } from './types/supplier-dc';
 import { SupplierDc } from '@/features/supplier-dc/schemas';
-import { GetPurchaseOrdersResponse } from './types/purchase-order';
+import {
+  AddPurchaseOrderResponse,
+  GetPurchaseOrdersResponse,
+} from './types/purchase-order';
+import { PurchaseOrder } from '@/features/purchase-orders/schemas';
+
+export enum CurrencySymbol {
+  INR = '₹',
+  USD = '$',
+  AED = 'د.إ',
+  AUD = 'A$',
+  CAD = 'C$',
+  CHF = 'CHF',
+  CNY_JPY = '¥',
+  EUR = '€',
+  GBP = '£',
+  HKD = 'HK$',
+  KRW = '₩',
+  NZD = 'NZ$',
+  SGD = 'S$',
+}
+
+export enum QueryKeyString {
+  CUSTOMERS = 'customers',
+  ENQUIRIES = 'enquiries',
+  QUOTATIONS = 'quotations',
+  COMPANIES = 'companies',
+  SUPPLIER_DCS = 'supplier-dcs',
+  PURCHASE_ORDERS = 'purchase-orders',
+  COUNTRIES = 'countries',
+}
 
 export interface IApiService {
   // Customer Endpoints
@@ -110,6 +140,11 @@ export interface IApiService {
   }: {
     customerId?: string;
   }) => Promise<GetPurchaseOrdersResponse>;
+  addPurchaseOrder: ({
+    purchaseOrder,
+  }: {
+    purchaseOrder: PurchaseOrder;
+  }) => Promise<AddPurchaseOrderResponse>;
 
   getCountries: () => Promise<GetCountriesResponse>;
 }

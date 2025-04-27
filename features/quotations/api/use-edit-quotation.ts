@@ -2,6 +2,7 @@ import APIService from '@/services/api';
 import { QueryClient, useMutation } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { EditQuotationSchema } from '../schemas';
+import { QueryKeyString } from '@/lib/types';
 
 export const useEditQuotation = () => {
   const queryClient = new QueryClient();
@@ -20,8 +21,10 @@ export const useEditQuotation = () => {
         title: 'Quotation updated',
         description: 'The quotation has been edited successfully',
       });
-      queryClient.invalidateQueries({ queryKey: ['quotations'] });
-      queryClient.invalidateQueries({ queryKey: ['quotations', id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKeyString.QUOTATIONS] });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeyString.QUOTATIONS, id],
+      });
     },
     onError: (err) => {
       toast({

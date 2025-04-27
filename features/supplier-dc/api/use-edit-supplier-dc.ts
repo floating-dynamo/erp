@@ -2,6 +2,7 @@ import APIService from '@/services/api';
 import { QueryClient, useMutation } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { EditSupplierDcSchema } from '../schemas';
+import { QueryKeyString } from '@/lib/types';
 
 export const useEditSupplierDc = () => {
   const queryClient = new QueryClient();
@@ -24,8 +25,12 @@ export const useEditSupplierDc = () => {
         description:
           'The supplier delivery challan has been edited successfully',
       });
-      queryClient.invalidateQueries({ queryKey: ['supplierDcs'] });
-      queryClient.invalidateQueries({ queryKey: ['supplierDcs', id] });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeyString.SUPPLIER_DCS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeyString.SUPPLIER_DCS, id],
+      });
     },
     onError: (err) => {
       toast({

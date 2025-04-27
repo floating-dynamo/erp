@@ -3,6 +3,7 @@ import { QueryClient, useMutation } from "@tanstack/react-query";
 import { AddCustomerResponse } from "@/lib/types/customer";
 import { toast } from "@/hooks/use-toast";
 import { Enquiry } from "../schemas";
+import { QueryKeyString } from "@/lib/types";
 
 export const useAddEnquiry = () => {
   const queryClient = new QueryClient();
@@ -17,7 +18,7 @@ export const useAddEnquiry = () => {
         title: "Enquiry created",
         description: "The enquiry has been created successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ["enquiries"] });
+      queryClient.invalidateQueries({ queryKey: [QueryKeyString.ENQUIRIES] });
     },
     onError: (err) => {
       toast({

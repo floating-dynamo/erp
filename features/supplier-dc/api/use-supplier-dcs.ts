@@ -1,9 +1,10 @@
+import { QueryKeyString } from '@/lib/types';
 import APIService from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
 
 export const useSupplierDcs = () => {
   const query = useQuery({
-    queryKey: ['supplierDcs'],
+    queryKey: [QueryKeyString.SUPPLIER_DCS],
     queryFn: async () => {
       const response = await APIService.getSupplierDcs();
 
