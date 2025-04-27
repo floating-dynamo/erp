@@ -48,6 +48,12 @@ const routes = [
     activeIcon: Building2Icon,
   },
   {
+    label: 'Purchase Orders',
+    href: '/purchase-orders',
+    icon: PackageIcon,
+    activeIcon: PackageOpenIcon,
+  },
+  {
     label: 'Supplier DCs',
     href: '/supplier-dcs',
     icon: PackageIcon,

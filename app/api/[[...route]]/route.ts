@@ -7,6 +7,7 @@ import quotations from '@/features/quotations/server/route';
 import countries from '@/features/countries/server/route';
 import companies from '@/features/companies/server/route';
 import supplierDc from '@/features/supplier-dc/server/route';
+import purchaseOrders from '@/features/purchase-orders/server/route';
 
 export const runtime = 'nodejs';
 
@@ -19,6 +20,7 @@ const routes = app
   .route('/quotations', quotations)
   .route('/countries', countries)
   .route('/companies', companies)
+  .route('/purchase-orders', purchaseOrders)
   .route('/supplier-dcs', supplierDc);
 
 export const GET = handle(app);

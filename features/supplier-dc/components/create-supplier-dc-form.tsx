@@ -91,7 +91,9 @@ export const CreateSupplierDcForm = ({
   return (
     <Card className="w-full h-full border-none shadow-none">
       <CardHeader className="flex p-7">
-        <CardTitle className="text-xl font-bold">Create Supplier DC</CardTitle>
+        <CardTitle className="text-xl font-bold">
+          {isEdit ? 'Editing Supplier DC' : 'Create Supplier DC'}
+        </CardTitle>
       </CardHeader>
       <div className="px-7">
         <Separator />

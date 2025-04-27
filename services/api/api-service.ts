@@ -211,6 +211,21 @@ const apiService: IApiService = {
       );
     }
   },
+  async getPurchaseOrders({ customerId }) {
+    try {
+      const purchaseOrders = await axios.get('/api/purchase-orders', {
+        params: {
+          customerId,
+        },
+      });
+      return purchaseOrders.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(
+        `Error fetching Purchase Orders ${(error as Error).message}`
+      );
+    }
+  },
 };
 
 export default apiService;

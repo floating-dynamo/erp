@@ -10,12 +10,15 @@ import { COMPANIES_MOCK_DATA } from './mocks/companies';
 import { Company } from '@/features/companies/schemas';
 import { SupplierDc } from '@/features/supplier-dc/schemas';
 import { SUPPLIER_DCS_MOCK_DATA } from './mocks/supplier-dcs';
+import { PurchaseOrder } from '@/features/purchase-orders/schemas';
+import { PURCHASE_ORDERS_MOCK_DATA } from './mocks/purchase-orders';
 
 const customers: Customer[] = CUSTOMERS_MOCK_DATA;
 const enquiries: Enquiry[] = ENQUIRIES_MOCK_DATA;
 const quotations: Quotation[] = QUOTATIONS_MOCK_DATA;
 const companies: Company[] = COMPANIES_MOCK_DATA;
 const supplierDcs: SupplierDc[] = SUPPLIER_DCS_MOCK_DATA;
+const purchaseOrders: PurchaseOrder[] = PURCHASE_ORDERS_MOCK_DATA;
 
 const mockService: IApiService = {
   async getCustomers(queryString: string = '') {
@@ -250,6 +253,15 @@ const mockService: IApiService = {
         resolve({
           message: 'Supplier DC details edited',
           success: true,
+        });
+      }, 1000);
+    });
+  },
+  async getPurchaseOrders() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          purchaseOrders,
         });
       }, 1000);
     });

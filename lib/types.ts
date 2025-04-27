@@ -25,6 +25,7 @@ import {
   GetSupplierDcsResponse,
 } from './types/supplier-dc';
 import { SupplierDc } from '@/features/supplier-dc/schemas';
+import { GetPurchaseOrdersResponse } from './types/purchase-order';
 
 export interface IApiService {
   // Customer Endpoints
@@ -102,6 +103,13 @@ export interface IApiService {
     id: string;
     data: SupplierDc;
   }) => Promise<EditSupplierDcResponse>;
+
+  // Purchase Order Endpoints
+  getPurchaseOrders: ({
+    customerId,
+  }: {
+    customerId?: string;
+  }) => Promise<GetPurchaseOrdersResponse>;
 
   getCountries: () => Promise<GetCountriesResponse>;
 }
