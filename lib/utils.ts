@@ -87,7 +87,7 @@ export const generateCsv = ({
         rows.push([
           data.id || 'NA',
           data.customerId,
-          data.customerName || 'NA',
+          data.customer?.name || 'NA',
           data.enquiryNumber,
           formatDate(new Date(data.enquiryDate)),
           formatDate(new Date(data.quotationDueDate)),
@@ -99,7 +99,7 @@ export const generateCsv = ({
         ]);
       });
 
-      fileName = `${data.customerName?.replace(/\s/g, '_')}_Enquiry_${
+      fileName = `${(data.customer?.name || 'Unknown').replace(/\s/g, '_')}_Enquiry_${
         data.enquiryNumber
       }.csv`;
       break;
@@ -282,10 +282,10 @@ export function getEnquiryPdfFileName({
   customerName,
   enquiryNumber,
 }: {
-  customerName: string;
-  enquiryNumber: string;
+  customerName?: string;
+  enquiryNumber?: string;
 }) {
-  return `${customerName.replace(/\s/g, '_')}_Enquiry_${enquiryNumber}.pdf`;
+  return `${(customerName || 'Unknown').replace(/\s/g, '_')}_Enquiry_${enquiryNumber || 'Draft'}.pdf`;
 }
 
 export function getQuotationPdfFileName({

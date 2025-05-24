@@ -42,7 +42,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Enquiry } from '../schemas';
+import { EnquiryWithPopulatedCustomer } from '@/lib/types/requirement';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useEnquiries } from '../api/use-enquiries';
@@ -51,7 +51,11 @@ import { formatDate } from '@/lib/utils';
 import { redirect } from 'next/navigation';
 import Fuse from 'fuse.js';
 
-const ActionsCell = ({ enquiry }: { enquiry: Enquiry }) => {
+const ActionsCell = ({
+  enquiry,
+}: {
+  enquiry: EnquiryWithPopulatedCustomer;
+}) => {
   const { toast } = useToast();
 
   const handleCopyEnquiryId = () => {
@@ -63,10 +67,14 @@ const ActionsCell = ({ enquiry }: { enquiry: Enquiry }) => {
   };
 
   const handleCopyCustomerId = () => {
-    navigator.clipboard.writeText(enquiry.customerId!);
+    const customerId =
+      typeof enquiry.customer === 'object'
+        ? enquiry.customer.id
+        : enquiry.customer;
+    navigator.clipboard.writeText(customerId);
     toast({
       title: 'Customer ID copied',
-      description: enquiry.customerId,
+      description: customerId,
     });
   };
 
@@ -110,12 +118,9 @@ const ActionsCell = ({ enquiry }: { enquiry: Enquiry }) => {
   );
 };
 
-const columns: ColumnDef<Enquiry>[] = [
+const columns: ColumnDef<EnquiryWithPopulatedCustomer>[] = [
   {
-    accessorKey: 'customerId',
-  },
-  {
-    accessorKey: 'customerName',
+    accessorKey: 'customer.name',
     header: ({ column }) => {
       return (
         <Button
@@ -128,9 +133,10 @@ const columns: ColumnDef<Enquiry>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => (
-      <div className="ml-4">{row.getValue('customerName')}</div>
-    ),
+    cell: ({ row }) => {
+      const customerName = row.original.customer?.name || 'N/A';
+      return <div className="ml-4">{customerName}</div>;
+    },
   },
   {
     accessorKey: 'enquiryNumber',

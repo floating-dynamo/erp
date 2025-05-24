@@ -3,7 +3,6 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 export interface EnquiryDocument extends Document {
   id: string;
   customerId: string;
-  customerName: string;
   enquiryNumber: string;
   totalItemsPrice?: number;
   totalItemsFinalPrice?: number;
@@ -17,13 +16,16 @@ export interface EnquiryDocument extends Document {
   }[];
   termsAndConditions?: string;
   isQotationCreated?: boolean;
+  customer?: {
+    id: string;
+    name: string;
+  };
 }
 
 const EnquirySchema = new Schema<EnquiryDocument>(
   {
     id: { type: String, required: true },
-    customerId: { type: String, required: true, trim: true },
-    customerName: { type: String, required: true },
+    customerId: { type: String, required: true, trim: true }, // Remove ref: 'Customer' since we're using UUID
     enquiryNumber: { type: String, required: true },
     totalItemsPrice: { type: Number },
     totalItemsFinalPrice: { type: Number },
@@ -39,6 +41,10 @@ const EnquirySchema = new Schema<EnquiryDocument>(
     ],
     termsAndConditions: { type: String },
     isQotationCreated: { type: Boolean, default: false },
+    customer: {
+      id: { type: String, required: true },
+      name: { type: String, required: true },
+    },
   },
   { timestamps: true }
 );

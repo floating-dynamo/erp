@@ -89,9 +89,9 @@ const ActionsCell = ({ purchaseOrder }: { purchaseOrder: PurchaseOrder }) => {
         </DropdownMenuItem> */}
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={() => redirect(`purchaseOrders/${purchaseOrder?.id}`)}
+          onClick={() => redirect(`purchase-orders/${purchaseOrder?.id}`)}
         >
-          <EyeIcon className="size-3" /> View purchaseOrder
+          <EyeIcon className="size-3" /> View Purchase Order
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

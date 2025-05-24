@@ -92,32 +92,46 @@ const mockService: IApiService = {
       }, 1000);
     });
   },
-  async getEnquiries() {
+  async getEnquiries({ customerId }) {
+    const filteredEnquiries = customerId
+      ? enquiries.filter((enquiry) => enquiry.customerId === customerId)
+      : enquiries;
+
+    // Populate customer data
+    const populatedEnquiries = filteredEnquiries.map((enquiry) => {
+      const customer = customers.find((c) => c.id === enquiry.customerId);
+      
+      return {
+        ...enquiry,
+        customer: {
+          id: customer?.id || enquiry.customerId,
+          name: customer?.name || 'Unknown Customer'
+        }
+      };
+    });
+
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
-          enquiries,
+          enquiries: populatedEnquiries,
         });
       }, 1000);
     });
   },
-  addEnquiry({ enquiry }) {
-    enquiries.push(enquiry);
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          message: 'Enquiry added successfully',
-          success: true,
-        });
-      }, 1000);
-    });
-  },
+
   getEnquiryById({ id }) {
     const enquiry = enquiries.find((enquiry) => enquiry?.id === id) || null;
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(enquiry);
-      }, 1000);
+    if (!enquiry) return Promise.resolve(null);
+
+    const customer = customers.find((c) => c.id === enquiry.customerId);
+    
+    // Always include customer object with non-null id
+    return Promise.resolve({
+      ...enquiry,
+      customer: {
+        id: customer?.id || enquiry.customerId,
+        name: customer?.name || 'Unknown Customer'
+      }
     });
   },
   editEnquiry({ id, data }) {
@@ -276,6 +290,13 @@ const mockService: IApiService = {
         });
       }, 1000);
     });
+  },
+  async addEnquiry({ enquiry }) {
+    enquiries.push(enquiry);
+    return {
+      message: 'Enquiry added successfully',
+      success: true,
+    };
   },
 };
 

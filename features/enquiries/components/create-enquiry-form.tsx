@@ -1,7 +1,8 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,10 +14,33 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { createEnquirySchema } from '../schemas';
+import { useCustomers } from '@/features/customers/api/use-customers';
+import { useEditEnquiry } from '../api/use-edit-enquiry';
+import { useGetEnquiryDetails } from '../api/use-get-enquiry-details';
+import { Customer } from '@/features/customers/schemas';
+import { useAddEnquiry } from '../api/use-add-enquiry';
+import { EnquiryNotFound } from './enquiry-not-found';
+import Loader from '@/components/loader';
+import { Separator } from '@/components/ui/separator';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   ArrowLeft,
@@ -28,31 +52,7 @@ import {
   UploadCloudIcon,
   XIcon,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { Calendar } from '@/components/ui/calendar';
-import { Textarea } from '@/components/ui/textarea';
-import { useAddEnquiry } from '../api/use-add-enquiry';
-import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { cn, formatDate } from '@/lib/utils';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import Loader from '@/components/loader';
-import { useCustomers } from '@/features/customers/api/use-customers';
-import { useGetCustomerDetails } from '@/features/customers/api/use-get-customer-details';
-import { useGetEnquiryDetails } from '../api/use-get-enquiry-details';
-import { useEditEnquiry } from '../api/use-edit-enquiry';
-import { EnquiryNotFound } from './enquiry-not-found';
+import { formatDate } from '@/lib/utils';
 
 interface CreateEnquiryFormProps {
   onCancel?: () => void;
@@ -60,118 +60,114 @@ interface CreateEnquiryFormProps {
   enquiryId?: string;
 }
 
-type ZodCreateEnquirySchema = z.infer<typeof createEnquirySchema>;
-
 export const CreateEnquiryForm = ({
   onCancel,
   enquiryId,
   showBackButton = false,
 }: CreateEnquiryFormProps) => {
-  const {
-    data: enquiryData,
-    isFetching: isFetchingEnquiry,
-    status: fetchEnquiryStatus,
-  } = useGetEnquiryDetails({ id: enquiryId || '' });
-  const { mutate: addEnquiry, isPending: isPendingAddEnquiry } =
-    useAddEnquiry();
-  const { data, isLoading } = useCustomers();
-  const { customers } = data || { customers: [] };
-  const { mutate: editEnquiry, isPending: isPendingEditEnquiry } =
-    useEditEnquiry();
-  const searchParams = useSearchParams();
-  const customerId = searchParams.get('customer') || '';
-  const { data: customer, isFetching: isFetchingCustomer } =
-    useGetCustomerDetails({
-      id: customerId || '',
-    });
+  const inputRef = useRef<HTMLInputElement>(null);
   const [customerSelectOpen, setCustomerSelectOpen] = useState(false);
+  const { data: customersData, isLoading: isLoadingCustomers } = useCustomers({
+    page: 1,
+    limit: 100,
+  });
+  const { mutate: editEnquiryMutation, isPending: isPendingEditEnquiry } =
+    useEditEnquiry();
+  const { mutate: addEnquiryMutation, isPending: isPendingAdd } =
+    useAddEnquiry();
+  const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   const [formKey, setFormKey] = useState(0);
-  const isEdit = !!enquiryId;
-  const isPending = isPendingEditEnquiry || isPendingAddEnquiry;
 
-  const form = useForm<ZodCreateEnquirySchema>({
+  const form = useForm<z.infer<typeof createEnquirySchema>>({
     resolver: zodResolver(createEnquirySchema),
     defaultValues: {
       customerId: '',
-      customerName: '',
       enquiryNumber: '',
-      enquiryDate: '',
-      quotationDueDate: '',
-      items: [{ itemCode: 0, itemDescription: '', quantity: 0 }],
-      termsAndConditions: '',
-      file: undefined,
-      isQotationCreated: false,
+      enquiryDate: new Date().toISOString(),
+      quotationDueDate: new Date().toISOString(),
+      items: [
+        {
+          itemCode: undefined,
+          itemDescription: '',
+          quantity: undefined,
+        },
+      ],
     },
   });
-  const inputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
+
+  const {
+    data: enquiryData,
+    isFetching: isFetchingEnquiry,
+    status: enquiryStatus,
+  } = useGetEnquiryDetails({ id: enquiryId || '' });
+
+  const isEdit = !!enquiryId;
+  const isPending = isPendingEditEnquiry || isPendingAdd;
+  const currentCustomerId = form.getValues().customerId;
+  const selectedCustomer = customersData?.customers?.find(
+    (c) => c.id === currentCustomerId
+  );
 
   useEffect(() => {
     if (isEdit && enquiryData) {
-      console.log('Editing Enquiry Data: ', enquiryData);
       setFormKey((prevKey) => prevKey + 1);
       form.reset(enquiryData);
     }
   }, [isEdit, enquiryData, form]);
 
-  useEffect(() => {
-    form.reset({
-      customerName: customer?.name || '',
-      customerId: customer?.id,
-      items: [{ itemCode: 0, itemDescription: '', quantity: 0 }],
-      isQotationCreated: false,
-    });
-  }, [customer, form]);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      form.setValue('file', file);
-    }
+    setSelectedFile(file || undefined);
   };
 
-  const onSubmit = (values: ZodCreateEnquirySchema) => {
-    const finalValues = {
-      ...values,
-    };
-    console.log('Enquiry: ', finalValues);
+  const onSubmit = async (data: z.infer<typeof createEnquirySchema>) => {
     if (isEdit) {
-      console.log('Editing enquiry');
-      editEnquiry(
-        {
-          id: enquiryId,
-          enquiry: finalValues,
-        },
-        {
-          onSuccess: () => {
-            form.reset();
-            router.push('/enquiries');
+      return editEnquiryMutation({
+        id: enquiryId!,
+        enquiry: {
+          ...data,
+          file: selectedFile,
+          customer: {
+            id: data.customerId,
+            name: selectedCustomer?.name || '',
           },
-        }
-      );
-    } else {
-      addEnquiry(finalValues, {
-        onSuccess: () => {
-          form.reset();
-          router.push('/enquiries');
         },
       });
     }
+
+    try {
+      addEnquiryMutation({
+        ...data,
+        file: selectedFile,
+        customer: {
+          id: data.customerId,
+          name: selectedCustomer?.name || '',
+        },
+      });
+
+      // Reset form state
+      form.reset();
+      setSelectedFile(undefined);
+      setFormKey((prev) => prev + 1);
+      console.log('Enquiry Added');
+    } catch (error) {
+      console.error('Error occurred while adding a new enquiry: ', error);
+    }
   };
 
-  if ((isLoading && !customers && isFetchingCustomer) || isFetchingEnquiry) {
-    return <Loader />;
+  if (isLoadingCustomers || isFetchingEnquiry) {
+    return <Loader text="Loading..." />;
+  }
+
+  if (enquiryStatus === 'error') {
+    return <EnquiryNotFound />;
   }
 
   const customerSelectData =
-    customers?.map((customer) => ({
-      value: customer.id,
+    customersData?.customers?.map((customer: Customer) => ({
+      value: customer.id!,
       label: customer.name,
     })) || [];
-
-  if (fetchEnquiryStatus === 'error') {
-    return <EnquiryNotFound />;
-  }
 
   return (
     <Card className="w-full h-full border-none shadow-none">
@@ -221,10 +217,10 @@ export const CreateEnquiryForm = ({
                                 'sm:w-[300px] w-full justify-between disabled:text-slate-700',
                                 !field.value && 'text-muted-foreground'
                               )}
-                              disabled={!!customer || isEdit}
+                              disabled={isEdit} // Only disable in edit mode
                             >
-                              {customer
-                                ? customer.name
+                              {selectedCustomer
+                                ? selectedCustomer.name
                                 : field.value
                                 ? customerSelectData.find(
                                     (customer) => customer.value === field.value
@@ -251,10 +247,6 @@ export const CreateEnquiryForm = ({
                                       form.setValue(
                                         'customerId',
                                         customer.value
-                                      );
-                                      form.setValue(
-                                        'customerName',
-                                        customer.label
                                       );
                                       setCustomerSelectOpen(false);
                                     }}

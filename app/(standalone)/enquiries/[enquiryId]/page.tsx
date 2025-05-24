@@ -73,10 +73,10 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
   }
 
   function copyCustomerId() {
-    navigator.clipboard.writeText(enquiry?.customerId || '');
+    navigator.clipboard.writeText(enquiry?.customer?.id || '');
     toast({
       title: 'Customer ID Copied',
-      description: enquiry?.customerId,
+      description: enquiry?.customer?.id,
     });
   }
 
@@ -177,7 +177,7 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
             <div className="flex flex-col">
               <p className="text-sm text-muted-foreground">Customer Name</p>
               <div className="flex items-center gap-3">
-                <p className="font-medium">{enquiry.customerName}</p>
+                <p className="font-medium">{enquiry.customer?.name}</p>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild data-html2canvas-ignore>
@@ -197,7 +197,7 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
               <Button
                 size={'sm'}
                 variant={'ghost'}
-                onClick={() => redirect(`/customers/${enquiry.customerId}`)}
+                onClick={() => redirect(`/customers/${enquiry.customer?.id}`)}
               >
                 View Customer
               </Button>

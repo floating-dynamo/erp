@@ -57,28 +57,17 @@ const apiService: IApiService = {
       return enquiries.data;
     } catch (error) {
       console.error(error);
-      throw new Error(`Error fetching customers ${(error as Error).message}`);
+      throw new Error(`Error fetching enquiries ${(error as Error).message}`);
     }
   },
-  async addEnquiry({ enquiry }) {
-    try {
-      await axios.post('/api/enquiries', enquiry);
-      return {
-        message: 'Enquiry added successfully',
-        success: true,
-      };
-    } catch (error) {
-      console.error(error);
-      throw new Error(`Error adding new eqnuiry ${(error as Error).message}`);
-    }
-  },
+
   async getEnquiryById({ id }) {
     try {
       const enquiry = await axios.get(`/api/enquiries/${id}`);
       return enquiry.data;
     } catch (error) {
       console.error(error);
-      throw new Error(`Error fetching the eqnuiry ${(error as Error).message}`);
+      throw new Error(`Error fetching the enquiry ${(error as Error).message}`);
     }
   },
   async editEnquiry({ id, data }) {
@@ -90,6 +79,18 @@ const apiService: IApiService = {
       throw new Error(
         `Error editing enquiry details ${(error as Error).message}`
       );
+    }
+  },
+  async addEnquiry({ enquiry }) {
+    try {
+      await axios.post('/api/enquiries', enquiry);
+      return {
+        message: 'Enquiry added successfully',
+        success: true,
+      };
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error adding new enquiry ${(error as Error).message}`);
     }
   },
   // Quotation Endpoints

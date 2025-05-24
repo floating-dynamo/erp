@@ -220,6 +220,7 @@ export const EnquiryPdfDocument = ({ enquiry }: { enquiry: Enquiry }) => (
           </Text>
         </View>
         <View style={styles.headerRight}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
           <Image src={LOGO_URL} style={styles.companyLogo} />
           <Text style={styles.documentTitle}>ENQUIRY</Text>
           <Text style={styles.documentInfo}>
@@ -235,7 +236,7 @@ export const EnquiryPdfDocument = ({ enquiry }: { enquiry: Enquiry }) => (
       </View>
 
       <View style={styles.customerInfo}>
-        <Text style={styles.customerName}>{enquiry.customerName}</Text>
+        <Text style={styles.customerName}>{enquiry.customer?.name || 'Unknown'}</Text>
         <Text style={styles.customerDetail}>
           Customer ID: {enquiry.customerId}
         </Text>
@@ -343,7 +344,8 @@ const EnquiryDetailsPDFExport = ({
   children: ReactNode;
   enquiry: Enquiry;
 }) => {
-  const { customerName, enquiryNumber } = enquiry;
+  const customerName = enquiry?.customer?.name || 'Unknown';
+  const { enquiryNumber } = enquiry || {};
   return (
     <PDFDownloadLink
       document={<EnquiryPdfDocument enquiry={enquiry} />}
