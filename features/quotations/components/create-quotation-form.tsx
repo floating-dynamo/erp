@@ -118,7 +118,7 @@ const CreateQuotationForm = ({ quotationId }: CreateQuotationFormProps) => {
       form.reset({
         customerId: enquiry?.customerId || '',
         enquiryNumber: enquiry?.enquiryNumber || '',
-        customerName: enquiry?.customerName || '',
+        customerName: enquiry?.customer?.name || '',
         items: enquiry
           ? enquiry?.items?.map(({ itemCode, itemDescription, quantity }) => ({
               itemDescription,
