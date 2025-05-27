@@ -277,6 +277,30 @@ const mockService: IApiService = {
       }, 1000);
     });
   },
+  async editPurchaseOrder({ id, data }) {
+    const purchaseOrder = purchaseOrders.find((po) => po.id === id) || null;
+    const updatedPurchaseOrder = { ...purchaseOrder, ...data };
+    const index = purchaseOrders.findIndex((po) => po.id === id);
+    if (index !== -1) {
+      purchaseOrders[index] = updatedPurchaseOrder;
+    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          message: 'Purchase Order updated successfully',
+          success: true,
+        });
+      }, 1000);
+    });
+  },
+  async getPurchaseOrderDetails({ id }) {
+    const purchaseOrder = purchaseOrders.find((po) => po.id === id) || null;
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(purchaseOrder);
+      }, 1000);
+    });
+  },
 };
 
 export default mockService;

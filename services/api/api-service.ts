@@ -249,6 +249,15 @@ const apiService: IApiService = {
       throw new Error('Failed to fetch purchase order details');
     }
   },
+  async editPurchaseOrder({ id, data }) {
+    try {
+      const response = await axios.patch(`/api/purchase-orders/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Error editing purchase order:', error);
+      throw new Error('Failed to edit purchase order');
+    }
+  },
 };
 
 export default apiService;

@@ -21,7 +21,17 @@ import {
   Copy,
   Package,
   ScrollText,
+  PenIcon,
+  MoreHorizontalIcon,
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface PurchaseOrderDetailsPageProps {
   params: Promise<{ purchaseOrderId: string }>;
@@ -55,6 +65,10 @@ const PurchaseOrderDetailsPage = ({
       title: 'Purchase Order ID Copied',
       description: purchaseOrder?.id,
     });
+  }
+
+  function navigateToEditPurchaseOrder() {
+    redirect(`/purchase-orders/edit/${purchaseOrderId}`);
   }
 
   return (
@@ -97,6 +111,24 @@ const PurchaseOrderDetailsPage = ({
             </p>
           </div>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontalIcon className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem
+              className="cursor-pointer text-xs sm:text-sm"
+              onClick={() => navigateToEditPurchaseOrder()}
+            >
+              <PenIcon className="size-4" /> Edit Purchase Order
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

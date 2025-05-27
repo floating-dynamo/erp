@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -40,14 +42,33 @@ import {
 } from '@/components/ui/command';
 import { useCustomers } from '@/features/customers/api/use-customers';
 import Loader from '@/components/loader';
+import { useGetPurchaseOrderDetails } from '../api/use-get-purchase-order-details';
+import { useEditPurchaseOrder } from '../api/use-edit-purchase-order';
+import { useRouter } from 'next/navigation';
 
-const CreatePurchaseOrderForm = () => {
-  const { mutate: addPurchaseOrder, isPending: isPendingAddPurchaseOrder } =
-    useAddPurchaseOrder();
+const CreatePurchaseOrderForm = ({
+  isEdit = false,
+  purchaseOrderId,
+}: {
+  isEdit?: boolean;
+  purchaseOrderId?: string;
+}) => {
+  const {
+    mutate: addPurchaseOrder,
+    isPending: isPendingAddPurchaseOrder,
+  } = useAddPurchaseOrder();
+  const {
+    mutate: editPurchaseOrder,
+    isPending: isPendingEditPurchaseOrder,
+  } = useEditPurchaseOrder();
+  const { data: purchaseOrder, isFetching } = useGetPurchaseOrderDetails({
+    id: purchaseOrderId || '',
+  });
   const [formKey] = useState(0);
   const [customerSelectOpen, setCustomerSelectOpen] = useState(false);
   const { data, isFetching: isFetchingCustomerList } = useCustomers();
   const customerList = data?.customers || [];
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof createPurchaseOrderSchema>>({
     resolver: zodResolver(createPurchaseOrderSchema),
@@ -61,15 +82,34 @@ const CreatePurchaseOrderForm = () => {
     },
   });
 
+  useEffect(() => {
+    if (isEdit && purchaseOrder) {
+      form.reset(purchaseOrder);
+    }
+  }, [isEdit, purchaseOrder, form]);
+
   const onSubmit = (values: z.infer<typeof createPurchaseOrderSchema>) => {
-    addPurchaseOrder(values, {
-      onSuccess: () => {
-        form.reset();
-      },
-    });
+    if (isEdit && purchaseOrderId) {
+      editPurchaseOrder(
+        { id: purchaseOrderId, purchaseOrder: values },
+        {
+          onSuccess: () => {
+            form.reset();
+            router.push('/purchase-orders');
+          },
+        }
+      );
+    } else {
+      addPurchaseOrder(values, {
+        onSuccess: () => {
+          form.reset();
+          router.push('/purchase-orders');
+        },
+      });
+    }
   };
 
-  if (isFetchingCustomerList) {
+  if (isFetching || isFetchingCustomerList) {
     return <Loader />;
   }
 
@@ -77,7 +117,7 @@ const CreatePurchaseOrderForm = () => {
     <Card className="w-full h-full border-none shadow-none">
       <CardHeader className="flex p-7">
         <CardTitle className="text-xl font-bold">
-          Add a new Purchase Order
+          {isEdit ? 'Edit Purchase Order' : 'Add a new Purchase Order'}
         </CardTitle>
       </CardHeader>
       <div className="px-7">
@@ -426,9 +466,9 @@ const CreatePurchaseOrderForm = () => {
               <Button
                 type="submit"
                 size="lg"
-                disabled={isPendingAddPurchaseOrder}
+                disabled={isEdit ? isPendingEditPurchaseOrder : isPendingAddPurchaseOrder}
               >
-                Create Purchase Order
+                {isEdit ? 'Update Purchase Order' : 'Create Purchase Order'}
               </Button>
             </div>
           </form>
