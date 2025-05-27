@@ -145,6 +145,7 @@ export interface IApiService {
   }: {
     purchaseOrder: PurchaseOrder;
   }) => Promise<AddPurchaseOrderResponse>;
+  getPurchaseOrderDetails: ({ id }: { id: string }) => Promise<PurchaseOrder | null>;
 
   getCountries: () => Promise<GetCountriesResponse>;
 }

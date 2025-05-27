@@ -240,6 +240,15 @@ const apiService: IApiService = {
       );
     }
   },
+  async getPurchaseOrderDetails({ id }) {
+    try {
+      const response = await axios.get(`/api/purchase-orders/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching purchase order details:', error);
+      throw new Error('Failed to fetch purchase order details');
+    }
+  },
 };
 
 export default apiService;

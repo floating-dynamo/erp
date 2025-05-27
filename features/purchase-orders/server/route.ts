@@ -42,6 +42,22 @@ const app = new Hono()
         400
       );
     }
+  })
+  .get('/:id', async (c) => {
+    try {
+      const { id } = c.req.param();
+      await connectDB();
+      const purchaseOrder = ((await PurchaseOrderModel.find({ id })) || [])[0];
+
+      if (!purchaseOrder) {
+        return c.json({ error: 'Purchase Order not found' }, 404);
+      }
+
+      return c.json(purchaseOrder);
+    } catch (error) {
+      console.error('Error fetching purchase order details:', error);
+      return c.json({ error: 'Failed to fetch purchase order details' }, 500);
+    }
   });
 
 export default app;

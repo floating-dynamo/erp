@@ -8,3 +8,7 @@ export interface AddPurchaseOrderResponse {
   message: string;
   success: boolean;
 }
+
+export interface GetPurchaseOrderDetailsResponse {
+  purchaseOrder: PurchaseOrder;
+}
