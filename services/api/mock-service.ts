@@ -28,6 +28,9 @@ const mockService: IApiService = {
     const city = params.get('city');
     const page = parseInt(params.get('page') || '1', 10);
     const limit = parseInt(params.get('limit') || '10', 10);
+    // Check if there's a search query in the params
+    const searchQuery = params.get('searchQuery') || '';
+    const isSearching = searchQuery.trim().length > 0;
 
     const filteredCustomers = customers?.filter((customer) => {
       if (!customer?.address) return false;
@@ -40,9 +43,17 @@ const mockService: IApiService = {
     });
 
     const totalCustomers = filteredCustomers?.length || 0;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedCustomers = filteredCustomers?.slice(startIndex, endIndex);
+
+    // If searching, bypass pagination and return all records (pagination will be handled client-side)
+    let paginatedCustomers;
+    if (isSearching) {
+      paginatedCustomers = filteredCustomers;
+    } else {
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      paginatedCustomers = filteredCustomers?.slice(startIndex, endIndex);
+    }
+
     const totalPages = Math.ceil(totalCustomers / limit);
 
     return new Promise((resolve) => {
