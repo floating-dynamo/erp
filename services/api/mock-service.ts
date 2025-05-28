@@ -182,11 +182,48 @@ const mockService: IApiService = {
       console.error(error);
     }
   },
-  async getQuotations() {
+  async getQuotations({ page = 1, limit = 10, searchQuery = '' } = {}) {
+    // Check if there's a search query
+    const isSearching = searchQuery?.trim().length > 0;
+    
+    // Filter quotations based on search query if provided
+    let filteredQuotations = [...quotations];
+    if (isSearching) {
+      const query = searchQuery.toLowerCase();
+      filteredQuotations = quotations.filter(quotation => {
+        return (
+          (quotation.customerName && quotation.customerName.toLowerCase().includes(query)) ||
+          (quotation.enquiryNumber && quotation.enquiryNumber.toLowerCase().includes(query)) ||
+          (quotation.quoteNumber && quotation.quoteNumber.toLowerCase().includes(query)) ||
+          (quotation.totalAmount && quotation.totalAmount.toString().includes(query))
+        );
+      });
+    }
+    
+    const totalQuotations = filteredQuotations.length;
+    
+    // Apply pagination
+    let paginatedQuotations;
+    if (isSearching) {
+      // Return all filtered results for client-side pagination when searching
+      paginatedQuotations = filteredQuotations;
+    } else {
+      // Apply server-side pagination when not searching
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      paginatedQuotations = filteredQuotations.slice(startIndex, endIndex);
+    }
+    
+    const totalPages = Math.ceil(totalQuotations / limit);
+    
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
-          quotations,
+          quotations: paginatedQuotations,
+          total: totalQuotations,
+          page,
+          limit,
+          totalPages,
         });
       }, 1000);
     });

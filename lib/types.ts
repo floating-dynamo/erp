@@ -101,7 +101,15 @@ export interface IApiService {
   }) => Promise<EditEnquiryResponse>;
 
   // Quotation Endpoints
-  getQuotations: () => Promise<GetQuotationsResponse>;
+  getQuotations: ({
+    page,
+    limit,
+    searchQuery,
+  }: {
+    page?: number;
+    limit?: number;
+    searchQuery?: string;
+  }) => Promise<GetQuotationsResponse>;
   addQuotation: ({
     quotation,
   }: {
@@ -151,8 +159,18 @@ export interface IApiService {
   }: {
     purchaseOrder: PurchaseOrder;
   }) => Promise<AddPurchaseOrderResponse>;
-  getPurchaseOrderDetails: ({ id }: { id: string }) => Promise<PurchaseOrder | null>;
-  editPurchaseOrder: ({ id, data }: { id: string; data: PurchaseOrder }) => Promise<{ message: string; success: boolean }>;
+  getPurchaseOrderDetails: ({
+    id,
+  }: {
+    id: string;
+  }) => Promise<PurchaseOrder | null>;
+  editPurchaseOrder: ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: PurchaseOrder;
+  }) => Promise<{ message: string; success: boolean }>;
 
   getCountries: () => Promise<GetCountriesResponse>;
 }
