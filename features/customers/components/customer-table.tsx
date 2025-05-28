@@ -49,6 +49,7 @@ import { useCustomers } from '../api/use-customers';
 import Loader from '@/components/loader';
 import { redirect } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { useDebounce } from '@/hooks/use-debounce';
 import Fuse from 'fuse.js';
 import {
   Select,
@@ -279,7 +280,8 @@ export default function CustomerTable() {
       id: false,
     });
   const [rowSelection, setRowSelection] = React.useState({});
-  const [searchQuery, setSearchQuery] = React.useState('');
+  const [searchInputValue, setSearchInputValue] = React.useState('');
+  const searchQuery = useDebounce(searchInputValue, 300);
 
   const [showFilter, setShowFilter] = useState<boolean>(false);
   const [filterCity, setFilterCity] = useState<string>('');
@@ -287,7 +289,7 @@ export default function CustomerTable() {
   const [filterCountry, setFilterCountry] = useState<string>('');
 
   const [page, setPage] = React.useState(0);
-  const [limit] = React.useState(100);
+  const [limit] = React.useState(3);
 
   const clearFilters = (closeFiter: boolean = false) => {
     setFilterCity('');
@@ -308,10 +310,10 @@ export default function CustomerTable() {
     country: filterCountry,
     page: page + 1,
     limit: limit,
+    searchQuery: searchQuery, // Use debounced search query
   });
 
-  const { customers, total, totalPages } = data || {};
-  console.log(customers, total, totalPages);
+  const { customers, total } = data || {};
 
   const fuseCustomerSearchKeys = [
     'name',
@@ -326,23 +328,40 @@ export default function CustomerTable() {
       keys: fuseCustomerSearchKeys,
       threshold: 0.1, // Adjust threshold for fuzzy matching
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customers]);
 
+  // Apply fuzzy search on all customers data
   const filteredCustomers = React.useMemo(() => {
     if (!searchQuery) return customers;
     return fuse.search(searchQuery).map((result) => result.item);
   }, [searchQuery, fuse, customers]);
 
+  // Client-side pagination for search results
+  const paginatedCustomers = React.useMemo(() => {
+    if (!filteredCustomers) return [];
+
+    const startIndex = page * limit;
+    const endIndex = startIndex + limit;
+    return filteredCustomers.slice(startIndex, endIndex);
+  }, [filteredCustomers, page, limit]);
+
+  // Calculate total pages based on filtered results
+  const totalFilteredCustomers = filteredCustomers?.length || 0;
+  const totalFilteredPages = Math.ceil(totalFilteredCustomers / limit);
+
+  // Use appropriate pagination values based on whether we're searching or not
+  const displayedTotal = searchQuery ? totalFilteredCustomers : total;
+  const displayedTotalPages = searchQuery ? totalFilteredPages : data?.totalPages;
+
   const table = useReactTable({
-    data: filteredCustomers ?? [],
+    data: searchQuery ? paginatedCustomers : filteredCustomers || [],
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
-    pageCount: totalPages,
-    rowCount: total,
+    manualPagination: !searchQuery, // Only use manual pagination when not searching
+    pageCount: displayedTotalPages,
+    rowCount: displayedTotal,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
@@ -355,6 +374,11 @@ export default function CustomerTable() {
     },
   });
 
+  // Reset page when search query changes
+  React.useEffect(() => {
+    setPage(0);
+  }, [searchQuery]); // Use debounced searchQuery
+
   const toggleFilter = () => {
     setShowFilter((prev) => {
       if (prev) {
@@ -364,18 +388,14 @@ export default function CustomerTable() {
     });
   };
 
-  if (isLoading) {
-    return <Loader text="Fetching all customers" />;
-  }
-
   return (
     <div className="w-full">
       <div className="flex items-center py-4 gap-4 justify-between flex-wrap">
         <div className="flex gap-2 items-center">
           <Input
             placeholder="Search Customer..."
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
+            value={searchInputValue}
+            onChange={(event) => setSearchInputValue(event.target.value)}
             className="max-w-sm"
           />
           <Button
@@ -393,6 +413,7 @@ export default function CustomerTable() {
           <RefreshCwIcon className="size-4" /> Refresh Data
         </Button>
       </div>
+
       {showFilter && customers && (
         <div>
           <CustomerSearchFilters
@@ -409,60 +430,68 @@ export default function CustomerTable() {
           />
         </div>
       )}
+      
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+        {isLoading ? (
+          <div className="flex items-center justify-center h-80">
+            <Loader text="Fetching customers data" />
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  <p>No customers to view</p>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && 'selected'}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    <p>No customers to view</p>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
       </div>
+      
       <div className="flex items-center justify-between py-4">
         <div>
           <p className="text-sm text-muted-foreground">
-            Page {page + 1} of {totalPages} (Total Customers: {total})
+            Page {page + 1} of {displayedTotalPages} (Total Customers: {displayedTotal})
           </p>
         </div>
         <div className="space-x-2 flex items-center">
@@ -479,10 +508,10 @@ export default function CustomerTable() {
             size="sm"
             onClick={() =>
               setPage((prev) =>
-                totalPages ? Math.min(prev + 1, totalPages - 1) : prev + 1
+                displayedTotalPages ? Math.min(prev + 1, displayedTotalPages - 1) : prev + 1
               )
             }
-            disabled={page + 1 === totalPages}
+            disabled={page + 1 === displayedTotalPages}
           >
             Next
             <ArrowRight className="size-4" />

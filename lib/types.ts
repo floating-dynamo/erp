@@ -77,8 +77,14 @@ export interface IApiService {
   // Enquiry Endpoints
   getEnquiries: ({
     customerId,
+    page,
+    limit,
+    searchQuery,
   }: {
     customerId?: string;
+    page?: number;
+    limit?: number;
+    searchQuery?: string;
   }) => Promise<GetEnquiriesResponse>;
   addEnquiry: ({
     enquiry,

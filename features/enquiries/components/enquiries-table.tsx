@@ -9,11 +9,12 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 import {
+  ArrowLeft,
+  ArrowRight,
   ArrowUpDown,
   CheckIcon,
   CirclePlusIcon,
@@ -50,6 +51,7 @@ import Loader from '@/components/loader';
 import { formatDate } from '@/lib/utils';
 import { redirect } from 'next/navigation';
 import Fuse from 'fuse.js';
+import { useDebounce } from '@/hooks/use-debounce';
 
 const ActionsCell = ({ enquiry }: { enquiry: Enquiry }) => {
   const { toast } = useToast();
@@ -216,12 +218,24 @@ const EnquiriesTable: React.FC = () => {
       customerId: false,
     });
   const [rowSelection, setRowSelection] = React.useState({});
-  const [searchQuery, setSearchQuery] = React.useState('');
+  const [searchInputValue, setSearchInputValue] = React.useState('');
+  const searchQuery = useDebounce(searchInputValue, 300);
+  
+  const [page, setPage] = React.useState(0);
+  const [limit] = React.useState(100);
+
   const {
-    data: enquiries,
+    data = { enquiries: [], total: 0, totalPages: 0 },
     isLoading,
     refetch: refetchEnquiryData,
-  } = useEnquiries({});
+  } = useEnquiries({
+    page: page + 1, 
+    limit,
+    searchQuery,
+  });
+  
+  const { enquiries, total, totalPages } = data || {};
+
   const fuseEnquirySearchKeys = [
     'customerName',
     'enquiryNumber',
@@ -247,17 +261,40 @@ const EnquiriesTable: React.FC = () => {
   }, [processedEnquiries]);
 
   const filteredEnquiries = React.useMemo(() => {
-    if (!searchQuery) return enquiries;
+    if (!searchQuery) return processedEnquiries;
     return fuse.search(searchQuery).map((result) => result.item);
-  }, [searchQuery, fuse, enquiries]);
+  }, [searchQuery, fuse, processedEnquiries]);
+
+  // Client-side pagination for search results
+  const paginatedEnquiries = React.useMemo(() => {
+    if (!filteredEnquiries) return [];
+    
+    if (searchQuery) {
+      const startIndex = page * limit;
+      const endIndex = startIndex + limit;
+      return filteredEnquiries.slice(startIndex, endIndex);
+    }
+    
+    return filteredEnquiries;
+  }, [filteredEnquiries, page, limit, searchQuery]);
+
+  // Calculate total pages based on filtered results
+  const totalFilteredEnquiries = filteredEnquiries?.length || 0;
+  const totalFilteredPages = Math.ceil(totalFilteredEnquiries / limit);
+
+  // Use appropriate pagination values based on whether we're searching or not
+  const displayedTotal = searchQuery ? totalFilteredEnquiries : total;
+  const displayedTotalPages = searchQuery ? totalFilteredPages : totalPages;
 
   const table = useReactTable({
-    data: filteredEnquiries ?? [],
+    data: searchQuery ? paginatedEnquiries : filteredEnquiries ?? [],
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    manualPagination: !searchQuery, // Only use manual pagination when not searching
+    pageCount: displayedTotalPages,
+    rowCount: displayedTotal,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
@@ -270,9 +307,10 @@ const EnquiriesTable: React.FC = () => {
     },
   });
 
-  if (isLoading) {
-    return <Loader text="Fetching all enquiries" />;
-  }
+  // Reset page when search query changes
+  React.useEffect(() => {
+    setPage(0);
+  }, [searchQuery]);
 
   return (
     <div className="w-full">
@@ -280,8 +318,8 @@ const EnquiriesTable: React.FC = () => {
         <div className="flex gap-2 items-center">
           <Input
             placeholder="Search Enquiry..."
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
+            value={searchInputValue}
+            onChange={(event) => setSearchInputValue(event.target.value)}
             className="max-w-sm"
           />
           <Button variant="outline">
@@ -292,55 +330,93 @@ const EnquiriesTable: React.FC = () => {
           <RefreshCwIcon className="size-4" /> Refresh Data
         </Button>
       </div>
+      
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+        {isLoading ? (
+          <div className="flex items-center justify-center h-80">
+            <Loader text="Fetching enquiries data" />
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  <p>Could not find the enquiry</p>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && 'selected'}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    <p>Could not find any enquiries</p>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+      
+      <div className="flex items-center justify-between py-4">
+        <div>
+          <p className="text-sm text-muted-foreground">
+            Page {page + 1} of {displayedTotalPages} (Total Enquiries: {displayedTotal})
+          </p>
+        </div>
+        <div className="space-x-2 flex items-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+            disabled={page === 0}
+          >
+            <ArrowLeft className="size-4" /> Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setPage((prev) =>
+                displayedTotalPages ? Math.min(prev + 1, displayedTotalPages - 1) : prev + 1
+              )
+            }
+            disabled={page + 1 === displayedTotalPages}
+          >
+            Next
+            <ArrowRight className="size-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

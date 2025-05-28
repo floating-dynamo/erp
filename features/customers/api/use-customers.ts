@@ -8,17 +8,26 @@ export const useCustomers = (filters?: {
   city?: string;
   page?: number;
   limit?: number;
+  searchQuery?: string;
 }) => {
   const query = useQuery({
     queryKey: [QueryKeyString.CUSTOMERS, filters],
     queryFn: async () => {
       const queryParams = new URLSearchParams();
 
-      if (filters?.page) {
+      // If we have a search query, request all records for client-side searching
+      const isSearching = !!filters?.searchQuery?.trim();
+
+      if (filters?.page && !isSearching) {
         queryParams.append('page', filters.page.toString());
       }
-      if (filters?.limit) {
+
+      if (filters?.limit && !isSearching) {
         queryParams.append('limit', filters.limit.toString());
+      } else if (isSearching) {
+        // If searching, request all records
+        queryParams.append('limit', '10000'); // Set a high limit to get all records
+        queryParams.append('page', '1');
       }
 
       if (filters?.country) {

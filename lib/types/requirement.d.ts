@@ -7,6 +7,10 @@ export interface EnquiryItem {
 
 export interface GetEnquiriesResponse {
   enquiries: Enquiry[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export interface AddEnquiryResponse {

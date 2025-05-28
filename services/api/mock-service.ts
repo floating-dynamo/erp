@@ -28,6 +28,9 @@ const mockService: IApiService = {
     const city = params.get('city');
     const page = parseInt(params.get('page') || '1', 10);
     const limit = parseInt(params.get('limit') || '10', 10);
+    // Check if there's a search query in the params
+    const searchQuery = params.get('searchQuery') || '';
+    const isSearching = searchQuery.trim().length > 0;
 
     const filteredCustomers = customers?.filter((customer) => {
       if (!customer?.address) return false;
@@ -40,9 +43,17 @@ const mockService: IApiService = {
     });
 
     const totalCustomers = filteredCustomers?.length || 0;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedCustomers = filteredCustomers?.slice(startIndex, endIndex);
+
+    // If searching, bypass pagination and return all records (pagination will be handled client-side)
+    let paginatedCustomers;
+    if (isSearching) {
+      paginatedCustomers = filteredCustomers;
+    } else {
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      paginatedCustomers = filteredCustomers?.slice(startIndex, endIndex);
+    }
+
     const totalPages = Math.ceil(totalCustomers / limit);
 
     return new Promise((resolve) => {
@@ -92,11 +103,38 @@ const mockService: IApiService = {
       }, 1000);
     });
   },
-  async getEnquiries() {
+  async getEnquiries({ customerId, page = 1, limit = 10, searchQuery = '' } = {}) {
+    // Filter by customerId if provided
+    const filteredEnquiries = customerId 
+      ? enquiries.filter((enquiry) => enquiry.customerId === customerId) 
+      : enquiries;
+    
+    const totalEnquiries = filteredEnquiries?.length || 0;
+    
+    // Check if there's a search query
+    const isSearching = searchQuery.trim().length > 0;
+    
+    // If searching, return all records for client-side pagination
+    // Otherwise, apply server-side pagination
+    let paginatedEnquiries;
+    if (isSearching) {
+      paginatedEnquiries = filteredEnquiries;
+    } else {
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      paginatedEnquiries = filteredEnquiries?.slice(startIndex, endIndex);
+    }
+    
+    const totalPages = Math.ceil(totalEnquiries / limit);
+    
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
-          enquiries,
+          enquiries: paginatedEnquiries,
+          total: totalEnquiries,
+          page,
+          limit,
+          totalPages,
         });
       }, 1000);
     });
