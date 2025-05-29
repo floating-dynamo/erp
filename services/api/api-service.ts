@@ -52,11 +52,19 @@ const apiService: IApiService = {
     page,
     limit,
     searchQuery,
+    customerFilter,
+    dueDateFrom,
+    dueDateTo,
+    quotationCreated,
   }: {
     customerId?: string;
     page?: number;
     limit?: number;
     searchQuery?: string;
+    customerFilter?: string;
+    dueDateFrom?: string;
+    dueDateTo?: string;
+    quotationCreated?: string;
   } = {}) {
     try {
       const enquiries = await axios.get('/api/enquiries', {
@@ -65,6 +73,10 @@ const apiService: IApiService = {
           page,
           limit,
           searchQuery,
+          customerFilter,
+          dueDateFrom,
+          dueDateTo,
+          quotationCreated,
         },
       });
       return enquiries.data;
@@ -110,10 +122,18 @@ const apiService: IApiService = {
     page,
     limit,
     searchQuery,
+    customerFilter,
+    enquiryNumberFilter,
+    amountFrom,
+    amountTo,
   }: {
     page?: number;
     limit?: number;
     searchQuery?: string;
+    customerFilter?: string;
+    enquiryNumberFilter?: string;
+    amountFrom?: string;
+    amountTo?: string;
   } = {}) {
     try {
       const quotations = await axios.get('/api/quotations', {
@@ -121,6 +141,10 @@ const apiService: IApiService = {
           page,
           limit,
           searchQuery,
+          customerFilter,
+          enquiryNumberFilter,
+          amountFrom,
+          amountTo,
         },
       });
       return quotations.data;

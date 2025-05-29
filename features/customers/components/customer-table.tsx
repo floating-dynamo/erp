@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -18,12 +18,9 @@ import {
   ArrowUpDown,
   CopyIcon,
   EyeIcon,
-  FilterIcon,
-  FilterX,
   MoreHorizontal,
   PlusCircleIcon,
   RefreshCwIcon,
-  XIcon,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -50,13 +47,7 @@ import Loader from '@/components/loader';
 import { redirect } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/use-debounce';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { CustomerFilters } from './customer-filters';
 
 const ActionsCell = ({ customer }: { customer: Customer }) => {
   const { toast } = useToast();
@@ -156,119 +147,6 @@ const columns: ColumnDef<Customer>[] = [
   },
 ];
 
-const CustomerSearchFilters = ({
-  countries,
-  states,
-  cities,
-  selectedCountry,
-  setSelectedCountry,
-  selectedState,
-  setSelectedState,
-  selectedCity,
-  setSelectedCity,
-  clearFilters,
-}: {
-  countries: string[];
-  states: string[];
-  cities: string[];
-  selectedCountry: string;
-  setSelectedCountry: (value: string) => void;
-  selectedState: string;
-  setSelectedState: (value: string) => void;
-  selectedCity: string;
-  setSelectedCity: (value: string) => void;
-  clearFilters: () => void;
-}) => {
-  const sanitizedCities = Array.from(
-    new Set(
-      cities.filter((city) => city !== undefined && city !== ' ' && city !== '')
-    )
-  );
-  const sanitizedStates = Array.from(
-    new Set(
-      states.filter(
-        (state) => state !== undefined && state !== ' ' && state !== ''
-      )
-    )
-  );
-  const sanitizedCountries = Array.from(
-    new Set(
-      countries.filter(
-        (country) => country !== undefined && country !== ' ' && country !== ''
-      )
-    )
-  );
-
-  return (
-    <div>
-      <h2 className="text-md font-semibold">Select Filters</h2>
-      <div className="flex gap-4 p-4 flex-wrap">
-        <div className="flex gap-4 items-center flex-wrap">
-          <label className="text-sm font-medium" htmlFor="country">
-            Country
-          </label>
-          <Select
-            value={selectedCountry}
-            onValueChange={(value) => setSelectedCountry(value)}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select a country" />
-            </SelectTrigger>
-            <SelectContent>
-              {sanitizedCountries.map((country) => (
-                <SelectItem key={country} value={country}>
-                  {country}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex gap-4 items-center">
-          <label className="text-sm font-medium" htmlFor="state">
-            State
-          </label>
-          <Select
-            value={selectedState}
-            onValueChange={(value) => setSelectedState(value)}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select a state" />
-            </SelectTrigger>
-            <SelectContent>
-              {sanitizedStates.map((state) => (
-                <SelectItem key={state} value={state}>
-                  {state}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex gap-4 items-center">
-          <label htmlFor="city">City</label>
-          <Select
-            value={selectedCity}
-            onValueChange={(value) => setSelectedCity(value)}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select a city" />
-            </SelectTrigger>
-            <SelectContent>
-              {sanitizedCities.map((city) => (
-                <SelectItem key={city} value={city}>
-                  {city}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <Button onClick={() => clearFilters()} variant="tertiaryDestuctive">
-          <XIcon className="size-4" /> Clear Filters
-        </Button>
-      </div>
-    </div>
-  );
-};
-
 export default function CustomerTable() {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -282,31 +160,24 @@ export default function CustomerTable() {
   const [searchInputValue, setSearchInputValue] = React.useState('');
   const searchQuery = useDebounce(searchInputValue, 300);
 
-  const [showFilter, setShowFilter] = useState<boolean>(false);
-  const [filterCity, setFilterCity] = useState<string>('');
-  const [filterState, setFilterState] = useState<string>('');
-  const [filterCountry, setFilterCountry] = useState<string>('');
+  // Filter states
+  const [filters, setFilters] = React.useState({
+    country: '',
+    state: '',
+    city: '',
+  });
 
   const [page, setPage] = React.useState(0);
   const [limit] = React.useState(100);
-
-  const clearFilters = (closeFiter: boolean = false) => {
-    setFilterCity('');
-    setFilterState('');
-    setFilterCountry('');
-    if (closeFiter) {
-      setShowFilter(false);
-    }
-  };
 
   const {
     data = { customers: [], total: 0, totalPages: 0 },
     isLoading,
     refetch: refetchCustomerData,
   } = useCustomers({
-    city: filterCity,
-    state: filterState,
-    country: filterCountry,
+    country: filters.country,
+    state: filters.state,
+    city: filters.city,
     page: page + 1,
     limit: limit,
     searchQuery: searchQuery,
@@ -338,16 +209,7 @@ export default function CustomerTable() {
   // Reset page when search query or filters change
   React.useEffect(() => {
     setPage(0);
-  }, [searchQuery, filterCity, filterState, filterCountry]);
-
-  const toggleFilter = () => {
-    setShowFilter((prev) => {
-      if (prev) {
-        clearFilters(true);
-      }
-      return !prev;
-    });
-  };
+  }, [searchQuery, filters.country, filters.state, filters.city]);
 
   return (
     <div className="w-full">
@@ -359,38 +221,15 @@ export default function CustomerTable() {
             onChange={(event) => setSearchInputValue(event.target.value)}
             className="max-w-sm"
           />
-          <Button
-            variant={showFilter ? 'tertiaryDestuctive' : 'outline'}
-            onClick={() => toggleFilter()}
-          >
-            {showFilter ? (
-              <FilterX className="size-4" />
-            ) : (
-              <FilterIcon className="size-4" />
-            )}
-          </Button>
+          <CustomerFilters
+            onApplyFilters={setFilters}
+            currentFilters={filters}
+          />
         </div>
         <Button variant="secondary" onClick={() => refetchCustomerData()}>
           <RefreshCwIcon className="size-4" /> Refresh Data
         </Button>
       </div>
-
-      {showFilter && customers && (
-        <div>
-          <CustomerSearchFilters
-            clearFilters={clearFilters}
-            cities={customers?.map(({ address: { city } }) => city)}
-            countries={customers?.map(({ address: { country } }) => country)}
-            states={customers?.map(({ address: { state } }) => state)}
-            selectedCity={filterCity}
-            setSelectedCity={setFilterCity}
-            selectedCountry={filterCountry}
-            setSelectedCountry={setFilterCountry}
-            selectedState={filterState}
-            setSelectedState={setFilterState}
-          />
-        </div>
-      )}
       
       <div className="rounded-md border">
         {isLoading ? (
@@ -472,7 +311,7 @@ export default function CustomerTable() {
                 totalPages ? Math.min(prev + 1, totalPages - 1) : prev + 1
               )
             }
-            disabled={page + 1 === totalPages}
+            disabled={page + 1 === totalPages || totalPages === 0 || total === 0}
           >
             Next
             <ArrowRight className="size-4" />

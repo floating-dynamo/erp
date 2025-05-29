@@ -337,7 +337,7 @@ const CreateQuotationForm = ({ quotationId }: CreateQuotationFormProps) => {
                                 {enquiry
                                   ? enquiry.enquiryNumber
                                   : field.value
-                                  ? enquiryList?.find(
+                                  ? enquiryList?.enquiries?.find(
                                       ({ enquiryNumber }) =>
                                         enquiryNumber === field.value
                                     )?.enquiryNumber
@@ -357,7 +357,7 @@ const CreateQuotationForm = ({ quotationId }: CreateQuotationFormProps) => {
                               <CommandList>
                                 <CommandEmpty>No Enquiry found.</CommandEmpty>
                                 <CommandGroup>
-                                  {enquiryList?.map(({ enquiryNumber, id }) => (
+                                  {enquiryList?.enquiries?.map(({ enquiryNumber, id }) => (
                                     <CommandItem
                                       value={enquiryNumber}
                                       key={enquiryNumber}

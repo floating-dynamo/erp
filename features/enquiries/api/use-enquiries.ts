@@ -7,20 +7,32 @@ export const useEnquiries = ({
   page,
   limit,
   searchQuery,
+  customerFilter,
+  dueDateFrom,
+  dueDateTo,
+  quotationCreated,
 }: {
   customerId?: string;
   page?: number;
   limit?: number;
   searchQuery?: string;
+  customerFilter?: string;
+  dueDateFrom?: string;
+  dueDateTo?: string;
+  quotationCreated?: string;
 } = {}) => {
   const query = useQuery({
-    queryKey: [QueryKeyString.ENQUIRIES, customerId, page, limit, searchQuery],
+    queryKey: [QueryKeyString.ENQUIRIES, customerId, page, limit, searchQuery, customerFilter, dueDateFrom, dueDateTo, quotationCreated],
     queryFn: async () => {
       const response = await APIService.getEnquiries({
         customerId,
         page,
         limit,
         searchQuery,
+        customerFilter,
+        dueDateFrom,
+        dueDateTo,
+        quotationCreated,
       });
 
       if (!response) {

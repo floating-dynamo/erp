@@ -88,7 +88,10 @@ const mockService: IApiService = {
     // Apply pagination to the final filtered results
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
-    const paginatedCustomers = finalFilteredCustomers?.slice(startIndex, endIndex);
+    const paginatedCustomers = finalFilteredCustomers?.slice(
+      startIndex,
+      endIndex
+    );
 
     const totalPages = Math.ceil(totalCustomers / limit);
 
@@ -139,11 +142,52 @@ const mockService: IApiService = {
       }, 1000);
     });
   },
-  async getEnquiries({ customerId, page = 1, limit = 10, searchQuery = '' } = {}) {
+  async getEnquiries({
+    customerId,
+    page = 1,
+    limit = 10,
+    searchQuery = '',
+    customerFilter = '',
+    dueDateFrom = '',
+    dueDateTo = '',
+    quotationCreated = '',
+  } = {}) {
     // Filter by customerId if provided
-    const filteredEnquiries = customerId
+    let filteredEnquiries = customerId
       ? enquiries.filter((enquiry) => enquiry.customerId === customerId)
       : enquiries;
+
+    // Apply additional filters
+    if (customerFilter) {
+      filteredEnquiries = filteredEnquiries.filter(
+        (enquiry) =>
+          enquiry.customerId === customerFilter ||
+          enquiry.customerName
+            .toLowerCase()
+            .includes(customerFilter.toLowerCase())
+      );
+    }
+
+    if (dueDateFrom) {
+      const fromDate = new Date(dueDateFrom);
+      filteredEnquiries = filteredEnquiries.filter(
+        (enquiry) => new Date(enquiry.quotationDueDate) >= fromDate
+      );
+    }
+
+    if (dueDateTo) {
+      const toDate = new Date(dueDateTo);
+      filteredEnquiries = filteredEnquiries.filter(
+        (enquiry) => new Date(enquiry.quotationDueDate) <= toDate
+      );
+    }
+
+    if (quotationCreated !== '') {
+      const isCreated = quotationCreated === 'true';
+      filteredEnquiries = filteredEnquiries.filter(
+        (enquiry) => Boolean(enquiry.isQotationCreated) === isCreated
+      );
+    }
 
     const totalEnquiries = filteredEnquiries?.length || 0;
 
@@ -218,14 +262,53 @@ const mockService: IApiService = {
       console.error(error);
     }
   },
-  async getQuotations({ page = 1, limit = 10, searchQuery = '' } = {}) {
+  async getQuotations({
+    page = 1,
+    limit = 10,
+    searchQuery = '',
+    customerFilter = '',
+    enquiryNumberFilter = '',
+    amountFrom = '',
+    amountTo = '',
+  } = {}) {
     // Check if there's a search query
     const isSearching = searchQuery?.trim().length > 0;
 
     // Filter quotations based on search query if provided
     let filteredQuotations = [...quotations];
+
+    // Apply customer filter
+    if (customerFilter) {
+      filteredQuotations = filteredQuotations.filter(
+        (quotation) => quotation.customerId === customerFilter
+      );
+    }
+
+    // Apply enquiry number filter
+    if (enquiryNumberFilter) {
+      filteredQuotations = filteredQuotations.filter(
+        (quotation) => quotation.enquiryNumber === enquiryNumberFilter
+      );
+    }
+
+    // Apply amount range filters
+    if (amountFrom) {
+      const minAmount = parseFloat(amountFrom);
+      filteredQuotations = filteredQuotations.filter(
+        (quotation) => quotation.totalAmount || 0 >= minAmount
+      );
+    }
+
+    if (amountTo) {
+      const maxAmount = parseFloat(amountTo);
+      filteredQuotations = filteredQuotations.filter(
+        (quotation) => quotation?.totalAmount || 0 <= maxAmount
+      );
+    }
+
+    // After applying filters, use search query if present
     if (isSearching) {
-      const fuse = new Fuse(quotations, quotationFuseOptions);
+      const fuse = new Fuse(filteredQuotations, quotationFuseOptions);
       const searchResults = fuse.search(searchQuery);
       filteredQuotations = searchResults.map((result) => result.item);
     }

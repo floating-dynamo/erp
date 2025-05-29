@@ -6,18 +6,39 @@ export const useQuotations = ({
   page,
   limit,
   searchQuery,
+  customerFilter,
+  enquiryNumberFilter,
+  amountFrom,
+  amountTo,
 }: {
   page?: number;
   limit?: number;
   searchQuery?: string;
+  customerFilter?: string;
+  enquiryNumberFilter?: string;
+  amountFrom?: string;
+  amountTo?: string;
 } = {}) => {
   const query = useQuery({
-    queryKey: [QueryKeyString.QUOTATIONS, page, limit, searchQuery],
+    queryKey: [
+      QueryKeyString.QUOTATIONS,
+      page,
+      limit,
+      searchQuery,
+      customerFilter,
+      enquiryNumberFilter,
+      amountFrom,
+      amountTo,
+    ],
     queryFn: async () => {
       const response = await APIService.getQuotations({
         page,
         limit,
         searchQuery,
+        customerFilter,
+        enquiryNumberFilter,
+        amountFrom,
+        amountTo,
       });
 
       if (!response) {
