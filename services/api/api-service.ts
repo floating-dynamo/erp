@@ -106,9 +106,23 @@ const apiService: IApiService = {
     }
   },
   // Quotation Endpoints
-  async getQuotations() {
+  async getQuotations({
+    page,
+    limit,
+    searchQuery,
+  }: {
+    page?: number;
+    limit?: number;
+    searchQuery?: string;
+  } = {}) {
     try {
-      const quotations = await axios.get('/api/quotations');
+      const quotations = await axios.get('/api/quotations', {
+        params: {
+          page,
+          limit,
+          searchQuery,
+        },
+      });
       return quotations.data;
     } catch (error) {
       console.error(error);

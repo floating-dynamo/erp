@@ -37,6 +37,21 @@ const customerFuseOptions = {
   includeScore: true, // Include match score in results
 };
 
+// Fuse.js configuration for quotation search
+const quotationSearchKeys = [
+  'customerName',
+  'enquiryNumber',
+  'quoteNumber',
+  'totalAmount',
+];
+
+const quotationFuseOptions = {
+  keys: quotationSearchKeys,
+  threshold: 0.1,
+  ignoreLocation: true,
+  includeScore: true,
+};
+
 const mockService: IApiService = {
   async getCustomers(queryString: string = '') {
     const params = new URLSearchParams(queryString);
@@ -203,11 +218,42 @@ const mockService: IApiService = {
       console.error(error);
     }
   },
-  async getQuotations() {
+  async getQuotations({ page = 1, limit = 10, searchQuery = '' } = {}) {
+    // Check if there's a search query
+    const isSearching = searchQuery?.trim().length > 0;
+
+    // Filter quotations based on search query if provided
+    let filteredQuotations = [...quotations];
+    if (isSearching) {
+      const fuse = new Fuse(quotations, quotationFuseOptions);
+      const searchResults = fuse.search(searchQuery);
+      filteredQuotations = searchResults.map((result) => result.item);
+    }
+
+    const totalQuotations = filteredQuotations.length;
+
+    // Apply pagination
+    let paginatedQuotations;
+    if (isSearching) {
+      // Return all filtered results for client-side pagination when searching
+      paginatedQuotations = filteredQuotations;
+    } else {
+      // Apply server-side pagination when not searching
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      paginatedQuotations = filteredQuotations.slice(startIndex, endIndex);
+    }
+
+    const totalPages = Math.ceil(totalQuotations / limit);
+
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
-          quotations,
+          quotations: paginatedQuotations,
+          total: totalQuotations,
+          page,
+          limit,
+          totalPages,
         });
       }, 1000);
     });
