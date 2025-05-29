@@ -445,11 +445,117 @@ const mockService: IApiService = {
       }, 1000);
     });
   },
-  async getPurchaseOrders() {
+  async getPurchaseOrders({
+    customerId,
+    buyerNameFilter,
+    enquiryId,
+    deliveryDateFrom,
+    deliveryDateTo,
+    totalValueFrom,
+    totalValueTo,
+    page = 1,
+    limit = 10,
+    searchQuery = '',
+  } = {}) {
+    // Filter purchase orders based on criteria
+    let filteredPurchaseOrders = [...purchaseOrders];
+
+    // Apply customer filter
+    if (customerId) {
+      filteredPurchaseOrders = filteredPurchaseOrders.filter(
+        (po) => po.customerId === customerId
+      );
+    }
+
+    // Apply buyer name filter
+    if (buyerNameFilter) {
+      filteredPurchaseOrders = filteredPurchaseOrders.filter(
+        (po) => po.buyerName?.toLowerCase().includes(buyerNameFilter.toLowerCase())
+      );
+    }
+
+    // Apply enquiry id filter
+    if (enquiryId) {
+      filteredPurchaseOrders = filteredPurchaseOrders.filter(
+        (po) => po.enquiryId === enquiryId
+      );
+    }
+
+    // Apply delivery date range filters with type safety checks
+    if (deliveryDateFrom) {
+      const fromDate = new Date(deliveryDateFrom);
+      filteredPurchaseOrders = filteredPurchaseOrders.filter(
+        (po) => po.deliveryDate ? new Date(po.deliveryDate) >= fromDate : false
+      );
+    }
+
+    if (deliveryDateTo) {
+      const toDate = new Date(deliveryDateTo);
+      filteredPurchaseOrders = filteredPurchaseOrders.filter(
+        (po) => po.deliveryDate ? new Date(po.deliveryDate) <= toDate : false
+      );
+    }
+
+    // Apply total value range filters with type safety checks
+    if (totalValueFrom) {
+      const minValue = parseFloat(String(totalValueFrom));
+      filteredPurchaseOrders = filteredPurchaseOrders.filter(
+        (po) => typeof po.totalValue === 'number' ? po.totalValue >= minValue : false
+      );
+    }
+
+    if (totalValueTo) {
+      const maxValue = parseFloat(String(totalValueTo));
+      filteredPurchaseOrders = filteredPurchaseOrders.filter(
+        (po) => typeof po.totalValue === 'number' ? po.totalValue <= maxValue : false
+      );
+    }
+
+    const totalPurchaseOrders = filteredPurchaseOrders.length;
+
+    // Check if there's a search query
+    const isSearching = searchQuery?.trim().length > 0;
+
+    // If searching, we'll need to implement fuzzy search
+    if (isSearching) {
+      const fuseSearchKeys = [
+        'poNumber',
+        'buyerName',
+        'customerName',
+        'totalBasicValue',
+        'totalValue',
+      ];
+
+      const fuse = new Fuse(filteredPurchaseOrders, {
+        keys: fuseSearchKeys,
+        threshold: 0.1,
+        ignoreLocation: true,
+      });
+
+      const searchResults = fuse.search(searchQuery);
+      filteredPurchaseOrders = searchResults.map((result) => result.item);
+    }
+
+    // Apply pagination
+    let paginatedPurchaseOrders;
+    if (isSearching) {
+      // Return all filtered results for client-side pagination when searching
+      paginatedPurchaseOrders = filteredPurchaseOrders;
+    } else {
+      // Apply server-side pagination when not searching
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      paginatedPurchaseOrders = filteredPurchaseOrders.slice(startIndex, endIndex);
+    }
+
+    const totalPages = Math.ceil(totalPurchaseOrders / limit);
+
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
-          purchaseOrders,
+          purchaseOrders: paginatedPurchaseOrders,
+          total: totalPurchaseOrders,
+          totalPages,
         });
       }, 1000);
     });

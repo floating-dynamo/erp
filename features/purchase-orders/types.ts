@@ -10,6 +10,9 @@ export interface PurchaseOrderFiltersParams {
   deliveryDateTo?: string;
   totalValueFrom?: string | number;
   totalValueTo?: string | number;
+  page?: number;
+  limit?: number;
+  searchQuery?: string;
 }
 
 export interface FilterDateRange {

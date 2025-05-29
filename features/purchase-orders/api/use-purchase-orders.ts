@@ -11,7 +11,10 @@ export const usePurchaseOrders = (filters: PurchaseOrderFiltersParams = {}) => {
     deliveryDateFrom,
     deliveryDateTo,
     totalValueFrom,
-    totalValueTo
+    totalValueTo,
+    page,
+    limit,
+    searchQuery
   } = filters;
   
   const query = useQuery({
@@ -23,17 +26,19 @@ export const usePurchaseOrders = (filters: PurchaseOrderFiltersParams = {}) => {
       deliveryDateFrom,
       deliveryDateTo,
       totalValueFrom,
-      totalValueTo
+      totalValueTo,
+      page,
+      limit,
+      searchQuery
     ],
     queryFn: async () => {
       const response = await APIService.getPurchaseOrders(filters);
 
       if (!response) {
-        return null;
+        return { purchaseOrders: [], total: 0, totalPages: 0 };
       }
 
-      const { purchaseOrders } = response;
-      return purchaseOrders;
+      return response;
     },
   });
 

@@ -9,13 +9,13 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 import {
   ArrowUpDown,
-  // CirclePlusIcon,
+  ArrowLeft,
+  ArrowRight,
   CopyIcon,
   EyeIcon,
   RefreshCwIcon,
@@ -49,6 +49,7 @@ import Fuse from 'fuse.js';
 import { usePurchaseOrders } from '../api/use-purchase-orders';
 import { CurrencySymbol } from '@/lib/types';
 import { PurchaseOrderFilters } from './purchase-order-filters';
+import { useDebounce } from '@/hooks/use-debounce';
 
 const ActionsCell = ({ purchaseOrder }: { purchaseOrder: PurchaseOrder }) => {
   const { toast } = useToast();
@@ -79,14 +80,6 @@ const ActionsCell = ({ purchaseOrder }: { purchaseOrder: PurchaseOrder }) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        {/* <DropdownMenuItem
-          className="cursor-pointer text-xs sm:text-sm"
-          onClick={() =>
-            redirect(`/quotations/create?purchaseOrder=${purchaseOrder?.id}`)
-          }
-        >
-          <CirclePlusIcon className="size-4" /> Create Quotation
-        </DropdownMenuItem> */}
         <DropdownMenuItem
           className="cursor-pointer"
           onClick={() => redirect(`purchase-orders/${purchaseOrder?.id}`)}
@@ -252,7 +245,12 @@ const PurchaseOrdersTable: React.FC = () => {
     customerId: false,
   });
   const [rowSelection, setRowSelection] = useState({});
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInputValue, setSearchInputValue] = useState('');
+  const searchQuery = useDebounce(searchInputValue, 300);
+  
+  const [page, setPage] = useState(0);
+  const [limit] = useState(10);
+  
   const [filters, setFilters] = useState({
     buyerNameFilter: '',
     enquiryId: '',
@@ -263,10 +261,17 @@ const PurchaseOrdersTable: React.FC = () => {
   });
 
   const {
-    data: purchaseOrders,
+    data = { purchaseOrders: [], total: 0, totalPages: 0 },
     isLoading,
     refetch: refetchPurchaseOrdersData,
-  } = usePurchaseOrders(filters);
+  } = usePurchaseOrders({
+    ...filters,
+    page: page + 1,
+    limit,
+    searchQuery,
+  });
+  
+  const { purchaseOrders, total, totalPages } = data || {};
   
   const fuseSearchKeys: (keyof PurchaseOrder | string)[] = [
     'customerName',
@@ -297,17 +302,46 @@ const PurchaseOrdersTable: React.FC = () => {
     return fuse.search(searchQuery).map((result) => result.item);
   }, [searchQuery, fuse, purchaseOrders]);
 
+  // Calculate total pages based on filtered results
+  const totalFilteredPurchaseOrders = filteredPurchaseOrders?.length || 0;
+  const totalFilteredPages = Math.ceil(totalFilteredPurchaseOrders / limit);
+  
+  // Client-side pagination for search results
+  const paginatedPurchaseOrders = React.useMemo(() => {
+    if (!filteredPurchaseOrders) return [];
+    
+    if (searchQuery) {
+      const startIndex = page * limit;
+      const endIndex = startIndex + limit;
+      return filteredPurchaseOrders.slice(startIndex, endIndex);
+    }
+    
+    return filteredPurchaseOrders;
+  }, [filteredPurchaseOrders, page, limit, searchQuery]);
+  
+  // Use appropriate pagination values based on whether we're searching or not
+  const displayedTotal = searchQuery ? totalFilteredPurchaseOrders : total;
+  const displayedTotalPages = searchQuery ? totalFilteredPages : totalPages;
+
   const handleApplyFilters = (newFilters: typeof filters) => {
     setFilters(newFilters);
+    setPage(0); // Reset to first page when filters change
   };
+  
+  // Reset page when search query changes
+  React.useEffect(() => {
+    setPage(0);
+  }, [searchQuery, filters]);
 
   const table = useReactTable({
-    data: filteredPurchaseOrders ?? [],
+    data: searchQuery ? paginatedPurchaseOrders : processedPurchaseOrders ?? [],
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    manualPagination: !searchQuery, // Only use manual pagination when not searching
+    pageCount: displayedTotalPages,
+    rowCount: displayedTotal,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
@@ -320,18 +354,14 @@ const PurchaseOrdersTable: React.FC = () => {
     },
   });
 
-  if (isLoading) {
-    return <Loader text="Fetching all Purchase Orders" />;
-  }
-
   return (
     <div className="w-full">
       <div className="flex items-center py-4 gap-4 justify-between">
         <div className="flex gap-2 items-center">
           <Input
             placeholder="Search Purchase Order..."
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
+            value={searchInputValue}
+            onChange={(event) => setSearchInputValue(event.target.value)}
             className="max-w-sm"
           />
           <PurchaseOrderFilters
@@ -344,54 +374,91 @@ const PurchaseOrdersTable: React.FC = () => {
         </Button>
       </div>
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+        {isLoading ? (
+          <div className="flex items-center justify-center h-80">
+            <Loader text="Fetching purchase orders data" />
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  <p>No Purchase Orders to show</p>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && 'selected'}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    <p>No Purchase Orders to show</p>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+      
+      <div className="flex items-center justify-between py-4">
+        <div>
+          <p className="text-sm text-muted-foreground">
+            Page {page + 1} of {displayedTotalPages || 1} (Total Purchase Orders: {displayedTotal})
+          </p>
+        </div>
+        <div className="space-x-2 flex items-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+            disabled={page === 0}
+          >
+            <ArrowLeft className="size-4" /> Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setPage((prev) =>
+                displayedTotalPages ? Math.min(prev + 1, displayedTotalPages - 1) : prev + 1
+              )
+            }
+            disabled={page + 1 >= displayedTotalPages}
+          >
+            Next
+            <ArrowRight className="size-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

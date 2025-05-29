@@ -167,8 +167,26 @@ export interface IApiService {
   // Purchase Order Endpoints
   getPurchaseOrders: ({
     customerId,
+    buyerNameFilter,
+    enquiryId,
+    deliveryDateFrom,
+    deliveryDateTo,
+    totalValueFrom,
+    totalValueTo,
+    page,
+    limit,
+    searchQuery,
   }: {
     customerId?: string;
+    buyerNameFilter?: string;
+    enquiryId?: string;
+    deliveryDateFrom?: string;
+    deliveryDateTo?: string;
+    totalValueFrom?: string | number;
+    totalValueTo?: string | number;
+    page?: number;
+    limit?: number;
+    searchQuery?: string;
   }) => Promise<GetPurchaseOrdersResponse>;
   addPurchaseOrder: ({
     purchaseOrder,

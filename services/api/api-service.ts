@@ -271,6 +271,9 @@ const apiService: IApiService = {
     deliveryDateTo,
     totalValueFrom,
     totalValueTo,
+    page,
+    limit,
+    searchQuery,
   }: PurchaseOrderFiltersParams = {}) {
     try {
       const purchaseOrders = await axios.get('/api/purchase-orders', {
@@ -282,6 +285,9 @@ const apiService: IApiService = {
           deliveryDateTo,
           totalValueFrom,
           totalValueTo,
+          page,
+          limit,
+          searchQuery,
         },
       });
       return purchaseOrders.data;
