@@ -10,8 +10,45 @@ const app = new Hono()
   .get("/", async (c) => {
     try {
       await connectDB();
-      const quotations = await QuotationModel.find();
-      return c.json({ quotations });
+      const page = parseInt(c.req.query("page") || "1");
+      const limit = parseInt(c.req.query("limit") || "10");
+      const searchQuery = c.req.query("searchQuery") || "";
+
+      const skip = (page - 1) * limit;
+
+      // If there's a search query, we'll need to handle it differently
+      // For now, let's implement basic server-side filtering
+      let quotations;
+      let total;
+
+      if (searchQuery) {
+        // For search, return all matching records for client-side pagination
+        const searchRegex = new RegExp(searchQuery, "i");
+        const searchFilter = {
+          $or: [
+            { customerName: searchRegex },
+            { enquiryNumber: searchRegex },
+            { quoteNumber: searchRegex },
+            { customerId: searchRegex },
+          ],
+        };
+        quotations = await QuotationModel.find(searchFilter);
+        total = quotations.length;
+      } else {
+        // For normal pagination, use server-side pagination
+        quotations = await QuotationModel.find({}).skip(skip).limit(limit);
+        total = await QuotationModel.countDocuments({});
+      }
+
+      const totalPages = Math.ceil(total / limit);
+
+      return c.json({
+        quotations,
+        total,
+        page,
+        limit,
+        totalPages,
+      });
     } catch (error) {
       console.log(error);
       return c.json({ error: "Failed to fetch quotations" }, 500);

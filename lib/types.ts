@@ -101,7 +101,15 @@ export interface IApiService {
   }) => Promise<EditEnquiryResponse>;
 
   // Quotation Endpoints
-  getQuotations: () => Promise<GetQuotationsResponse>;
+  getQuotations: ({
+    page,
+    limit,
+    searchQuery,
+  }: {
+    page?: number;
+    limit?: number;
+    searchQuery?: string;
+  }) => Promise<GetQuotationsResponse>;
   addQuotation: ({
     quotation,
   }: {

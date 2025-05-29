@@ -12,6 +12,7 @@ import { SupplierDc } from '@/features/supplier-dc/schemas';
 import { SUPPLIER_DCS_MOCK_DATA } from './mocks/supplier-dcs';
 import { PurchaseOrder } from '@/features/purchase-orders/schemas';
 import { PURCHASE_ORDERS_MOCK_DATA } from './mocks/purchase-orders';
+import Fuse from 'fuse.js';
 
 const customers: Customer[] = CUSTOMERS_MOCK_DATA;
 const enquiries: Enquiry[] = ENQUIRIES_MOCK_DATA;
@@ -19,6 +20,37 @@ const quotations: Quotation[] = QUOTATIONS_MOCK_DATA;
 const companies: Company[] = COMPANIES_MOCK_DATA;
 const supplierDcs: SupplierDc[] = SUPPLIER_DCS_MOCK_DATA;
 const purchaseOrders: PurchaseOrder[] = PURCHASE_ORDERS_MOCK_DATA;
+
+// Fuse.js configuration for customer search
+const customerSearchKeys = [
+  'name',
+  'address.city',
+  'address.state',
+  'gstNumber',
+  'vendorId',
+];
+
+const customerFuseOptions = {
+  keys: customerSearchKeys,
+  threshold: 0.1, // Adjust threshold for fuzzy matching (0.0 = exact match, 1.0 = match anything)
+  ignoreLocation: true, // Don't penalize matches that are far from the start
+  includeScore: true, // Include match score in results
+};
+
+// Fuse.js configuration for quotation search
+const quotationSearchKeys = [
+  'customerName',
+  'enquiryNumber',
+  'quoteNumber',
+  'totalAmount',
+];
+
+const quotationFuseOptions = {
+  keys: quotationSearchKeys,
+  threshold: 0.1,
+  ignoreLocation: true,
+  includeScore: true,
+};
 
 const mockService: IApiService = {
   async getCustomers(queryString: string = '') {
@@ -28,11 +60,11 @@ const mockService: IApiService = {
     const city = params.get('city');
     const page = parseInt(params.get('page') || '1', 10);
     const limit = parseInt(params.get('limit') || '10', 10);
-    // Check if there's a search query in the params
     const searchQuery = params.get('searchQuery') || '';
     const isSearching = searchQuery.trim().length > 0;
 
-    const filteredCustomers = customers?.filter((customer) => {
+    // First apply location filters (country, state, city)
+    const locationFilteredCustomers = customers?.filter((customer) => {
       if (!customer?.address) return false;
       const countryMatch = country
         ? customer?.address.country === country
@@ -42,17 +74,21 @@ const mockService: IApiService = {
       return countryMatch && stateMatch && cityMatch;
     });
 
-    const totalCustomers = filteredCustomers?.length || 0;
+    let finalFilteredCustomers = locationFilteredCustomers;
 
-    // If searching, bypass pagination and return all records (pagination will be handled client-side)
-    let paginatedCustomers;
+    // Apply fuzzy search if search query exists
     if (isSearching) {
-      paginatedCustomers = filteredCustomers;
-    } else {
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      paginatedCustomers = filteredCustomers?.slice(startIndex, endIndex);
+      const fuse = new Fuse(locationFilteredCustomers, customerFuseOptions);
+      const searchResults = fuse.search(searchQuery);
+      finalFilteredCustomers = searchResults.map((result) => result.item);
     }
+
+    const totalCustomers = finalFilteredCustomers?.length || 0;
+
+    // Apply pagination to the final filtered results
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedCustomers = finalFilteredCustomers?.slice(startIndex, endIndex);
 
     const totalPages = Math.ceil(totalCustomers / limit);
 
@@ -105,15 +141,15 @@ const mockService: IApiService = {
   },
   async getEnquiries({ customerId, page = 1, limit = 10, searchQuery = '' } = {}) {
     // Filter by customerId if provided
-    const filteredEnquiries = customerId 
-      ? enquiries.filter((enquiry) => enquiry.customerId === customerId) 
+    const filteredEnquiries = customerId
+      ? enquiries.filter((enquiry) => enquiry.customerId === customerId)
       : enquiries;
-    
+
     const totalEnquiries = filteredEnquiries?.length || 0;
-    
+
     // Check if there's a search query
     const isSearching = searchQuery.trim().length > 0;
-    
+
     // If searching, return all records for client-side pagination
     // Otherwise, apply server-side pagination
     let paginatedEnquiries;
@@ -124,9 +160,9 @@ const mockService: IApiService = {
       const endIndex = startIndex + limit;
       paginatedEnquiries = filteredEnquiries?.slice(startIndex, endIndex);
     }
-    
+
     const totalPages = Math.ceil(totalEnquiries / limit);
-    
+
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
@@ -182,11 +218,42 @@ const mockService: IApiService = {
       console.error(error);
     }
   },
-  async getQuotations() {
+  async getQuotations({ page = 1, limit = 10, searchQuery = '' } = {}) {
+    // Check if there's a search query
+    const isSearching = searchQuery?.trim().length > 0;
+
+    // Filter quotations based on search query if provided
+    let filteredQuotations = [...quotations];
+    if (isSearching) {
+      const fuse = new Fuse(quotations, quotationFuseOptions);
+      const searchResults = fuse.search(searchQuery);
+      filteredQuotations = searchResults.map((result) => result.item);
+    }
+
+    const totalQuotations = filteredQuotations.length;
+
+    // Apply pagination
+    let paginatedQuotations;
+    if (isSearching) {
+      // Return all filtered results for client-side pagination when searching
+      paginatedQuotations = filteredQuotations;
+    } else {
+      // Apply server-side pagination when not searching
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      paginatedQuotations = filteredQuotations.slice(startIndex, endIndex);
+    }
+
+    const totalPages = Math.ceil(totalQuotations / limit);
+
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
-          quotations,
+          quotations: paginatedQuotations,
+          total: totalQuotations,
+          page,
+          limit,
+          totalPages,
         });
       }, 1000);
     });
