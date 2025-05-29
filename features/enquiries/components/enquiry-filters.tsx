@@ -8,20 +8,28 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Label } from '@/components/ui/label';
-import { FilterIcon, CalendarIcon } from 'lucide-react';
+import { FilterIcon, CalendarIcon, ChevronsUpDown, Check } from 'lucide-react';
 import { useCustomers } from '@/features/customers/api/use-customers';
 import { cn, formatDate } from '@/lib/utils';
 
@@ -46,6 +54,7 @@ export const EnquiryFilters: React.FC<EnquiryFiltersProps> = ({
 }) => {
   const [open, setOpen] = React.useState(false);
   const [localFilters, setLocalFilters] = React.useState(currentFilters);
+  const [customerSelectOpen, setCustomerSelectOpen] = React.useState(false);
 
   // State for controlling date picker popovers
   const [isFromDateOpen, setIsFromDateOpen] = React.useState(false);
@@ -88,6 +97,19 @@ export const EnquiryFilters: React.FC<EnquiryFiltersProps> = ({
     setOpen(false);
   };
 
+  const handleCustomerChange = (value: string) => {
+    setLocalFilters(prev => ({ ...prev, customerFilter: value }));
+    setCustomerSelectOpen(false);
+  };
+
+  const getSelectedCustomerName = () => {
+    if (!localFilters.customerFilter || localFilters.customerFilter === 'all') {
+      return 'All Customers';
+    }
+    const customer = customers.find(c => c.id === localFilters.customerFilter);
+    return customer ? customer.name : 'Select customer';
+  };
+
   const hasActiveFilters = Object.entries(currentFilters).some(([key, value]) => {
     if (key === 'dueDateFrom' || key === 'dueDateTo') return value !== '';
     return value !== '' && value !== 'all';
@@ -108,24 +130,65 @@ export const EnquiryFilters: React.FC<EnquiryFiltersProps> = ({
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="customer">Customer</Label>
-            <Select
-              value={localFilters.customerFilter || 'all'}
-              onValueChange={(value) =>
-                setLocalFilters(prev => ({ ...prev, customerFilter: value }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select customer" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Customers</SelectItem>
-                {customers.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>
-                    {customer.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={customerSelectOpen} onOpenChange={setCustomerSelectOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  className={cn(
+                    'w-full justify-between',
+                    (!localFilters.customerFilter || localFilters.customerFilter === 'all') && 'text-muted-foreground'
+                  )}
+                >
+                  {getSelectedCustomerName()}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput
+                    placeholder="Search customers..."
+                    className="h-9"
+                  />
+                  <CommandList>
+                    <CommandEmpty>No customer found.</CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem
+                        value="all"
+                        onSelect={() => handleCustomerChange('all')}
+                      >
+                        All Customers
+                        <Check
+                          className={cn(
+                            'ml-auto h-4 w-4',
+                            (localFilters.customerFilter === 'all' || !localFilters.customerFilter)
+                              ? 'opacity-100'
+                              : 'opacity-0'
+                          )}
+                        />
+                      </CommandItem>
+                      {customers.map((customer) => (
+                        <CommandItem
+                          key={customer.id}
+                          value={customer.name}
+                          onSelect={() => handleCustomerChange(customer.id)}
+                        >
+                          {customer.name}
+                          <Check
+                            className={cn(
+                              'ml-auto h-4 w-4',
+                              localFilters.customerFilter === customer.id
+                                ? 'opacity-100'
+                                : 'opacity-0'
+                            )}
+                          />
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="grid gap-2">
