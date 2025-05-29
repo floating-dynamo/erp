@@ -3,20 +3,58 @@ import { Hono } from 'hono';
 import PurchaseOrderModel from '../model';
 import uuid4 from 'uuid4';
 import { createPurchaseOrderSchema } from '../schemas';
+import { PurchaseOrderFilterCriteria } from '../types';
 
 const app = new Hono()
   .get('/', async (c) => {
     try {
       await connectDB();
       const customerId = c.req.query('customerId');
-      let purchaseOrders;
+      const buyerNameFilter = c.req.query('buyerNameFilter');
+      const enquiryId = c.req.query('enquiryId');
+      const deliveryDateFrom = c.req.query('deliveryDateFrom');
+      const deliveryDateTo = c.req.query('deliveryDateTo');
+      const totalValueFrom = c.req.query('totalValueFrom');
+      const totalValueTo = c.req.query('totalValueTo');
+
+      // Build filter criteria
+      const filter: PurchaseOrderFilterCriteria = {};
 
       if (customerId) {
-        purchaseOrders = await PurchaseOrderModel.find({ customerId });
-      } else {
-        purchaseOrders = await PurchaseOrderModel.find();
+        filter.customerId = customerId;
       }
 
+      if (enquiryId) {
+        filter.enquiryId = enquiryId;
+      }
+
+      if (buyerNameFilter) {
+        filter.buyerName = { $regex: buyerNameFilter, $options: 'i' };
+      }
+
+      // Date range filtering
+      if (deliveryDateFrom || deliveryDateTo) {
+        filter.deliveryDate = {};
+        if (deliveryDateFrom) {
+          filter.deliveryDate.$gte = deliveryDateFrom;
+        }
+        if (deliveryDateTo) {
+          filter.deliveryDate.$lte = deliveryDateTo;
+        }
+      }
+
+      // Total value range filtering
+      if (totalValueFrom || totalValueTo) {
+        filter.totalValue = {};
+        if (totalValueFrom) {
+          filter.totalValue.$gte = Number(totalValueFrom);
+        }
+        if (totalValueTo) {
+          filter.totalValue.$lte = Number(totalValueTo);
+        }
+      }
+
+      const purchaseOrders = await PurchaseOrderModel.find(filter);
       return c.json({ purchaseOrders });
     } catch (error) {
       console.log(error);

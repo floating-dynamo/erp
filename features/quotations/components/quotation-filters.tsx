@@ -65,11 +65,12 @@ export const QuotationFilters: React.FC<QuotationFiltersProps> = ({
 
   const handleApplyFilters = () => {
     // Convert "all" values back to empty strings for the API
+    // Ensure amount values are properly formatted
     const apiFilters = {
       customerFilter: localFilters.customerFilter === 'all' ? '' : localFilters.customerFilter,
       enquiryNumberFilter: localFilters.enquiryNumberFilter === 'all' ? '' : localFilters.enquiryNumberFilter,
-      amountFrom: localFilters.amountFrom,
-      amountTo: localFilters.amountTo,
+      amountFrom: localFilters.amountFrom ? String(Number(localFilters.amountFrom)) : '',
+      amountTo: localFilters.amountTo ? String(Number(localFilters.amountTo)) : '',
     };
     onApplyFilters(apiFilters);
     setOpen(false);
@@ -121,6 +122,13 @@ export const QuotationFilters: React.FC<QuotationFiltersProps> = ({
     if (key === 'amountFrom' || key === 'amountTo') return value !== '';
     return value !== '' && value !== 'all';
   });
+
+  // Handle numeric input change to ensure we only have valid numbers
+  const handleNumericInput = (field: 'amountFrom' | 'amountTo', value: string) => {
+    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      setLocalFilters(prev => ({ ...prev, [field]: value }));
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -268,16 +276,20 @@ export const QuotationFilters: React.FC<QuotationFiltersProps> = ({
                 type="number"
                 placeholder="From"
                 value={localFilters.amountFrom}
-                onChange={(e) => setLocalFilters(prev => ({ ...prev, amountFrom: e.target.value }))}
+                onChange={(e) => handleNumericInput('amountFrom', e.target.value)}
                 className="w-full"
+                min="0"
+                step="0.01"
               />
               <span>to</span>
               <Input
                 type="number"
                 placeholder="To"
                 value={localFilters.amountTo}
-                onChange={(e) => setLocalFilters(prev => ({ ...prev, amountTo: e.target.value }))}
+                onChange={(e) => handleNumericInput('amountTo', e.target.value)}
                 className="w-full"
+                min="0"
+                step="0.01"
               />
             </div>
           </div>

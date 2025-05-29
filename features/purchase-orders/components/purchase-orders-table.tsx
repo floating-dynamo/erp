@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 
 import {
   ColumnDef,
@@ -18,9 +18,8 @@ import {
   // CirclePlusIcon,
   CopyIcon,
   EyeIcon,
-  FilterIcon,
-  MoreHorizontal,
   RefreshCwIcon,
+  MoreHorizontal,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -49,6 +48,7 @@ import { redirect } from 'next/navigation';
 import Fuse from 'fuse.js';
 import { usePurchaseOrders } from '../api/use-purchase-orders';
 import { CurrencySymbol } from '@/lib/types';
+import { PurchaseOrderFilters } from './purchase-order-filters';
 
 const ActionsCell = ({ purchaseOrder }: { purchaseOrder: PurchaseOrder }) => {
   const { toast } = useToast();
@@ -245,23 +245,30 @@ const columns: ColumnDef<PurchaseOrder>[] = [
   },
 ];
 
-const EnquiriesTable: React.FC = () => {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({
-      customerId: false,
-    });
-  const [rowSelection, setRowSelection] = React.useState({});
-  const [searchQuery, setSearchQuery] = React.useState('');
+const PurchaseOrdersTable: React.FC = () => {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    customerId: false,
+  });
+  const [rowSelection, setRowSelection] = useState({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState({
+    buyerNameFilter: '',
+    enquiryId: '',
+    deliveryDateFrom: '',
+    deliveryDateTo: '',
+    totalValueFrom: '',
+    totalValueTo: '',
+  });
+
   const {
     data: purchaseOrders,
     isLoading,
     refetch: refetchPurchaseOrdersData,
-  } = usePurchaseOrders({});
-  const fuseEnquirySearchKeys: (keyof PurchaseOrder | string)[] = [
+  } = usePurchaseOrders(filters);
+  
+  const fuseSearchKeys: (keyof PurchaseOrder | string)[] = [
     'customerName',
     'poNumber',
     'formattedPoDate',
@@ -270,7 +277,7 @@ const EnquiriesTable: React.FC = () => {
     'totalValue',
   ];
 
-  const processedEnquiries = React.useMemo(() => {
+  const processedPurchaseOrders = React.useMemo(() => {
     return purchaseOrders?.map((purchaseOrder) => ({
       ...purchaseOrder,
       formattedPoDate: formatDate(new Date(purchaseOrder.poDate || '')),
@@ -278,17 +285,21 @@ const EnquiriesTable: React.FC = () => {
   }, [purchaseOrders]);
 
   const fuse = React.useMemo(() => {
-    return new Fuse(processedEnquiries || [], {
-      keys: fuseEnquirySearchKeys,
+    return new Fuse(processedPurchaseOrders || [], {
+      keys: fuseSearchKeys,
       threshold: 0.1, // Adjust threshold for fuzzy matching
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [processedEnquiries]);
+  }, [processedPurchaseOrders]);
 
   const filteredPurchaseOrders = React.useMemo(() => {
     if (!searchQuery) return purchaseOrders;
     return fuse.search(searchQuery).map((result) => result.item);
   }, [searchQuery, fuse, purchaseOrders]);
+
+  const handleApplyFilters = (newFilters: typeof filters) => {
+    setFilters(newFilters);
+  };
 
   const table = useReactTable({
     data: filteredPurchaseOrders ?? [],
@@ -323,9 +334,10 @@ const EnquiriesTable: React.FC = () => {
             onChange={(event) => setSearchQuery(event.target.value)}
             className="max-w-sm"
           />
-          <Button variant="outline">
-            <FilterIcon className="size-4" />
-          </Button>
+          <PurchaseOrderFilters
+            onApplyFilters={handleApplyFilters}
+            currentFilters={filters}
+          />
         </div>
         <Button variant="secondary" onClick={() => refetchPurchaseOrdersData()}>
           <RefreshCwIcon className="size-4" /> Refresh Data
@@ -385,4 +397,4 @@ const EnquiriesTable: React.FC = () => {
   );
 };
 
-export default EnquiriesTable;
+export default PurchaseOrdersTable;

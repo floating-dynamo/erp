@@ -1,4 +1,5 @@
 import { IApiService } from '@/lib/types';
+import { PurchaseOrderFiltersParams } from '@/features/purchase-orders/types';
 import axios from 'axios';
 
 const apiService: IApiService = {
@@ -262,11 +263,25 @@ const apiService: IApiService = {
       );
     }
   },
-  async getPurchaseOrders({ customerId }) {
+  async getPurchaseOrders({
+    customerId,
+    buyerNameFilter,
+    enquiryId,
+    deliveryDateFrom,
+    deliveryDateTo,
+    totalValueFrom,
+    totalValueTo,
+  }: PurchaseOrderFiltersParams = {}) {
     try {
       const purchaseOrders = await axios.get('/api/purchase-orders', {
         params: {
           customerId,
+          buyerNameFilter,
+          enquiryId,
+          deliveryDateFrom,
+          deliveryDateTo,
+          totalValueFrom,
+          totalValueTo,
         },
       });
       return purchaseOrders.data;
