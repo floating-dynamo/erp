@@ -249,7 +249,7 @@ const PurchaseOrdersTable: React.FC = () => {
   const searchQuery = useDebounce(searchInputValue, 300);
   
   const [page, setPage] = useState(0);
-  const [limit] = useState(10);
+  const [limit] = useState(100);
   
   const [filters, setFilters] = useState({
     buyerNameFilter: '',

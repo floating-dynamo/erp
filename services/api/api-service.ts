@@ -330,6 +330,17 @@ const apiService: IApiService = {
       throw new Error('Failed to edit purchase order');
     }
   },
+  // Metadata endpoints
+  async getMetadata({ type }) {
+    try {
+      const params = type ? { type } : {};
+      const response = await axios.get('/api/metadata', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching metadata:', error);
+      throw new Error(`Failed to fetch metadata: ${(error as Error).message}`);
+    }
+  },
 };
 
 export default apiService;

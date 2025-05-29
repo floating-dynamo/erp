@@ -10,7 +10,7 @@ import {
   GetEnquiriesResponse,
 } from './types/requirement';
 import { Enquiry } from '@/features/enquiries/schemas';
-import { GetCountriesResponse } from './types/index';
+import { GetCountriesResponse, GetMetadataResponse } from './types/index';
 import {
   AddQuotationResponse,
   EditQuotationResponse,
@@ -55,6 +55,7 @@ export enum QueryKeyString {
   SUPPLIER_DCS = 'supplier-dcs',
   PURCHASE_ORDERS = 'purchase-orders',
   COUNTRIES = 'countries',
+  METADATA = 'metadata',
 }
 
 export interface IApiService {
@@ -195,6 +196,13 @@ export interface IApiService {
   }) => Promise<AddPurchaseOrderResponse>;
   getPurchaseOrderDetails: ({ id }: { id: string }) => Promise<PurchaseOrder | null>;
   editPurchaseOrder: ({ id, data }: { id: string; data: PurchaseOrder }) => Promise<{ message: string; success: boolean }>;
+
+  // Metadata Endpoints
+  getMetadata: ({
+    type,
+  }: {
+    type?: MetaDataType;
+  }) => Promise<GetMetadataResponse>;
 
   getCountries: () => Promise<GetCountriesResponse>;
 }

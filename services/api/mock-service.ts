@@ -1,4 +1,4 @@
-import { IApiService } from '@/lib/types';
+import { IApiService, MetaDataType } from '@/lib/types';
 import { CUSTOMERS_MOCK_DATA } from './mocks/customers';
 import { Customer } from '@/features/customers/schemas';
 import { Enquiry } from '@/features/enquiries/schemas';
@@ -12,6 +12,7 @@ import { SupplierDc } from '@/features/supplier-dc/schemas';
 import { SUPPLIER_DCS_MOCK_DATA } from './mocks/supplier-dcs';
 import { PurchaseOrder } from '@/features/purchase-orders/schemas';
 import { PURCHASE_ORDERS_MOCK_DATA } from './mocks/purchase-orders';
+import { CURRENCIES_MOCK_DATA, UOMS_MOCK_DATA } from '@/features/metadata/model/mock-data';
 import Fuse from 'fuse.js';
 
 const customers: Customer[] = CUSTOMERS_MOCK_DATA;
@@ -592,6 +593,29 @@ const mockService: IApiService = {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(purchaseOrder);
+      }, 1000);
+    });
+  },
+  async getMetadata({ type } = {}) {
+    // Initialize response with proper types for the arrays
+    const response = {
+      currencies: [] as typeof CURRENCIES_MOCK_DATA,
+      uoms: [] as typeof UOMS_MOCK_DATA,
+    };
+    
+    // If type is UOM or not specified, return UOMs
+    if (!type || type === MetaDataType.UOM) {
+      response.uoms = UOMS_MOCK_DATA;
+    }
+    
+    // If type is CURRENCY or not specified, return Currencies
+    if (!type || type === MetaDataType.CURRENCY) {
+      response.currencies = CURRENCIES_MOCK_DATA;
+    }
+    
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(response);
       }, 1000);
     });
   },

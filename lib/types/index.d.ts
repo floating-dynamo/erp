@@ -1,12 +1,16 @@
-export interface CountryData {
-  iso2: string;
-  iso3: string;
-  country: string;
-  cities: string[];
+import { Currency, UOM } from '@/features/metadata/schemas';
+
+export interface GetMetadataResponse {
+  uoms: UOM[];
+  currencies: Currency[];
 }
 
 export interface GetCountriesResponse {
-  error: string;
-  msg: string;
-  data: CountryData[];
+  countries: Array<{
+    name: string;
+    states: Array<{
+      name: string;
+      cities: string[];
+    }>;
+  }>;
 }
