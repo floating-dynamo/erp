@@ -197,7 +197,7 @@ export default function QuotationsTable() {
   const searchQuery = useDebounce(searchInputValue, 300);
   
   const [page, setPage] = React.useState(0);
-  const [limit] = React.useState(1);
+  const [limit] = React.useState(100);
 
   const {
     data = { quotations: [], total: 0, totalPages: 0 },
