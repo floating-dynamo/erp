@@ -288,7 +288,7 @@ export default function CustomerTable() {
   const [filterCountry, setFilterCountry] = useState<string>('');
 
   const [page, setPage] = React.useState(0);
-  const [limit] = React.useState(3);
+  const [limit] = React.useState(100);
 
   const clearFilters = (closeFiter: boolean = false) => {
     setFilterCity('');

@@ -9,15 +9,50 @@ const app = new Hono()
     try {
       await connectDB();
       const customerId = c.req.query('customerId');
-      let enquiries;
+      const page = parseInt(c.req.query('page') || '1');
+      const limit = parseInt(c.req.query('limit') || '10');
+      const searchQuery = c.req.query('searchQuery') || '';
 
+      let query = {};
       if (customerId) {
-        enquiries = await EnquiryModel.find({ customerId });
-      } else {
-        enquiries = await EnquiryModel.find();
+        query = { customerId };
       }
 
-      return c.json({ enquiries });
+      const skip = (page - 1) * limit;
+
+      // If there's a search query, we'll need to handle it differently
+      // For now, let's implement basic server-side filtering
+      let enquiries;
+      let total;
+
+      if (searchQuery) {
+        // For search, return all matching records for client-side pagination
+        const searchRegex = new RegExp(searchQuery, 'i');
+        const searchFilter = {
+          ...query,
+          $or: [
+            { customerName: searchRegex },
+            { enquiryNumber: searchRegex },
+            { customerId: searchRegex },
+          ],
+        };
+        enquiries = await EnquiryModel.find(searchFilter);
+        total = enquiries.length;
+      } else {
+        // For normal pagination, use server-side pagination
+        enquiries = await EnquiryModel.find(query).skip(skip).limit(limit);
+        total = await EnquiryModel.countDocuments(query);
+      }
+
+      const totalPages = Math.ceil(total / limit);
+
+      return c.json({
+        enquiries,
+        total,
+        page,
+        limit,
+        totalPages,
+      });
     } catch (error) {
       console.log(error);
       return c.json({ error: 'Failed to fetch enquiries' }, 500);

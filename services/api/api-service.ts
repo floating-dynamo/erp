@@ -47,17 +47,30 @@ const apiService: IApiService = {
     }
   },
   // Enquiry Endpoints
-  async getEnquiries({ customerId }) {
+  async getEnquiries({
+    customerId,
+    page,
+    limit,
+    searchQuery,
+  }: {
+    customerId?: string;
+    page?: number;
+    limit?: number;
+    searchQuery?: string;
+  } = {}) {
     try {
       const enquiries = await axios.get('/api/enquiries', {
         params: {
           customerId,
+          page,
+          limit,
+          searchQuery,
         },
       });
       return enquiries.data;
     } catch (error) {
       console.error(error);
-      throw new Error(`Error fetching customers ${(error as Error).message}`);
+      throw new Error(`Error fetching enquiries ${(error as Error).message}`);
     }
   },
   async addEnquiry({ enquiry }) {
