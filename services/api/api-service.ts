@@ -52,11 +52,19 @@ const apiService: IApiService = {
     page,
     limit,
     searchQuery,
+    customerFilter,
+    dueDateFrom,
+    dueDateTo,
+    quotationCreated,
   }: {
     customerId?: string;
     page?: number;
     limit?: number;
     searchQuery?: string;
+    customerFilter?: string;
+    dueDateFrom?: string;
+    dueDateTo?: string;
+    quotationCreated?: string;
   } = {}) {
     try {
       const enquiries = await axios.get('/api/enquiries', {
@@ -65,6 +73,10 @@ const apiService: IApiService = {
           page,
           limit,
           searchQuery,
+          customerFilter,
+          dueDateFrom,
+          dueDateTo,
+          quotationCreated,
         },
       });
       return enquiries.data;

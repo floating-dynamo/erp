@@ -139,11 +139,39 @@ const mockService: IApiService = {
       }, 1000);
     });
   },
-  async getEnquiries({ customerId, page = 1, limit = 10, searchQuery = '' } = {}) {
+  async getEnquiries({ customerId, page = 1, limit = 10, searchQuery = '', customerFilter = '', dueDateFrom = '', dueDateTo = '', quotationCreated = '' } = {}) {
     // Filter by customerId if provided
-    const filteredEnquiries = customerId
+    let filteredEnquiries = customerId
       ? enquiries.filter((enquiry) => enquiry.customerId === customerId)
       : enquiries;
+
+    // Apply additional filters
+    if (customerFilter) {
+      filteredEnquiries = filteredEnquiries.filter((enquiry) => 
+        enquiry.customerId === customerFilter || enquiry.customerName.toLowerCase().includes(customerFilter.toLowerCase())
+      );
+    }
+
+    if (dueDateFrom) {
+      const fromDate = new Date(dueDateFrom);
+      filteredEnquiries = filteredEnquiries.filter((enquiry) => 
+        new Date(enquiry.quotationDueDate) >= fromDate
+      );
+    }
+
+    if (dueDateTo) {
+      const toDate = new Date(dueDateTo);
+      filteredEnquiries = filteredEnquiries.filter((enquiry) => 
+        new Date(enquiry.quotationDueDate) <= toDate
+      );
+    }
+
+    if (quotationCreated !== '') {
+      const isCreated = quotationCreated === 'true';
+      filteredEnquiries = filteredEnquiries.filter((enquiry) => 
+        Boolean(enquiry.isQotationCreated) === isCreated
+      );
+    }
 
     const totalEnquiries = filteredEnquiries?.length || 0;
 

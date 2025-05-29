@@ -20,7 +20,6 @@ import {
   CirclePlusIcon,
   CopyIcon,
   EyeIcon,
-  FilterIcon,
   MoreHorizontal,
   RefreshCwIcon,
   XIcon,
@@ -52,6 +51,7 @@ import { formatDate } from '@/lib/utils';
 import { redirect } from 'next/navigation';
 import Fuse from 'fuse.js';
 import { useDebounce } from '@/hooks/use-debounce';
+import { EnquiryFilters } from './enquiry-filters';
 
 const ActionsCell = ({ enquiry }: { enquiry: Enquiry }) => {
   const { toast } = useToast();
@@ -221,6 +221,14 @@ const EnquiriesTable: React.FC = () => {
   const [searchInputValue, setSearchInputValue] = React.useState('');
   const searchQuery = useDebounce(searchInputValue, 300);
   
+  // Filter states
+  const [filters, setFilters] = React.useState({
+    customerFilter: '',
+    dueDateFrom: '',
+    dueDateTo: '',
+    quotationCreated: '',
+  });
+  
   const [page, setPage] = React.useState(0);
   const [limit] = React.useState(100);
 
@@ -232,6 +240,10 @@ const EnquiriesTable: React.FC = () => {
     page: page + 1, 
     limit,
     searchQuery,
+    customerFilter: filters.customerFilter,
+    dueDateFrom: filters.dueDateFrom,
+    dueDateTo: filters.dueDateTo,
+    quotationCreated: filters.quotationCreated,
   });
   
   const { enquiries, total, totalPages } = data || {};
@@ -312,6 +324,15 @@ const EnquiriesTable: React.FC = () => {
     setPage(0);
   }, [searchQuery]);
 
+  // Reset page when filters change
+  React.useEffect(() => {
+    setPage(0);
+  }, [filters]);
+
+  const handleApplyFilters = (newFilters: typeof filters) => {
+    setFilters(newFilters);
+  };
+
   return (
     <div className="w-full">
       <div className="flex items-center py-4 gap-4 justify-between">
@@ -322,9 +343,10 @@ const EnquiriesTable: React.FC = () => {
             onChange={(event) => setSearchInputValue(event.target.value)}
             className="max-w-sm"
           />
-          <Button variant="outline">
-            <FilterIcon className="size-4" />
-          </Button>
+          <EnquiryFilters
+            onApplyFilters={handleApplyFilters}
+            currentFilters={filters}
+          />
         </div>
         <Button variant="secondary" onClick={() => refetchEnquiryData()}>
           <RefreshCwIcon className="size-4" /> Refresh Data

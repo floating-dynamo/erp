@@ -80,11 +80,19 @@ export interface IApiService {
     page,
     limit,
     searchQuery,
+    customerFilter,
+    dueDateFrom,
+    dueDateTo,
+    quotationCreated,
   }: {
     customerId?: string;
     page?: number;
     limit?: number;
     searchQuery?: string;
+    customerFilter?: string;
+    dueDateFrom?: string;
+    dueDateTo?: string;
+    quotationCreated?: string;
   }) => Promise<GetEnquiriesResponse>;
   addEnquiry: ({
     enquiry,
