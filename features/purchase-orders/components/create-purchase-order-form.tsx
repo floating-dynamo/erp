@@ -45,6 +45,8 @@ import Loader from '@/components/loader';
 import { useGetPurchaseOrderDetails } from '../api/use-get-purchase-order-details';
 import { useEditPurchaseOrder } from '../api/use-edit-purchase-order';
 import { useRouter } from 'next/navigation';
+import { useEnquiries } from '@/features/enquiries/api/use-enquiries';
+import { useGetEnquiryDetails } from '@/features/enquiries/api/use-get-enquiry-details';
 
 const CreatePurchaseOrderForm = ({
   isEdit = false,
@@ -66,8 +68,21 @@ const CreatePurchaseOrderForm = ({
   });
   const [formKey] = useState(0);
   const [customerSelectOpen, setCustomerSelectOpen] = useState(false);
+  const [enquirySelectOpen, setEnquirySelectOpen] = useState(false);
+  const [poDateOpen, setPoDateOpen] = useState(false);
+  const [deliveryDateOpen, setDeliveryDateOpen] = useState(false);
   const { data, isFetching: isFetchingCustomerList } = useCustomers();
   const customerList = data?.customers || [];
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>();
+  const {
+    data: enquiryList,
+    isFetching: isFetchingEnquiryList,
+    refetch: refetchEnquiries,
+  } = useEnquiries({ customerId: selectedCustomerId });
+  const [enquiryId, setEnquiryId] = useState<string | undefined>();
+  const { data: enquiry, isFetching: isFetchingEnquiry } = useGetEnquiryDetails({
+    id: enquiryId || '',
+  });
   const router = useRouter();
 
   const form = useForm<z.infer<typeof createPurchaseOrderSchema>>({
@@ -79,14 +94,39 @@ const CreatePurchaseOrderForm = ({
       items: [{ itemCode: undefined, itemDescription: '', quantity: 0 }],
       taxPercentage: 0,
       customerId: '',
+      enquiryId: '',
     },
   });
 
   useEffect(() => {
     if (isEdit && purchaseOrder) {
       form.reset(purchaseOrder);
+      if (purchaseOrder.customerId) {
+        setSelectedCustomerId(purchaseOrder.customerId);
+      }
+      if (purchaseOrder.enquiryId) {
+        setEnquiryId(purchaseOrder.enquiryId);
+      }
     }
   }, [isEdit, purchaseOrder, form]);
+
+  useEffect(() => {
+    if (selectedCustomerId) {
+      refetchEnquiries();
+    }
+  }, [selectedCustomerId, refetchEnquiries]);
+
+  // Effect to update items when an enquiry is selected
+  useEffect(() => {
+    if (enquiry && !isEdit) {
+      // Update items based on the selected enquiry
+      form.setValue('items', enquiry.items.map(item => ({
+        itemCode: item.itemCode,
+        itemDescription: item.itemDescription,
+        quantity: item.quantity
+      })));
+    }
+  }, [enquiry, form, isEdit]);
 
   const onSubmit = (values: z.infer<typeof createPurchaseOrderSchema>) => {
     if (isEdit && purchaseOrderId) {
@@ -109,7 +149,7 @@ const CreatePurchaseOrderForm = ({
     }
   };
 
-  if (isFetching || isFetchingCustomerList) {
+  if (isFetching || isFetchingCustomerList || isFetchingEnquiryList || isFetchingEnquiry) {
     return <Loader />;
   }
 
@@ -119,6 +159,11 @@ const CreatePurchaseOrderForm = ({
         <CardTitle className="text-xl font-bold">
           {isEdit ? 'Edit Purchase Order' : 'Add a new Purchase Order'}
         </CardTitle>
+        {enquiry && (
+          <div className="text-sm text-muted-foreground">
+            Using items from Enquiry: {enquiry.enquiryNumber}
+          </div>
+        )}
       </CardHeader>
       <div className="px-7">
         <Separator />
@@ -127,78 +172,157 @@ const CreatePurchaseOrderForm = ({
         <Form {...form} key={formKey}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="flex flex-col gap-y-4">
-              <FormField
-                control={form.control}
-                name="customerId"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col sticky top-0 bg-white z-50 py-4 border-b-2">
-                    <FormLabel>
-                      Customer <span className="text-orange-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Popover
-                        open={customerSelectOpen}
-                        onOpenChange={setCustomerSelectOpen}
-                      >
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              className={cn(
-                                'sm:w-[300px] w-full justify-between disabled:text-slate-700',
-                                !field.value && 'text-muted-foreground'
-                              )}
-                              disabled={false}
-                            >
-                              {field.value
-                                ? customerList?.find(
-                                    (customer) => customer.id === field.value
-                                  )?.name
-                                : 'Select Customer'}
-                              <ChevronsUpDown className="opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="sm:w-[300px] w-[200px] p-0">
-                          <Command>
-                            <CommandInput
-                              placeholder="Search Customer..."
-                              className="h-9"
-                            />
-                            <CommandList>
-                              <CommandEmpty>No Customer found.</CommandEmpty>
-                              <CommandGroup>
-                                {customerList?.map(({ id, name }) => (
-                                  <CommandItem
-                                    value={name}
-                                    key={id}
-                                    onSelect={() => {
-                                      form.setValue('customerId', id);
-                                      setCustomerSelectOpen(false);
-                                    }}
-                                  >
-                                    {name}
-                                    <Check
-                                      className={cn(
-                                        'ml-auto',
-                                        id === field.value
-                                          ? 'opacity-100'
-                                          : 'opacity-0'
-                                      )}
-                                    />
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="flex flex-col sm:flex-row gap-5 w-full sm:w-fit mb-4 flex-wrap">
+                <FormField
+                  control={form.control}
+                  name="customerId"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col bg-white py-4">
+                      <FormLabel>
+                        Customer <span className="text-orange-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Popover
+                          open={customerSelectOpen}
+                          onOpenChange={setCustomerSelectOpen}
+                        >
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  'sm:w-[300px] w-full justify-between disabled:text-slate-700',
+                                  !field.value && 'text-muted-foreground'
+                                )}
+                                disabled={false}
+                              >
+                                {field.value
+                                  ? customerList?.find(
+                                      (customer) => customer.id === field.value
+                                    )?.name
+                                  : 'Select Customer'}
+                                <ChevronsUpDown className="opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="sm:w-[300px] w-[200px] p-0">
+                            <Command>
+                              <CommandInput
+                                placeholder="Search Customer..."
+                                className="h-9"
+                              />
+                              <CommandList>
+                                <CommandEmpty>No Customer found.</CommandEmpty>
+                                <CommandGroup>
+                                  {customerList?.map(({ id, name }) => (
+                                    <CommandItem
+                                      value={name}
+                                      key={id}
+                                      onSelect={() => {
+                                        form.setValue('customerId', id);
+                                        form.setValue('enquiryId', '');
+                                        setCustomerSelectOpen(false);
+                                        setSelectedCustomerId(id);
+                                      }}
+                                    >
+                                      {name}
+                                      <Check
+                                        className={cn(
+                                          'ml-auto',
+                                          id === field.value
+                                            ? 'opacity-100'
+                                            : 'opacity-0'
+                                        )}
+                                      />
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="enquiryId"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col bg-white py-4">
+                      <FormLabel>
+                        Enquiry <span className="text-orange-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Popover
+                          open={enquirySelectOpen}
+                          onOpenChange={setEnquirySelectOpen}
+                        >
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  'sm:w-[300px] w-full justify-between disabled:text-slate-700',
+                                  !field.value && 'text-muted-foreground'
+                                )}
+                                disabled={!selectedCustomerId}
+                              >
+                                {field.value
+                                  ? enquiryList?.enquiries?.find(
+                                      (enq) => enq.id === field.value
+                                    )?.enquiryNumber || 'Select Enquiry'
+                                  : 'Select Enquiry'}
+                                <ChevronsUpDown className="opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="sm:w-[300px] w-[200px] p-0">
+                            <Command>
+                              <CommandInput
+                                placeholder="Search Enquiry..."
+                                className="h-9"
+                              />
+                              <CommandList>
+                                <CommandEmpty>No Enquiry found.</CommandEmpty>
+                                <CommandGroup>
+                                  {enquiryList?.enquiries?.map(({ id, enquiryNumber }) => (
+                                    <CommandItem
+                                      value={enquiryNumber}
+                                      key={id}
+                                      onSelect={() => {
+                                        form.setValue('enquiryId', id);
+                                        setEnquirySelectOpen(false);
+                                        setEnquiryId(id);
+                                      }}
+                                    >
+                                      {enquiryNumber}
+                                      <Check
+                                        className={cn(
+                                          'ml-auto',
+                                          id === field.value
+                                            ? 'opacity-100'
+                                            : 'opacity-0'
+                                        )}
+                                      />
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={form.control}
                 name="poNumber"
@@ -224,7 +348,7 @@ const CreatePurchaseOrderForm = ({
                     <FormItem className="flex-1">
                       <FormLabel>PO Date</FormLabel>
                       <FormControl>
-                        <Popover>
+                        <Popover open={poDateOpen} onOpenChange={setPoDateOpen}>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
@@ -250,6 +374,7 @@ const CreatePurchaseOrderForm = ({
                                   ? date.toISOString()
                                   : '';
                                 field.onChange(selectedDate);
+                                setPoDateOpen(false);
                               }}
                             />
                           </PopoverContent>
@@ -266,7 +391,7 @@ const CreatePurchaseOrderForm = ({
                     <FormItem className="flex-1">
                       <FormLabel>Delivery Date</FormLabel>
                       <FormControl>
-                        <Popover>
+                        <Popover open={deliveryDateOpen} onOpenChange={setDeliveryDateOpen}>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
@@ -292,6 +417,7 @@ const CreatePurchaseOrderForm = ({
                                   ? date.toISOString()
                                   : '';
                                 field.onChange(selectedDate);
+                                setDeliveryDateOpen(false);
                               }}
                             />
                           </PopoverContent>

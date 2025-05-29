@@ -23,6 +23,7 @@ import {
   ScrollText,
   PenIcon,
   MoreHorizontalIcon,
+  FileText,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -32,6 +33,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useGetEnquiryDetails } from '@/features/enquiries/api/use-get-enquiry-details';
 
 interface PurchaseOrderDetailsPageProps {
   params: Promise<{ purchaseOrderId: string }>;
@@ -44,10 +46,13 @@ const PurchaseOrderDetailsPage = ({
   const { data: purchaseOrder, isFetching } = useGetPurchaseOrderDetails({
     id: purchaseOrderId,
   });
+  const { data: enquiry, isFetching: isFetchingEnquiry } = useGetEnquiryDetails({
+    id: purchaseOrder?.enquiryId || '',
+  });
   const { toast } = useToast();
   const purchaseOrderDetailsElementId = `purchase-order-details-${purchaseOrderId}`;
 
-  if (isFetching) {
+  if (isFetching || (purchaseOrder?.enquiryId && isFetchingEnquiry)) {
     return <Loader text="Loading purchase order details" />;
   }
 
@@ -161,6 +166,38 @@ const PurchaseOrderDetailsPage = ({
             </div>
           </CardContent>
         </Card>
+
+        {purchaseOrder.enquiryId && enquiry && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Enquiry Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col">
+                <p className="text-sm text-muted-foreground">Enquiry ID</p>
+                <p className="font-medium">{purchaseOrder.enquiryId}</p>
+              </div>
+              <div className="flex flex-col">
+                <p className="text-sm text-muted-foreground">Enquiry Number</p>
+                <p className="font-medium">{enquiry.enquiryNumber}</p>
+              </div>
+              <div className='mt-2' data-html2canvas-ignore>
+                <Button
+                  size={'sm'}
+                  variant={'ghost'}
+                  onClick={() =>
+                    redirect(`/enquiries/${purchaseOrder.enquiryId}`)
+                  }
+                >
+                  View Enquiry
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>

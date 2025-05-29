@@ -5,6 +5,7 @@ export const createPurchaseOrderSchema = z.object({
   poMonth: z.string().optional(),
   deliveryMonth: z.string().optional(),
   customerId: z.string().optional(),
+  enquiryId: z.string().optional(),
   poNumber: z.string(),
   buyerName: z.string().optional(),
   deliveryDate: z.string().optional(),

@@ -7,6 +7,7 @@ const PurchoseOrderSchema = new Schema<PurchaseOrder>({
   buyerName: { type: String, required: false },
   currency: { type: String, required: false },
   customerId: { type: String, required: false },
+  enquiryId: { type: String, required: false },
   deliveryMonth: { type: String, required: false },
   exRate: { type: Number, required: false },
   items: [
