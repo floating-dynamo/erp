@@ -50,7 +50,6 @@ import Loader from '@/components/loader';
 import { redirect } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/use-debounce';
-import Fuse from 'fuse.js';
 import {
   Select,
   SelectContent,
@@ -289,7 +288,7 @@ export default function CustomerTable() {
   const [filterCountry, setFilterCountry] = useState<string>('');
 
   const [page, setPage] = React.useState(0);
-  const [limit] = React.useState(3);
+  const [limit] = React.useState(100);
 
   const clearFilters = (closeFiter: boolean = false) => {
     setFilterCity('');
@@ -310,58 +309,20 @@ export default function CustomerTable() {
     country: filterCountry,
     page: page + 1,
     limit: limit,
-    searchQuery: searchQuery, // Use debounced search query
+    searchQuery: searchQuery,
   });
 
-  const { customers, total } = data || {};
-
-  const fuseCustomerSearchKeys = [
-    'name',
-    'address.city',
-    'address.state',
-    'gstNumber',
-    'vendorId',
-  ];
-
-  const fuse = React.useMemo(() => {
-    return new Fuse(customers || [], {
-      keys: fuseCustomerSearchKeys,
-      threshold: 0.1, // Adjust threshold for fuzzy matching
-    });
-  }, [customers]);
-
-  // Apply fuzzy search on all customers data
-  const filteredCustomers = React.useMemo(() => {
-    if (!searchQuery) return customers;
-    return fuse.search(searchQuery).map((result) => result.item);
-  }, [searchQuery, fuse, customers]);
-
-  // Client-side pagination for search results
-  const paginatedCustomers = React.useMemo(() => {
-    if (!filteredCustomers) return [];
-
-    const startIndex = page * limit;
-    const endIndex = startIndex + limit;
-    return filteredCustomers.slice(startIndex, endIndex);
-  }, [filteredCustomers, page, limit]);
-
-  // Calculate total pages based on filtered results
-  const totalFilteredCustomers = filteredCustomers?.length || 0;
-  const totalFilteredPages = Math.ceil(totalFilteredCustomers / limit);
-
-  // Use appropriate pagination values based on whether we're searching or not
-  const displayedTotal = searchQuery ? totalFilteredCustomers : total;
-  const displayedTotalPages = searchQuery ? totalFilteredPages : data?.totalPages;
+  const { customers, total, totalPages } = data || {};
 
   const table = useReactTable({
-    data: searchQuery ? paginatedCustomers : filteredCustomers || [],
+    data: customers || [],
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    manualPagination: !searchQuery, // Only use manual pagination when not searching
-    pageCount: displayedTotalPages,
-    rowCount: displayedTotal,
+    manualPagination: true,
+    pageCount: totalPages,
+    rowCount: total,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
@@ -374,10 +335,10 @@ export default function CustomerTable() {
     },
   });
 
-  // Reset page when search query changes
+  // Reset page when search query or filters change
   React.useEffect(() => {
     setPage(0);
-  }, [searchQuery]); // Use debounced searchQuery
+  }, [searchQuery, filterCity, filterState, filterCountry]);
 
   const toggleFilter = () => {
     setShowFilter((prev) => {
@@ -491,7 +452,7 @@ export default function CustomerTable() {
       <div className="flex items-center justify-between py-4">
         <div>
           <p className="text-sm text-muted-foreground">
-            Page {page + 1} of {displayedTotalPages} (Total Customers: {displayedTotal})
+            Page {page + 1} of {totalPages} (Total Customers: {total})
           </p>
         </div>
         <div className="space-x-2 flex items-center">
@@ -508,10 +469,10 @@ export default function CustomerTable() {
             size="sm"
             onClick={() =>
               setPage((prev) =>
-                displayedTotalPages ? Math.min(prev + 1, displayedTotalPages - 1) : prev + 1
+                totalPages ? Math.min(prev + 1, totalPages - 1) : prev + 1
               )
             }
-            disabled={page + 1 === displayedTotalPages}
+            disabled={page + 1 === totalPages}
           >
             Next
             <ArrowRight className="size-4" />

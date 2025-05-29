@@ -15,19 +15,18 @@ export const useCustomers = (filters?: {
     queryFn: async () => {
       const queryParams = new URLSearchParams();
 
-      // If we have a search query, request all records for client-side searching
-      const isSearching = !!filters?.searchQuery?.trim();
-
-      if (filters?.page && !isSearching) {
+      // Always send page and limit for server-side pagination
+      if (filters?.page) {
         queryParams.append('page', filters.page.toString());
       }
 
-      if (filters?.limit && !isSearching) {
+      if (filters?.limit) {
         queryParams.append('limit', filters.limit.toString());
-      } else if (isSearching) {
-        // If searching, request all records
-        queryParams.append('limit', '10000'); // Set a high limit to get all records
-        queryParams.append('page', '1');
+      }
+
+      // Add search query to backend for server-side fuzzy search
+      if (filters?.searchQuery?.trim()) {
+        queryParams.append('searchQuery', filters.searchQuery.trim());
       }
 
       if (filters?.country) {

@@ -77,8 +77,14 @@ export interface IApiService {
   // Enquiry Endpoints
   getEnquiries: ({
     customerId,
+    page,
+    limit,
+    searchQuery,
   }: {
     customerId?: string;
+    page?: number;
+    limit?: number;
+    searchQuery?: string;
   }) => Promise<GetEnquiriesResponse>;
   addEnquiry: ({
     enquiry,
@@ -95,7 +101,15 @@ export interface IApiService {
   }) => Promise<EditEnquiryResponse>;
 
   // Quotation Endpoints
-  getQuotations: () => Promise<GetQuotationsResponse>;
+  getQuotations: ({
+    page,
+    limit,
+    searchQuery,
+  }: {
+    page?: number;
+    limit?: number;
+    searchQuery?: string;
+  }) => Promise<GetQuotationsResponse>;
   addQuotation: ({
     quotation,
   }: {
