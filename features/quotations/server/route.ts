@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import { Hono } from "hono";
 import QuotationModel from "../model";
 import { createQuotationSchema, editQuotationSchema } from "../schemas";
+import { QuotationFilter } from "../types";
 import uuid4 from "uuid4";
 import EnquiryModel from "@/features/enquiries/model";
 import { generateQuoteNumber } from "@/lib/utils";
@@ -14,10 +15,41 @@ const app = new Hono()
       const limit = parseInt(c.req.query("limit") || "10");
       const searchQuery = c.req.query("searchQuery") || "";
 
+      // Extract new filter parameters
+      const customerFilter = c.req.query("customerFilter") || "";
+      const enquiryNumberFilter = c.req.query("enquiryNumberFilter") || "";
+      const amountFrom = c.req.query("amountFrom") || "";
+      const amountTo = c.req.query("amountTo") || "";
+
       const skip = (page - 1) * limit;
 
+      // Build the filter object based on provided filters
+      const filter: QuotationFilter = {};
+
+      // Apply customer filter
+      if (customerFilter) {
+        filter.customerId = customerFilter;
+      }
+
+      // Apply enquiry number filter
+      if (enquiryNumberFilter) {
+        filter.enquiryNumber = enquiryNumberFilter;
+      }
+
+      // Apply amount range filters
+      if (amountFrom || amountTo) {
+        filter.totalAmount = {};
+
+        if (amountFrom) {
+          filter.totalAmount.$gte = Number(amountFrom);
+        }
+
+        if (amountTo) {
+          filter.totalAmount.$lte = Number(amountTo);
+        }
+      }
+
       // If there's a search query, we'll need to handle it differently
-      // For now, let's implement basic server-side filtering
       let quotations;
       let total;
 
@@ -25,6 +57,7 @@ const app = new Hono()
         // For search, return all matching records for client-side pagination
         const searchRegex = new RegExp(searchQuery, "i");
         const searchFilter = {
+          ...filter, // Include the existing filters
           $or: [
             { customerName: searchRegex },
             { enquiryNumber: searchRegex },
@@ -35,9 +68,9 @@ const app = new Hono()
         quotations = await QuotationModel.find(searchFilter);
         total = quotations.length;
       } else {
-        // For normal pagination, use server-side pagination
-        quotations = await QuotationModel.find({}).skip(skip).limit(limit);
-        total = await QuotationModel.countDocuments({});
+        // For normal pagination, use server-side pagination with the filters
+        quotations = await QuotationModel.find(filter).skip(skip).limit(limit);
+        total = await QuotationModel.countDocuments(filter);
       }
 
       const totalPages = Math.ceil(total / limit);

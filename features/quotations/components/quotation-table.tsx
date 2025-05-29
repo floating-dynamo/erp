@@ -18,7 +18,6 @@ import {
   ArrowUpDown,
   CopyIcon,
   EyeIcon,
-  FilterIcon,
   MoreHorizontal,
   RefreshCwIcon,
 } from 'lucide-react';
@@ -48,6 +47,7 @@ import { useQuotations } from '../api/use-quotations';
 import { redirect } from 'next/navigation';
 import Fuse from 'fuse.js';
 import { useDebounce } from '@/hooks/use-debounce';
+import { QuotationFilters } from './quotation-filters';
 
 const ActionsCell = ({ quotation }: { quotation: Quotation }) => {
   const { toast } = useToast();
@@ -198,6 +198,14 @@ export default function QuotationsTable() {
   
   const [page, setPage] = React.useState(0);
   const [limit] = React.useState(100);
+  
+  // Add filter state
+  const [filters, setFilters] = React.useState({
+    customerFilter: '',
+    enquiryNumberFilter: '',
+    amountFrom: '',
+    amountTo: '',
+  });
 
   const {
     data = { quotations: [], total: 0, totalPages: 0 },
@@ -207,6 +215,10 @@ export default function QuotationsTable() {
     page: page + 1, 
     limit,
     searchQuery,
+    customerFilter: filters.customerFilter,
+    enquiryNumberFilter: filters.enquiryNumberFilter,
+    amountFrom: filters.amountFrom,
+    amountTo: filters.amountTo,
   });
   
   const { quotations, total, totalPages } = data || {};
@@ -277,7 +289,17 @@ export default function QuotationsTable() {
   // Reset page when search query changes
   React.useEffect(() => {
     setPage(0);
-  }, [searchQuery]);
+  }, [searchQuery, filters]);
+  
+  // Handle filter changes
+  const handleApplyFilters = (newFilters: {
+    customerFilter: string;
+    enquiryNumberFilter: string;
+    amountFrom: string;
+    amountTo: string;
+  }) => {
+    setFilters(newFilters);
+  };
 
   return (
     <div className="w-full">
@@ -289,9 +311,10 @@ export default function QuotationsTable() {
             onChange={(event) => setSearchInputValue(event.target.value)}
             className="max-w-sm"
           />
-          <Button variant="outline">
-            <FilterIcon className="size-4" />
-          </Button>
+          <QuotationFilters 
+            onApplyFilters={handleApplyFilters} 
+            currentFilters={filters}
+          />
         </div>
         <Button variant="secondary" onClick={() => refetchQuotationData()}>
           <RefreshCwIcon className="size-4" /> Refresh Data
