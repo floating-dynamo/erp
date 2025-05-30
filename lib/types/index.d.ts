@@ -6,11 +6,12 @@ export interface GetMetadataResponse {
 }
 
 export interface GetCountriesResponse {
-  countries: Array<{
-    name: string;
-    states: Array<{
-      name: string;
-      cities: string[];
-    }>;
+  error: boolean;
+  msg: string;
+  data: Array<{
+    iso2: string;
+    iso3: string;
+    country: string;
+    cities: string[];
   }>;
 }

@@ -71,8 +71,7 @@ export const CreateCustomerForm = ({
     useAddCustomer();
   const { mutate: editCustomer, isPending: isPendingEditCustomer } =
     useEditCustomer();
-  const { data: countriesData, isLoading: isFetchingCountries } =
-    useCountries();
+  const { data: countriesData, isFetching: isFetchingCountries } = useCountries();
   const router = useRouter();
   const [countrySelectOpen, setCountrySelectOpen] = useState(false);
   const [stateSelectOpen, setStateSelectOpen] = useState(false);
@@ -105,13 +104,13 @@ export const CreateCustomerForm = ({
   }, [isEdit, customerData, form]);
 
   useEffect(() => {
-    if (countriesData?.countries) {
+    if (countriesData?.data) {
       const currentCountry = form.getValues('address.country');
       console.log('Current Country ', currentCountry);
-      const selectedCountry = countriesData.countries.find(
-        (country) => country.name === currentCountry
+      const selectedCountry = countriesData.data.find(
+        (country) => country.country === currentCountry
       );
-      const states = selectedCountry?.states.map((state) => state.name) || [];
+      const states = selectedCountry?.cities || [];
       setCountryStates(states);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -278,10 +277,10 @@ export const CreateCustomerForm = ({
                                 )}
                               >
                                 {field.value
-                                  ? countriesData?.countries?.find(
+                                  ? countriesData?.data?.find(
                                       (country) =>
-                                        country.name === field.value
-                                    )?.name
+                                        country.country === field.value
+                                    )?.country
                                   : 'Select Country'}
                                 <ChevronsUpDown className="opacity-50" />
                               </Button>
@@ -296,23 +295,23 @@ export const CreateCustomerForm = ({
                               <CommandList>
                                 <CommandEmpty>No Country found.</CommandEmpty>
                                 <CommandGroup>
-                                  {countriesData?.countries?.map((country) => (
+                                  {countriesData?.data?.map((country) => (
                                     <CommandItem
-                                      value={country.name}
-                                      key={country.name}
+                                      value={country.country}
+                                      key={country.country}
                                       onSelect={() => {
                                         form.setValue(
                                           'address.country',
-                                          country.name
+                                          country.country
                                         );
                                         setCountrySelectOpen(false);
                                       }}
                                     >
-                                      {country?.name}
+                                      {country.country}
                                       <Check
                                         className={cn(
                                           'ml-auto',
-                                          country.name === field.value
+                                          country.country === field.value
                                             ? 'opacity-100'
                                             : 'opacity-0'
                                         )}

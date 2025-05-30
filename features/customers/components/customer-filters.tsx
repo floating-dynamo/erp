@@ -49,7 +49,7 @@ export const CustomerFilters: React.FC<CustomerFiltersProps> = ({
 
   // Fetch countries data
   const { data: countriesData } = useCountries();
-  const countries = countriesData?.countries || [];
+  const countries = countriesData?.data || [];
 
   React.useEffect(() => {
     setLocalFilters(currentFilters);
@@ -57,9 +57,9 @@ export const CustomerFilters: React.FC<CustomerFiltersProps> = ({
 
   // Get states based on selected country
   const selectedCountryData = countries.find(
-    (country) => country.name === localFilters.country
+    (country) => country.country === localFilters.country
   );
-  const states = selectedCountryData?.states.map(state => state.name) || [];
+  const states = selectedCountryData?.cities || [];
 
   const handleApplyFilters = () => {
     // Convert "all" values back to empty strings for the API
@@ -180,15 +180,15 @@ export const CustomerFilters: React.FC<CustomerFiltersProps> = ({
                       </CommandItem>
                       {countries.map((country) => (
                         <CommandItem
-                          key={country.name}
-                          value={country.name}
-                          onSelect={() => handleCountryChange(country.name)}
+                          key={country.country}
+                          value={country.country}
+                          onSelect={() => handleCountryChange(country.country)}
                         >
-                          {country.name}
+                          {country.country}
                           <Check
                             className={cn(
                               'ml-auto h-4 w-4',
-                              localFilters.country === country.name
+                              localFilters.country === country.country
                                 ? 'opacity-100'
                                 : 'opacity-0'
                             )}
