@@ -47,6 +47,7 @@ import {
 import { useGetCustomerDetails } from '../api/use-get-customer-details';
 import { useEditCustomer } from '../api/use-edit-customer';
 import { CustomerNotFound } from './customer-not-found';
+import { useToast } from '@/hooks/use-toast';
 
 // Infer the form schema type
 type CreateCustomerFormSchema = z.infer<typeof createCustomerSchema>;
@@ -71,12 +72,14 @@ export const CreateCustomerForm = ({
     useAddCustomer();
   const { mutate: editCustomer, isPending: isPendingEditCustomer } =
     useEditCustomer();
-  const { data: countriesData, isFetching: isFetchingCountries } = useCountries();
+  const { data: countriesData, isFetching: isFetchingCountries } =
+    useCountries();
   const router = useRouter();
   const [countrySelectOpen, setCountrySelectOpen] = useState(false);
   const [stateSelectOpen, setStateSelectOpen] = useState(false);
   const isEdit = !!customerId;
   const isPending = isPendingAddCustomer || isPendingEditCustomer;
+  const { toast } = useToast();
 
   const form = useForm<CreateCustomerFormSchema>({
     resolver: zodResolver(createCustomerSchema),
@@ -152,11 +155,33 @@ export const CreateCustomerForm = ({
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check file size before processing (7.5MB limit)
+      const maxSize = 7.5 * 1024 * 1024; // 7.5MB
+      if (file.size > maxSize) {
+        toast({
+          title: 'Image too large',
+          description: 'Please select an image smaller than 7.5MB',
+          variant: 'destructive',
+        });
+        // Clear the input
+        if (inputRef.current) {
+          inputRef.current.value = '';
+        }
+        return;
+      }
+
       // Convert file to base64
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
         form.setValue('image', base64String);
+      };
+      reader.onerror = () => {
+        toast({
+          title: 'Error reading file',
+          description: 'Failed to process the selected image',
+          variant: 'destructive',
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -171,40 +196,40 @@ export const CreateCustomerForm = ({
   }
 
   return (
-    <Card className="w-full h-full border-none shadow-none">
-      <CardHeader className="flex p-7">
-        <CardTitle className="text-xl font-bold flex gap-7 items-center">
+    <Card className='w-full h-full border-none shadow-none'>
+      <CardHeader className='flex p-7'>
+        <CardTitle className='text-xl font-bold flex gap-7 items-center'>
           {showBackButton && (
             <Button
-              variant="outline"
-              type="button"
-              size="icon"
+              variant='outline'
+              type='button'
+              size='icon'
               onClick={onCancel}
               disabled={false}
             >
-              <ArrowLeft className="size-4" />
+              <ArrowLeft className='size-4' />
             </Button>
           )}
           {isEdit ? 'Edit the customer details' : 'Add a new customer'}
         </CardTitle>
       </CardHeader>
-      <div className="px-7">
+      <div className='px-7'>
         <Separator />
       </div>
-      <CardContent className="p-7">
+      <CardContent className='p-7'>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
             {/* Customer Name */}
             <FormField
               control={form.control}
-              name="name"
+              name='name'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Customer Name <span className="text-orange-500">*</span>
+                    Customer Name <span className='text-orange-500'>*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter customer name" {...field} />
+                    <Input placeholder='Enter customer name' {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -212,8 +237,8 @@ export const CreateCustomerForm = ({
             />
 
             {/* Address Section */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Address</h2>
+            <div className='space-y-4'>
+              <h2 className='text-lg font-semibold'>Address</h2>
               {(
                 Object.keys(customerAddressSchema.shape) as Array<
                   keyof typeof customerAddressSchema.shape
@@ -253,13 +278,13 @@ export const CreateCustomerForm = ({
                   )
               )}
 
-              <div className="flex items-start gap-8">
+              <div className='flex items-start gap-8'>
                 {/* Address - Country */}
                 <FormField
                   control={form.control}
-                  name="address.country"
+                  name='address.country'
                   render={({ field }) => (
-                    <FormItem className="flex flex-col w-1/2">
+                    <FormItem className='flex flex-col w-1/2'>
                       <FormLabel>Country</FormLabel>
                       <FormControl>
                         <Popover
@@ -269,8 +294,8 @@ export const CreateCustomerForm = ({
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
-                                variant="outline"
-                                role="combobox"
+                                variant='outline'
+                                role='combobox'
                                 className={cn(
                                   'w-full justify-between',
                                   !field.value && 'text-muted-foreground'
@@ -282,15 +307,15 @@ export const CreateCustomerForm = ({
                                         country.country === field.value
                                     )?.country
                                   : 'Select Country'}
-                                <ChevronsUpDown className="opacity-50" />
+                                <ChevronsUpDown className='opacity-50' />
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
-                          <PopoverContent className="sm:w-[300px] w-[200px] p-0">
+                          <PopoverContent className='sm:w-[300px] w-[200px] p-0'>
                             <Command>
                               <CommandInput
-                                placeholder="Search Country..."
-                                className="h-9"
+                                placeholder='Search Country...'
+                                className='h-9'
                               />
                               <CommandList>
                                 <CommandEmpty>No Country found.</CommandEmpty>
@@ -332,9 +357,9 @@ export const CreateCustomerForm = ({
                 {/* Address - State */}
                 <FormField
                   control={form.control}
-                  name="address.state"
+                  name='address.state'
                   render={({ field }) => (
-                    <FormItem className="flex flex-col w-1/2">
+                    <FormItem className='flex flex-col w-1/2'>
                       <FormLabel>State</FormLabel>
                       <FormControl>
                         <Popover
@@ -344,8 +369,8 @@ export const CreateCustomerForm = ({
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
-                                variant="outline"
-                                role="combobox"
+                                variant='outline'
+                                role='combobox'
                                 className={cn(
                                   'w-full justify-between',
                                   !field.value && 'text-muted-foreground'
@@ -356,15 +381,15 @@ export const CreateCustomerForm = ({
                                       (state) => state === field.value
                                     )
                                   : 'Select State'}
-                                <ChevronsUpDown className="opacity-50" />
+                                <ChevronsUpDown className='opacity-50' />
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
-                          <PopoverContent className="sm:w-[300px] w-[200px] p-0">
+                          <PopoverContent className='sm:w-[300px] w-[200px] p-0'>
                             <Command>
                               <CommandInput
-                                placeholder="Search State..."
-                                className="h-9"
+                                placeholder='Search State...'
+                                className='h-9'
                               />
                               <CommandList>
                                 <CommandEmpty>No State found.</CommandEmpty>
@@ -403,25 +428,25 @@ export const CreateCustomerForm = ({
             </div>
 
             {/* POC Section */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Points of Contact</h2>
+            <div className='space-y-4'>
+              <h2 className='text-lg font-semibold'>Points of Contact</h2>
               {pocFields.map((field, index) => (
                 <div
                   key={field.id}
-                  className="flex items-end gap-4 border-b pb-4 flex-wrap"
+                  className='flex items-end gap-4 border-b pb-4 flex-wrap'
                 >
                   {/* Name */}
                   <FormField
                     control={form.control}
                     name={`poc.${index}.name` as const}
                     render={({ field }) => (
-                      <FormItem className="flex-1">
+                      <FormItem className='flex-1'>
                         <FormLabel>Name</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder="Enter name"
-                            type="text"
+                            placeholder='Enter name'
+                            type='text'
                           />
                         </FormControl>
                         <FormMessage />
@@ -434,7 +459,7 @@ export const CreateCustomerForm = ({
                     control={form.control}
                     name={`poc.${index}.mobile` as const}
                     render={({ field }) => (
-                      <FormItem className="flex-1">
+                      <FormItem className='flex-1'>
                         <FormLabel>Mobile</FormLabel>
                         <FormControl>
                           <Input
@@ -443,8 +468,8 @@ export const CreateCustomerForm = ({
                             onChange={(e) =>
                               field.onChange(Number(e.target.value) || null)
                             }
-                            placeholder="Enter mobile number"
-                            type="number"
+                            placeholder='Enter mobile number'
+                            type='number'
                           />
                         </FormControl>
                         <FormMessage />
@@ -457,13 +482,13 @@ export const CreateCustomerForm = ({
                     control={form.control}
                     name={`poc.${index}.email` as const}
                     render={({ field }) => (
-                      <FormItem className="flex-1">
+                      <FormItem className='flex-1'>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder="Enter email address"
-                            type="email"
+                            placeholder='Enter email address'
+                            type='email'
                           />
                         </FormControl>
                         <FormMessage />
@@ -473,12 +498,12 @@ export const CreateCustomerForm = ({
 
                   {/* Remove Button */}
                   {/* Remove Button */}
-                  <div className="flex items-center justify-center h-full">
+                  <div className='flex items-center justify-center h-full'>
                     <Button
-                      variant="destructive"
-                      type="button"
+                      variant='destructive'
+                      type='button'
                       onClick={() => removePOC(index)}
-                      className="flex items-center justify-center mb-2"
+                      className='flex items-center justify-center mb-2'
                     >
                       <TrashIcon />
                     </Button>
@@ -488,7 +513,7 @@ export const CreateCustomerForm = ({
 
               {/* Add POC Button */}
               <Button
-                type="button"
+                type='button'
                 variant={'tertiary'}
                 onClick={() =>
                   addPOC({
@@ -498,19 +523,19 @@ export const CreateCustomerForm = ({
                   })
                 }
               >
-                <PlusCircle className="size-4" /> Add POC
+                <PlusCircle className='size-4' /> Add POC
               </Button>
             </div>
 
             {/* Other Fields */}
             <FormField
               control={form.control}
-              name="gstNumber"
+              name='gstNumber'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>GST Number</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter GST Number" />
+                    <Input {...field} placeholder='Enter GST Number' />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -519,12 +544,12 @@ export const CreateCustomerForm = ({
 
             <FormField
               control={form.control}
-              name="vendorId"
+              name='vendorId'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Vendor ID</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter Vendor ID" />
+                    <Input {...field} placeholder='Enter Vendor ID' />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -533,12 +558,12 @@ export const CreateCustomerForm = ({
 
             <FormField
               control={form.control}
-              name="customerType"
+              name='customerType'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Customer Type</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter Customer Type" />
+                    <Input {...field} placeholder='Enter Customer Type' />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -548,50 +573,50 @@ export const CreateCustomerForm = ({
             {/* Customer Logo Upload */}
             <FormField
               control={form.control}
-              name="image"
+              name='image'
               render={({ field }) => (
-                <div className="flex flex-col gap-y-2">
-                  <div className="flex items-center gap-x-5">
+                <div className='flex flex-col gap-y-2'>
+                  <div className='flex items-center gap-x-5'>
                     {field.value ? (
-                      <div className="size-[72px] relative rounded-md overflow-hidden">
+                      <div className='size-[72px] relative rounded-md overflow-hidden'>
                         <Image
                           src={
                             field.value instanceof File
                               ? URL.createObjectURL(field.value)
                               : field.value
                           }
-                          alt="Logo"
+                          alt='Logo'
                           fill
-                          className="object-cover"
+                          className='object-cover'
                         />
                       </div>
                     ) : (
-                      <Avatar className="size-[72px]">
+                      <Avatar className='size-[72px]'>
                         <AvatarFallback>
-                          <ImageIcon className="size-[36px] text-neutral-400" />
+                          <ImageIcon className='size-[36px] text-neutral-400' />
                         </AvatarFallback>
                       </Avatar>
                     )}
-                    <div className="flex flex-col">
-                      <p className="text-sm">Company Logo</p>
-                      <p className="text-sm text-muted-foreground">
+                    <div className='flex flex-col'>
+                      <p className='text-sm'>Company Logo</p>
+                      <p className='text-sm text-muted-foreground'>
                         JPEG, PNG, SVG or JPEG, max 1mb
                       </p>
                       <input
-                        className="hidden"
-                        accept=".jpg, .png, .jpeg, .svg"
-                        type="file"
+                        className='hidden'
+                        accept='.jpg, .png, .jpeg, .svg'
+                        type='file'
                         ref={inputRef}
                         onChange={handleImageChange}
                         disabled={isPending}
                       />
                       {field.value ? (
                         <Button
-                          type="button"
+                          type='button'
                           disabled={isPending}
                           variant={'destructive'}
                           size={'xs'}
-                          className="w-fit mt-2"
+                          className='w-fit mt-2'
                           onClick={() => {
                             field.onChange(null);
                             if (inputRef.current) {
@@ -603,11 +628,11 @@ export const CreateCustomerForm = ({
                         </Button>
                       ) : (
                         <Button
-                          type="button"
+                          type='button'
                           disabled={isPending}
                           variant={'tertiary'}
                           size={'xs'}
-                          className="w-fit mt-2"
+                          className='w-fit mt-2'
                           onClick={() => inputRef.current?.click()}
                         >
                           Upload Image
@@ -619,11 +644,11 @@ export const CreateCustomerForm = ({
               )}
             />
 
-            <Separator className="my-6" />
+            <Separator className='my-6' />
 
             {/* Submit Button */}
-            <div className="flex items-center lg:justify-end justify-center w-full">
-              <Button type="submit" disabled={isPending}>
+            <div className='flex items-center lg:justify-end justify-center w-full'>
+              <Button type='submit' disabled={isPending}>
                 {isEdit ? 'Update' : 'Submit'}
               </Button>
             </div>

@@ -17,6 +17,13 @@ export const customerPOCSchema = z.object({
   email: z.string().email(),
 });
 
+// Helper function to validate base64 image size
+const validateBase64ImageSize = (value: string) => {
+  // Base64 encoding increases size by ~33%, so 7.5MB image becomes ~10MB base64
+  const maxSizeInBytes = 10 * 1024 * 1024; // 10MB
+  return value.length <= maxSizeInBytes;
+};
+
 // Define the schema for Customer
 export const createCustomerSchema = z.object({
   id: z.string().optional(),
@@ -29,8 +36,19 @@ export const createCustomerSchema = z.object({
   customerType: z.string().optional(),
   image: z
     .union([
-      z.instanceof(File),
-      z.string().transform((value) => (value === '' ? undefined : value)),
+      z
+        .instanceof(File)
+        .refine(
+          (file) => file.size <= 7.5 * 1024 * 1024, // 7.5MB limit for file
+          'Image file must be less than 7.5MB'
+        ),
+      z
+        .string()
+        .refine(
+          (value) => value === '' || validateBase64ImageSize(value),
+          'Image data is too large (max 7.5MB)'
+        )
+        .transform((value) => (value === '' ? undefined : value)),
     ])
     .optional(),
 });

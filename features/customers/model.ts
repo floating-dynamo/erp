@@ -25,7 +25,11 @@ const customerSchema = new Schema({
   gstNumber: { type: String },
   vendorId: { type: String },
   customerType: { type: String },
-  image: { type: String },
+  image: { 
+    type: String, 
+    required: false,
+    maxlength: 10485760 // 10MB limit for base64 images (approximately 7.5MB actual image)
+  },
 });
 
 interface ICustomer extends Document, Omit<Customer, 'id'> {}
