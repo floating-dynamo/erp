@@ -1,5 +1,6 @@
 import { IApiService } from '@/lib/types';
 import { PurchaseOrderFiltersParams } from '@/features/purchase-orders/types';
+import { UOM, Currency } from '@/features/metadata/schemas';
 import axios from 'axios';
 
 // Configure axios defaults
@@ -320,161 +321,85 @@ const apiService: IApiService = {
       throw new Error(`Error editing quotation ${(error as Error).message}`);
     }
   },
-  // Misc Endpoints
+  // Metadata endpoints
+  async getMetadata({
+    type,
+  }: {
+    type?: MetaDataType;
+  }) {
+    try {
+      const response = await axios.get('/api/metadata', {
+        params: { type },
+      });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error fetching metadata ${(error as Error).message}`);
+    }
+  },
+
+  // Settings & Metadata CRUD Endpoints
+  async upsertUOM({
+    uom,
+  }: {
+    uom: UOM;
+  }) {
+    try {
+      const response = await axios.post('/api/metadata/uom', { uom });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error saving UOM ${(error as Error).message}`);
+    }
+  },
+
+  async upsertCurrency({
+    currency,
+  }: {
+    currency: Currency;
+  }) {
+    try {
+      const response = await axios.post('/api/metadata/currency', { currency });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error saving currency ${(error as Error).message}`);
+    }
+  },
+
+  // Settings & Company Management Endpoints
+  async getMyCompanies() {
+    try {
+      const response = await axios.get('/api/companies/my-companies');
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error fetching my companies ${(error as Error).message}`);
+    }
+  },
+
+  async setActiveCompany({
+    companyId,
+  }: {
+    companyId: string;
+  }) {
+    try {
+      const response = await axios.post('/api/companies/set-active', {
+        companyId,
+      });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error setting active company ${(error as Error).message}`);
+    }
+  },
+
   async getCountries() {
     try {
       const countries = await axios.get('/api/countries');
       return countries.data;
     } catch (error) {
       console.error(error);
-    }
-  },
-  // Company Endpoints
-  async addCompany({ company }) {
-    try {
-      await axios.post('/api/companies', company);
-      return {
-        message: 'Company added successfully',
-        success: true,
-      };
-    } catch (error) {
-      console.error(error);
-      throw new Error(`Error adding new company ${(error as Error).message}`);
-    }
-  },
-  async getCompanies() {
-    try {
-      const response = await axios.get('/api/companies');
-      return response.data;
-    } catch (error) {
-      console.error(error);
-      throw new Error(`Error fetching companies ${(error as Error).message}`);
-    }
-  },
-  // Supplier DC endpoints
-  async getSupplierDcs() {
-    try {
-      const response = await axios.get('/api/supplier-dcs');
-      return response.data;
-    } catch (error) {
-      console.error(error);
-      throw new Error(
-        `Error fetching supplier dcs ${(error as Error).message}`
-      );
-    }
-  },
-  async addSupplierDc({ supplierDc }) {
-    try {
-      await axios.post('/api/supplier-dcs', supplierDc);
-      return {
-        message: 'Supplier DC added successfully',
-        success: true,
-      };
-    } catch (error) {
-      console.error(error);
-      throw new Error(
-        `Error adding new supplier dc ${(error as Error).message}`
-      );
-    }
-  },
-  async getSupplierDCById({ id }) {
-    try {
-      const response = await axios.get(`/api/supplier-dcs/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error(error);
-      throw new Error(
-        `Error fetching supplier dc details ${(error as Error).message}`
-      );
-    }
-  },
-  async editSupplierDc({ id, data }) {
-    try {
-      const response = await axios.patch(`/api/supplier-dcs/${id}`, data);
-      return response.data;
-    } catch (error) {
-      console.error(error);
-      throw new Error(
-        `Error editing supplier dc details ${(error as Error).message}`
-      );
-    }
-  },
-  async getPurchaseOrders({
-    customerId,
-    buyerNameFilter,
-    enquiryId,
-    deliveryDateFrom,
-    deliveryDateTo,
-    totalValueFrom,
-    totalValueTo,
-    page,
-    limit,
-    searchQuery,
-  }: PurchaseOrderFiltersParams = {}) {
-    try {
-      const purchaseOrders = await axios.get('/api/purchase-orders', {
-        params: {
-          customerId,
-          buyerNameFilter,
-          enquiryId,
-          deliveryDateFrom,
-          deliveryDateTo,
-          totalValueFrom,
-          totalValueTo,
-          page,
-          limit,
-          searchQuery,
-        },
-      });
-      return purchaseOrders.data;
-    } catch (error) {
-      console.error(error);
-      throw new Error(
-        `Error fetching Purchase Orders ${(error as Error).message}`
-      );
-    }
-  },
-  async addPurchaseOrder({ purchaseOrder }) {
-    try {
-      await axios.post('/api/purchase-orders', purchaseOrder);
-      return {
-        message: 'Purchase Order added successfully',
-        success: true,
-      };
-    } catch (error) {
-      console.error(error);
-      throw new Error(
-        `Error adding new Purchase Order ${(error as Error).message}`
-      );
-    }
-  },
-  async getPurchaseOrderDetails({ id }) {
-    try {
-      const response = await axios.get(`/api/purchase-orders/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching purchase order details:', error);
-      throw new Error('Failed to fetch purchase order details');
-    }
-  },
-  async editPurchaseOrder({ id, data }) {
-    try {
-      const response = await axios.patch(`/api/purchase-orders/${id}`, data);
-      return response.data;
-    } catch (error) {
-      console.error('Error editing purchase order:', error);
-      throw new Error('Failed to edit purchase order');
-    }
-  },
-  // Metadata endpoints
-  async getMetadata({ type }) {
-    try {
-      const params = type ? { type } : {};
-      const response = await axios.get('/api/metadata', { params });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching metadata:', error);
-      throw new Error(`Failed to fetch metadata: ${(error as Error).message}`);
     }
   },
 };

@@ -41,25 +41,26 @@ export class MetadataModel {
     }
   }
 
-  // Create or update UOM
+  /**
+   * Create or update UOM
+   * @param uom UOM data to upsert
+   * @returns Success response
+   */
   static async upsertUOM(uom: UOM) {
     try {
       await connectDB();
       
       if (uom.id) {
-        // In a production environment, you would update in MongoDB
-        // await mongoose.connection.collection('uoms').updateOne(
-        //   { _id: uom.id },
-        //   { $set: uom }
-        // );
-        
-        // For now, just return success
+        // Update existing UOM in mock data
+        const index = UOMS_MOCK_DATA.findIndex(u => u.id === uom.id);
+        if (index !== -1) {
+          UOMS_MOCK_DATA[index] = { ...UOMS_MOCK_DATA[index], ...uom };
+        }
         return { message: 'UOM updated successfully', success: true };
       } else {
-        // In a production environment, you would insert into MongoDB
-        // await mongoose.connection.collection('uoms').insertOne(uom);
-        
-        // For now, just return success
+        // Create new UOM in mock data
+        const newUOM = { ...uom, id: `uom-${Date.now()}` };
+        UOMS_MOCK_DATA.push(newUOM);
         return { message: 'UOM created successfully', success: true };
       }
     } catch (error) {
@@ -68,25 +69,26 @@ export class MetadataModel {
     }
   }
 
-  // Create or update Currency
+  /**
+   * Create or update Currency
+   * @param currency Currency data to upsert
+   * @returns Success response
+   */
   static async upsertCurrency(currency: Currency) {
     try {
       await connectDB();
       
       if (currency.id) {
-        // In a production environment, you would update in MongoDB
-        // await mongoose.connection.collection('currencies').updateOne(
-        //   { _id: currency.id },
-        //   { $set: currency }
-        // );
-        
-        // For now, just return success
+        // Update existing Currency in mock data
+        const index = CURRENCIES_MOCK_DATA.findIndex(c => c.id === currency.id);
+        if (index !== -1) {
+          CURRENCIES_MOCK_DATA[index] = { ...CURRENCIES_MOCK_DATA[index], ...currency };
+        }
         return { message: 'Currency updated successfully', success: true };
       } else {
-        // In a production environment, you would insert into MongoDB
-        // await mongoose.connection.collection('currencies').insertOne(currency);
-        
-        // For now, just return success
+        // Create new Currency in mock data
+        const newCurrency = { ...currency, id: `curr-${Date.now()}` };
+        CURRENCIES_MOCK_DATA.push(newCurrency);
         return { message: 'Currency created successfully', success: true };
       }
     } catch (error) {

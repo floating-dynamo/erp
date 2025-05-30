@@ -3,6 +3,9 @@ import {
   MetaDataType,
   AuthResponse,
   UserProfileResponse,
+  SettingsResponse,
+  MyCompaniesResponse,
+  SetActiveCompanyResponse,
 } from '@/lib/types';
 import { CUSTOMERS_MOCK_DATA } from './mocks/customers';
 import { Customer } from '@/features/customers/schemas';
@@ -11,7 +14,7 @@ import { ENQUIRIES_MOCK_DATA } from './mocks/enquiries';
 import axios from 'axios';
 import { Quotation } from '@/features/quotations/schemas';
 import QUOTATIONS_MOCK_DATA from './mocks/quotations';
-import { COMPANIES_MOCK_DATA } from './mocks/companies';
+import { COMPANIES_MOCK_DATA, MY_COMPANIES_MOCK_DATA } from './mocks/companies';
 import { Company } from '@/features/companies/schemas';
 import { SupplierDc } from '@/features/supplier-dc/schemas';
 import { SUPPLIER_DCS_MOCK_DATA } from './mocks/supplier-dcs';
@@ -21,6 +24,7 @@ import {
   CURRENCIES_MOCK_DATA,
   UOMS_MOCK_DATA,
 } from '@/features/metadata/model/mock-data';
+import { Currency, UOM } from '@/features/metadata/schemas';
 import Fuse from 'fuse.js';
 
 const customers: Customer[] = CUSTOMERS_MOCK_DATA;
@@ -831,6 +835,77 @@ const mockService: IApiService = {
         resolve(response);
       }, 1000);
     });
+  },
+
+  // Settings & Metadata CRUD Endpoints
+  async upsertUOM({ uom }): Promise<SettingsResponse> {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    if (uom.id) {
+      // Update existing UOM
+      const index = UOMS_MOCK_DATA.findIndex(u => u.id === uom.id);
+      if (index !== -1) {
+        UOMS_MOCK_DATA[index] = { ...UOMS_MOCK_DATA[index], ...uom };
+      }
+      return { success: true, message: 'UOM updated successfully' };
+    } else {
+      // Create new UOM
+      const newUOM = { ...uom, id: `uom-${Date.now()}` };
+      UOMS_MOCK_DATA.push(newUOM);
+      return { success: true, message: 'UOM created successfully' };
+    }
+  },
+
+  async upsertCurrency({ currency }): Promise<SettingsResponse> {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    if (currency.id) {
+      // Update existing Currency
+      const index = CURRENCIES_MOCK_DATA.findIndex(c => c.id === currency.id);
+      if (index !== -1) {
+        CURRENCIES_MOCK_DATA[index] = { ...CURRENCIES_MOCK_DATA[index], ...currency };
+      }
+      return { success: true, message: 'Currency updated successfully' };
+    } else {
+      // Create new Currency
+      const newCurrency = { ...currency, id: `curr-${Date.now()}` };
+      CURRENCIES_MOCK_DATA.push(newCurrency);
+      return { success: true, message: 'Currency created successfully' };
+    }
+  },
+
+  async getMyCompanies(): Promise<MyCompaniesResponse> {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    
+    return {
+      success: true,
+      companies: MY_COMPANIES_MOCK_DATA,
+    };
+  },
+
+  async setActiveCompany({ companyId }): Promise<SetActiveCompanyResponse> {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    // Find the company to activate
+    const companyToActivate = MY_COMPANIES_MOCK_DATA.find(c => c.id === companyId);
+    
+    if (!companyToActivate) {
+      throw new Error('Company not found');
+    }
+    
+    // Set all companies to inactive
+    MY_COMPANIES_MOCK_DATA.forEach(company => {
+      company.isActive = false;
+    });
+    
+    // Set the selected company as active
+    companyToActivate.isActive = true;
+    
+    return {
+      success: true,
+      message: `${companyToActivate.name} is now the active company`,
+      activeCompany: companyToActivate,
+    };
   },
 };
 

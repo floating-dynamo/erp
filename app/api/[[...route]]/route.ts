@@ -9,6 +9,7 @@ import companies from '@/features/companies/server/route';
 import supplierDc from '@/features/supplier-dc/server/route';
 import purchaseOrders from '@/features/purchase-orders/server/route';
 import auth from '@/features/users/server/route';
+import metadata from '@/features/metadata/server';
 
 export const runtime = 'nodejs';
 
@@ -22,6 +23,7 @@ const routes = app
   .route('/quotations', quotations)
   .route('/countries', countries)
   .route('/companies', companies)
+  .route('/metadata', metadata)
   .route('/purchase-orders', purchaseOrders)
   .route('/supplier-dcs', supplierDc);
 

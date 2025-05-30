@@ -30,6 +30,7 @@ import {
   GetPurchaseOrdersResponse,
 } from './types/purchase-order';
 import { PurchaseOrder } from '@/features/purchase-orders/schemas';
+import { UOM, Currency } from '@/features/metadata/schemas';
 
 export enum CurrencySymbol {
   INR = '₹',
@@ -274,6 +275,26 @@ export interface IApiService {
   }: {
     type?: MetaDataType;
   }) => Promise<GetMetadataResponse>;
+  
+  upsertUOM: ({
+    uom,
+  }: {
+    uom: UOM;
+  }) => Promise<SettingsResponse>;
+  
+  upsertCurrency: ({
+    currency,
+  }: {
+    currency: Currency;
+  }) => Promise<SettingsResponse>;
+
+  // Settings & Company Management Endpoints
+  getMyCompanies: () => Promise<MyCompaniesResponse>;
+  setActiveCompany: ({
+    companyId,
+  }: {
+    companyId: string;
+  }) => Promise<SetActiveCompanyResponse>;
 
   getCountries: () => Promise<GetCountriesResponse>;
 }
@@ -281,4 +302,28 @@ export interface IApiService {
 export enum MetaDataType {
   UOM = 'uom',
   CURRENCY = 'currency',
+}
+
+// Settings-related types
+export interface SettingsResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface MyCompany extends Company {
+  isActive?: boolean;
+  logo?: string;
+  pan?: string;
+  address?: string;
+}
+
+export interface MyCompaniesResponse {
+  success: boolean;
+  companies: MyCompany[];
+}
+
+export interface SetActiveCompanyResponse {
+  success: boolean;
+  message: string;
+  activeCompany?: MyCompany;
 }
