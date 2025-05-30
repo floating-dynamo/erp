@@ -105,14 +105,14 @@ export const CreateCustomerForm = ({
   }, [isEdit, customerData, form]);
 
   useEffect(() => {
-    if (countriesData) {
+    if (countriesData?.countries) {
       const currentCountry = form.getValues('address.country');
       console.log('Current Country ', currentCountry);
-      const cities =
-        countriesData?.data?.find(
-          (country) => country.country === currentCountry
-        )?.cities || [];
-      setCountryStates(cities);
+      const selectedCountry = countriesData.countries.find(
+        (country) => country.name === currentCountry
+      );
+      const states = selectedCountry?.states.map((state) => state.name) || [];
+      setCountryStates(states);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [countriesData, form.watch('address.country')]);
@@ -275,10 +275,10 @@ export const CreateCustomerForm = ({
                                 )}
                               >
                                 {field.value
-                                  ? countriesData?.data?.find(
+                                  ? countriesData?.countries?.find(
                                       (country) =>
-                                        country.country === field.value
-                                    )?.country
+                                        country.name === field.value
+                                    )?.name
                                   : 'Select Country'}
                                 <ChevronsUpDown className="opacity-50" />
                               </Button>
@@ -293,23 +293,23 @@ export const CreateCustomerForm = ({
                               <CommandList>
                                 <CommandEmpty>No Country found.</CommandEmpty>
                                 <CommandGroup>
-                                  {countriesData?.data?.map((country) => (
+                                  {countriesData?.countries?.map((country) => (
                                     <CommandItem
-                                      value={country.country}
-                                      key={country.country}
+                                      value={country.name}
+                                      key={country.name}
                                       onSelect={() => {
                                         form.setValue(
                                           'address.country',
-                                          country.country
+                                          country.name
                                         );
                                         setCountrySelectOpen(false);
                                       }}
                                     >
-                                      {country?.country}
+                                      {country?.name}
                                       <Check
                                         className={cn(
                                           'ml-auto',
-                                          country.country === field.value
+                                          country.name === field.value
                                             ? 'opacity-100'
                                             : 'opacity-0'
                                         )}
