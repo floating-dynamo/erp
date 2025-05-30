@@ -127,15 +127,12 @@ export const CreateCustomerForm = ({
   });
 
   const onSubmit = (values: CreateCustomerFormSchema) => {
-    const finalValues = {
-      ...values,
-      image: values.image instanceof File ? values.image : '',
-    };
-    console.log('Customer: ', finalValues);
+    // No need to transform image anymore since it's already base64
+    console.log('Customer: ', values);
     if (isEdit) {
       console.log('Editing Customer Details...');
       editCustomer(
-        { id: customerId, customer: finalValues },
+        { id: customerId, customer: values },
         {
           onSuccess: () => {
             form.reset();
@@ -144,7 +141,7 @@ export const CreateCustomerForm = ({
         }
       );
     } else {
-      addCustomer(finalValues, {
+      addCustomer(values, {
         onSuccess: () => {
           form.reset();
           router.push('/customers');
@@ -156,7 +153,13 @@ export const CreateCustomerForm = ({
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      form.setValue('image', file);
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        form.setValue('image', base64String);
+      };
+      reader.readAsDataURL(file);
     }
   };
 

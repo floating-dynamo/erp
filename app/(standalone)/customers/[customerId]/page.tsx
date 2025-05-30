@@ -9,6 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useGetCustomerDetails } from '@/features/customers/api/use-get-customer-details';
 import { useToast } from '@/hooks/use-toast';
 import { cn, generateCsv } from '@/lib/utils';
@@ -74,6 +75,28 @@ export default function CustomerDetailsPage({
     redirect(`/customers/edit/${customer?.id}`);
   }
 
+  // Helper function to generate consistent colors based on customer name
+  const getAvatarStyle = (name: string) => {
+    const colors = [
+      'bg-gradient-to-br from-blue-500 to-blue-600',
+      'bg-gradient-to-br from-green-500 to-green-600',
+      'bg-gradient-to-br from-purple-500 to-purple-600',
+      'bg-gradient-to-br from-orange-500 to-orange-600',
+      'bg-gradient-to-br from-pink-500 to-pink-600',
+      'bg-gradient-to-br from-indigo-500 to-indigo-600',
+      'bg-gradient-to-br from-red-500 to-red-600',
+      'bg-gradient-to-br from-teal-500 to-teal-600',
+    ];
+
+    // Generate consistent color based on name
+    const hash = name.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+
+    return colors[Math.abs(hash) % colors.length];
+  };
+
   return (
     <div className="w-full lg:max-w-4xl" id={customerDetailsElementId}>
       <div className="flex items-center justify-between">
@@ -90,6 +113,27 @@ export default function CustomerDetailsPage({
           </Button>
           <div className="flex flex-col">
             <div className="flex gap-4 items-center flex-wrap">
+              {/* Customer Logo */}
+              {customer.image && typeof customer.image === 'string' ? (
+                <Avatar className="size-12 border-2 border-white shadow-lg">
+                  <AvatarImage src={customer.image} alt={`${customer.name} logo`} />
+                  <AvatarFallback className={cn(
+                    "text-white font-semibold text-lg",
+                    getAvatarStyle(customer.name)
+                  )}>
+                    {customer.name.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              ) : (
+                <Avatar className="size-12 border-2 border-white shadow-lg">
+                  <AvatarFallback className={cn(
+                    "text-white font-semibold text-lg",
+                    getAvatarStyle(customer.name)
+                  )}>
+                    {customer.name.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              )}
               <h1 className="text-xl sm:text-3xl font-bold">{customer.name}</h1>
               <TooltipProvider>
                 <Tooltip>
