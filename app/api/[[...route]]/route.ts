@@ -8,6 +8,7 @@ import countries from '@/features/countries/server/route';
 import companies from '@/features/companies/server/route';
 import supplierDc from '@/features/supplier-dc/server/route';
 import purchaseOrders from '@/features/purchase-orders/server/route';
+import auth from '@/features/users/server/route';
 
 export const runtime = 'nodejs';
 
@@ -15,6 +16,7 @@ const app = new Hono().basePath('/api');
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const routes = app
+  .route('/auth', auth)
   .route('/customers', customers)
   .route('/enquiries', enquiries)
   .route('/quotations', quotations)

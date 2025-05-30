@@ -1,9 +1,10 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
+import mongoose, { Schema, Document, Model, Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { User } from './schemas';
 
 // Interface extending Document with User properties
 interface IUser extends Document, Omit<User, 'id'> {
+  _id: Types.ObjectId;
   comparePassword(candidatePassword: string): Promise<boolean>;
   generateAuthToken(): string;
   removeToken(token: string): void;
@@ -188,6 +189,12 @@ userSchema.statics.findActiveUsers = function() {
   return this.find({ isActive: true });
 };
 
+// Add proper typing for static methods
+interface UserModelType extends Model<IUser> {
+  findByEmail(email: string): Promise<IUser | null>;
+  findActiveUsers(): Promise<IUser[]>;
+}
+
 // Virtual for user's full privileges (role + custom)
 userSchema.virtual('allPrivileges').get(function(this: IUser) {
   const rolePrivileges = this.getRolePrivileges();
@@ -199,8 +206,8 @@ userSchema.virtual('allPrivileges').get(function(this: IUser) {
 userSchema.set('toJSON', { virtuals: true });
 userSchema.set('toObject', { virtuals: true });
 
-const UserModel: Model<IUser> = 
-  mongoose.models.User || 
-  mongoose.model<IUser>('User', userSchema);
+const UserModel = 
+  (mongoose.models.User as UserModelType) || 
+  (mongoose.model<IUser>('User', userSchema) as UserModelType);
 
 export default UserModel;

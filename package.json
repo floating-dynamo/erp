@@ -34,7 +34,7 @@
     "dayjs": "^1.11.13",
     "file-saver": "^2.0.5",
     "fuse.js": "^7.1.0",
-    "hono": "^4.7.2",
+    "hono": "^4.7.10",
     "html2pdf.js": "^0.10.2",
     "lucide-react": "^0.468.0",
     "mongoose": "^8.10.1",

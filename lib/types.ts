@@ -58,7 +58,78 @@ export enum QueryKeyString {
   METADATA = 'metadata',
 }
 
+// Authentication response types
+export interface AuthResponse {
+  success: boolean;
+  message: string;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    privileges: string[];
+    isActive: boolean;
+    lastLoginAt?: Date;
+    createdAt?: Date;
+    updatedAt?: Date;
+  };
+  token?: string;
+}
+
+export interface UserProfileResponse {
+  success: boolean;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    privileges: string[];
+    isActive: boolean;
+    lastLoginAt?: Date;
+    createdAt?: Date;
+    updatedAt?: Date;
+  };
+}
+
 export interface IApiService {
+  // Authentication Endpoints
+  login: ({
+    email,
+    password,
+  }: {
+    email: string;
+    password: string;
+  }) => Promise<AuthResponse>;
+  register: ({
+    name,
+    email,
+    password,
+    role,
+  }: {
+    name: string;
+    email: string;
+    password: string;
+    role?: string;
+  }) => Promise<AuthResponse>;
+  logout: () => Promise<{ success: boolean }>;
+  getCurrentUser: () => Promise<UserProfileResponse>;
+  updateProfile: ({
+    name,
+    email,
+  }: {
+    name: string;
+    email: string;
+  }) => Promise<{ success: boolean; message: string }>;
+  changePassword: ({
+    currentPassword,
+    newPassword,
+    confirmPassword,
+  }: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) => Promise<{ success: boolean; message: string }>;
+
   // Customer Endpoints
   getCustomers: (queryString: string) => Promise<GetCusomtersResponse>;
   addCustomer: ({

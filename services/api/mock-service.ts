@@ -1,4 +1,9 @@
-import { IApiService, MetaDataType } from '@/lib/types';
+import {
+  IApiService,
+  MetaDataType,
+  AuthResponse,
+  UserProfileResponse,
+} from '@/lib/types';
 import { CUSTOMERS_MOCK_DATA } from './mocks/customers';
 import { Customer } from '@/features/customers/schemas';
 import { Enquiry } from '@/features/enquiries/schemas';
@@ -12,7 +17,10 @@ import { SupplierDc } from '@/features/supplier-dc/schemas';
 import { SUPPLIER_DCS_MOCK_DATA } from './mocks/supplier-dcs';
 import { PurchaseOrder } from '@/features/purchase-orders/schemas';
 import { PURCHASE_ORDERS_MOCK_DATA } from './mocks/purchase-orders';
-import { CURRENCIES_MOCK_DATA, UOMS_MOCK_DATA } from '@/features/metadata/model/mock-data';
+import {
+  CURRENCIES_MOCK_DATA,
+  UOMS_MOCK_DATA,
+} from '@/features/metadata/model/mock-data';
 import Fuse from 'fuse.js';
 
 const customers: Customer[] = CUSTOMERS_MOCK_DATA;
@@ -53,7 +61,209 @@ const quotationFuseOptions = {
   includeScore: true,
 };
 
+// Mock authentication methods
+const mockAuthService = {
+  async login({
+    email,
+    password,
+  }: {
+    email: string;
+    password: string;
+  }): Promise<AuthResponse> {
+    // Simulate API delay
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Only allow demo account when mock API is enabled
+    if (email === 'test@example.com' && password === 'password123') {
+      const user = {
+        id: '1',
+        name: 'John Doe',
+        email: 'test@example.com',
+        role: 'admin',
+        privileges: [
+          'users.create',
+          'users.read',
+          'users.update',
+          'users.delete',
+          'customers.create',
+          'customers.read',
+          'customers.update',
+          'customers.delete',
+          'companies.create',
+          'companies.read',
+          'companies.update',
+          'companies.delete',
+          'enquiries.create',
+          'enquiries.read',
+          'enquiries.update',
+          'enquiries.delete',
+          'quotations.create',
+          'quotations.read',
+          'quotations.update',
+          'quotations.delete',
+          'purchase-orders.create',
+          'purchase-orders.read',
+          'purchase-orders.update',
+          'purchase-orders.delete',
+          'supplier-dcs.create',
+          'supplier-dcs.read',
+          'supplier-dcs.update',
+          'supplier-dcs.delete',
+          'settings.read',
+          'settings.update',
+          'reports.read',
+          'export.pdf',
+          'export.excel',
+        ],
+        isActive: true,
+        lastLoginAt: new Date(),
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date(),
+      };
+      const token = 'mock-jwt-token-' + Date.now();
+      return { success: true, message: 'Login successful', user, token };
+    }
+
+    throw new Error('Invalid email or password');
+  },
+
+  async register({
+    name,
+    email,
+    password,
+    role = 'employee',
+  }: {
+    name: string;
+    email: string;
+    password: string;
+    role?: string;
+  }): Promise<AuthResponse> {
+    console.log(role);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Only allow demo registration when mock API is enabled
+    if (email && password && name) {
+      return {
+        success: true,
+        message: 'User registered successfully',
+      };
+    }
+
+    throw new Error('Registration failed');
+  },
+
+  async logout(): Promise<{ success: boolean }> {
+    // Simulate API delay
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return { success: true };
+  },
+
+  async getCurrentUser(): Promise<UserProfileResponse> {
+    // Simulate API delay
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Return mock user data
+    const user = {
+      id: '1',
+      name: 'John Doe',
+      email: 'test@example.com',
+      role: 'admin',
+      privileges: [
+        'users.create',
+        'users.read',
+        'users.update',
+        'users.delete',
+        'customers.create',
+        'customers.read',
+        'customers.update',
+        'customers.delete',
+        'companies.create',
+        'companies.read',
+        'companies.update',
+        'companies.delete',
+        'enquiries.create',
+        'enquiries.read',
+        'enquiries.update',
+        'enquiries.delete',
+        'quotations.create',
+        'quotations.read',
+        'quotations.update',
+        'quotations.delete',
+        'purchase-orders.create',
+        'purchase-orders.read',
+        'purchase-orders.update',
+        'purchase-orders.delete',
+        'supplier-dcs.create',
+        'supplier-dcs.read',
+        'supplier-dcs.update',
+        'supplier-dcs.delete',
+        'settings.read',
+        'settings.update',
+        'reports.read',
+        'export.pdf',
+        'export.excel',
+      ],
+      isActive: true,
+      lastLoginAt: new Date(),
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date(),
+    };
+
+    return {
+      success: true,
+      user,
+    };
+  },
+
+  async updateProfile({
+    name,
+    email,
+  }: {
+    name: string;
+    email: string;
+  }): Promise<{ success: boolean; message: string }> {
+    console.log(name, email);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    return {
+      success: true,
+      message: 'Profile updated successfully',
+    };
+  },
+
+  async changePassword({
+    currentPassword,
+    newPassword,
+    confirmPassword,
+  }: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }): Promise<{ success: boolean; message: string }> {
+    console.log(currentPassword);
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    if (newPassword !== confirmPassword) {
+      throw new Error("Passwords don't match");
+    }
+
+    return {
+      success: true,
+      message: 'Password changed successfully',
+    };
+  },
+};
+
 const mockService: IApiService = {
+  // Authentication Endpoints
+  login: mockAuthService.login,
+  register: mockAuthService.register,
+  logout: mockAuthService.logout,
+  getCurrentUser: mockAuthService.getCurrentUser,
+  updateProfile: mockAuthService.updateProfile,
+  changePassword: mockAuthService.changePassword,
+
   async getCustomers(queryString: string = '') {
     const params = new URLSearchParams(queryString);
     const country = params.get('country');
@@ -470,8 +680,8 @@ const mockService: IApiService = {
 
     // Apply buyer name filter
     if (buyerNameFilter) {
-      filteredPurchaseOrders = filteredPurchaseOrders.filter(
-        (po) => po.buyerName?.toLowerCase().includes(buyerNameFilter.toLowerCase())
+      filteredPurchaseOrders = filteredPurchaseOrders.filter((po) =>
+        po.buyerName?.toLowerCase().includes(buyerNameFilter.toLowerCase())
       );
     }
 
@@ -485,30 +695,30 @@ const mockService: IApiService = {
     // Apply delivery date range filters with type safety checks
     if (deliveryDateFrom) {
       const fromDate = new Date(deliveryDateFrom);
-      filteredPurchaseOrders = filteredPurchaseOrders.filter(
-        (po) => po.deliveryDate ? new Date(po.deliveryDate) >= fromDate : false
+      filteredPurchaseOrders = filteredPurchaseOrders.filter((po) =>
+        po.deliveryDate ? new Date(po.deliveryDate) >= fromDate : false
       );
     }
 
     if (deliveryDateTo) {
       const toDate = new Date(deliveryDateTo);
-      filteredPurchaseOrders = filteredPurchaseOrders.filter(
-        (po) => po.deliveryDate ? new Date(po.deliveryDate) <= toDate : false
+      filteredPurchaseOrders = filteredPurchaseOrders.filter((po) =>
+        po.deliveryDate ? new Date(po.deliveryDate) <= toDate : false
       );
     }
 
     // Apply total value range filters with type safety checks
     if (totalValueFrom) {
       const minValue = parseFloat(String(totalValueFrom));
-      filteredPurchaseOrders = filteredPurchaseOrders.filter(
-        (po) => typeof po.totalValue === 'number' ? po.totalValue >= minValue : false
+      filteredPurchaseOrders = filteredPurchaseOrders.filter((po) =>
+        typeof po.totalValue === 'number' ? po.totalValue >= minValue : false
       );
     }
 
     if (totalValueTo) {
       const maxValue = parseFloat(String(totalValueTo));
-      filteredPurchaseOrders = filteredPurchaseOrders.filter(
-        (po) => typeof po.totalValue === 'number' ? po.totalValue <= maxValue : false
+      filteredPurchaseOrders = filteredPurchaseOrders.filter((po) =>
+        typeof po.totalValue === 'number' ? po.totalValue <= maxValue : false
       );
     }
 
@@ -546,7 +756,10 @@ const mockService: IApiService = {
       // Apply server-side pagination when not searching
       const startIndex = (page - 1) * limit;
       const endIndex = startIndex + limit;
-      paginatedPurchaseOrders = filteredPurchaseOrders.slice(startIndex, endIndex);
+      paginatedPurchaseOrders = filteredPurchaseOrders.slice(
+        startIndex,
+        endIndex
+      );
     }
 
     const totalPages = Math.ceil(totalPurchaseOrders / limit);
@@ -602,17 +815,17 @@ const mockService: IApiService = {
       currencies: [] as typeof CURRENCIES_MOCK_DATA,
       uoms: [] as typeof UOMS_MOCK_DATA,
     };
-    
+
     // If type is UOM or not specified, return UOMs
     if (!type || type === MetaDataType.UOM) {
       response.uoms = UOMS_MOCK_DATA;
     }
-    
+
     // If type is CURRENCY or not specified, return Currencies
     if (!type || type === MetaDataType.CURRENCY) {
       response.currencies = CURRENCIES_MOCK_DATA;
     }
-    
+
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(response);

@@ -2,11 +2,18 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import APIService from '@/services/api';
 
 interface User {
   id: string;
   name: string;
   email: string;
+  role: string;
+  privileges: string[];
+  isActive: boolean;
+  lastLoginAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 interface AuthContextType {
@@ -38,81 +45,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
 
-  // Check if mock API is enabled
-  const isMockApiEnabled = process.env.NEXT_PUBLIC_APP_MOCK_API === 'true';
-
-  // Mock API calls - replace with actual API endpoints
-  const mockLogin = async (email: string, password: string): Promise<{ user: User; token: string }> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Only allow demo account when mock API is enabled
-    if (isMockApiEnabled && email === "test@example.com" && password === "password123") {
-      const user = { id: "1", name: "John Doe", email: "test@example.com" };
-      const token = "mock-jwt-token-" + Date.now();
-      return { user, token };
-    }
-    
-    // If mock API is disabled, this should call your real API
-    if (!isMockApiEnabled) {
-      // TODO: Replace with actual API call to your authentication endpoint
-      // Example:
-      // const response = await fetch('/api/auth/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email, password })
-      // });
-      // if (!response.ok) throw new Error('Authentication failed');
-      // return await response.json();
-      
-      throw new Error("Authentication API not implemented yet");
-    }
-    
-    throw new Error("Invalid email or password");
-  };
-
-  const mockRegister = async (name: string, email: string, password: string): Promise<void> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Only allow demo registration when mock API is enabled
-    if (isMockApiEnabled && email && password && name) {
-      // Registration successful
-      return;
-    }
-    
-    // If mock API is disabled, this should call your real API
-    if (!isMockApiEnabled) {
-      // TODO: Replace with actual API call to your registration endpoint
-      // Example:
-      // const response = await fetch('/api/auth/register', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ name, email, password })
-      // });
-      // if (!response.ok) throw new Error('Registration failed');
-      // return;
-      
-      throw new Error("Registration API not implemented yet");
-    }
-    
-    throw new Error("Registration failed");
-  };
-
-  // Check for existing token on mount
+  // Check for existing authentication on mount
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       try {
         const token = localStorage.getItem('token');
-        const userData = localStorage.getItem('user');
         
-        if (token && userData) {
-          const parsedUser = JSON.parse(userData);
-          setUser(parsedUser);
-          setIsAuthenticated(true);
+        if (token) {
+          // Try to get current user from API
+          const response = await APIService.getCurrentUser();
+          if (response.success && response.user) {
+            setUser(response.user);
+            setIsAuthenticated(true);
+          } else {
+            // Invalid token, clear storage
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+          }
         }
       } catch (error) {
-        console.error('Error checking auth:', error);
+        console.error('Auth check error:', error);
         // Clear invalid data
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -127,17 +79,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { user, token } = await mockLogin(email, password);
+      const response = await APIService.login({ email, password });
       
-      // Store token and user data
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      setUser(user);
-      setIsAuthenticated(true);
-      
-      // Redirect to dashboard
-      router.push('/dashboard');
+      if (response.success && response.user) {
+        // Store token and user data
+        if (response.token) {
+          localStorage.setItem('token', response.token);
+        }
+        localStorage.setItem('user', JSON.stringify(response.user));
+        
+        setUser(response.user);
+        setIsAuthenticated(true);
+        
+        // Redirect to dashboard
+        router.push('/dashboard');
+      } else {
+        throw new Error(response.message || 'Login failed');
+      }
     } catch (error) {
       throw error;
     } finally {
@@ -148,8 +106,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (name: string, email: string, password: string) => {
     setIsLoading(true);
     try {
-      await mockRegister(name, email, password);
-      // Registration successful - redirect to login will be handled by the component
+      const response = await APIService.register({ 
+        name, 
+        email, 
+        password, 
+        role: 'employee' 
+      });
+      
+      if (response.success) {
+        // Registration successful - redirect to login will be handled by the component
+        return;
+      } else {
+        throw new Error(response.message || 'Registration failed');
+      }
     } catch (error) {
       throw error;
     } finally {
@@ -157,8 +126,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    // Clear storage
+  const logout = async () => {
+    try {
+      // Call logout API to clear server-side session/cookies
+      await APIService.logout();
+    } catch (error) {
+      console.error('Logout API error:', error);
+      // Continue with client-side logout even if API call fails
+    }
+
+    // Clear client-side storage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     

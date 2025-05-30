@@ -2,7 +2,143 @@ import { IApiService } from '@/lib/types';
 import { PurchaseOrderFiltersParams } from '@/features/purchase-orders/types';
 import axios from 'axios';
 
+// Configure axios defaults
+axios.defaults.withCredentials = true; // Enable cookies for authentication
+
+// Add request interceptor to include JWT token in headers
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor to handle authentication errors
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid, clear storage and redirect to login
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 const apiService: IApiService = {
+  // Authentication Endpoints
+  async login({ email, password }: { email: string; password: string }) {
+    try {
+      const response = await axios.post('/api/auth/login', { email, password });
+      return response.data;
+    } catch (error) {
+      console.error('Login error:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Login failed');
+      }
+      throw new Error('Network error during login');
+    }
+  },
+  async register({
+    name,
+    email,
+    password,
+    role = 'employee',
+  }: {
+    name: string;
+    email: string;
+    password: string;
+    role?: string;
+  }) {
+    try {
+      const response = await axios.post('/api/auth/register', {
+        name,
+        email,
+        password,
+        role,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Registration error:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Registration failed');
+      }
+      throw new Error('Network error during registration');
+    }
+  },
+  async logout() {
+    try {
+      const response = await axios.post('/api/auth/logout');
+      return response.data;
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Don't throw error for logout, just log it
+      return { success: false };
+    }
+  },
+  async getCurrentUser() {
+    try {
+      const response = await axios.get('/api/auth/profile');
+      return response.data;
+    } catch (error) {
+      console.error('Get current user error:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(
+          error.response.data.message || 'Failed to get user profile'
+        );
+      }
+      throw new Error('Network error while fetching user profile');
+    }
+  },
+  async updateProfile({ name, email }: { name: string; email: string }) {
+    try {
+      const response = await axios.patch('/api/auth/profile', { name, email });
+      return response.data;
+    } catch (error) {
+      console.error('Update profile error:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(
+          error.response.data.message || 'Failed to update profile'
+        );
+      }
+      throw new Error('Network error while updating profile');
+    }
+  },
+  async changePassword({
+    currentPassword,
+    newPassword,
+    confirmPassword,
+  }: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) {
+    try {
+      const response = await axios.post('/api/auth/change-password', {
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Change password error:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(
+          error.response.data.message || 'Failed to change password'
+        );
+      }
+      throw new Error('Network error while changing password');
+    }
+  },
+
   // Customer Endpoints
   async getCustomers(queryString: string = '') {
     try {
