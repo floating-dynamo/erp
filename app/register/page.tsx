@@ -2,104 +2,156 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Eye, EyeOff, UserPlus, Mail, User, Shield, Check } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Eye, EyeOff, UserPlus, Mail, User, Lock, Check, X, Info } from "lucide-react";
+import { useAuth } from "@/components/providers/auth-provider";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 export default function RegisterPage() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    agreedToTerms: false,
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const { register, isLoading } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
-  const validateForm = () => {
-    if (!name.trim()) {
-      setError("Name is required");
-      return false;
-    }
-    if (!email.trim()) {
-      setError("Email is required");
-      return false;
-    }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
-      return false;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return false;
-    }
-    if (!acceptedTerms) {
-      setError("Please accept the terms and conditions");
-      return false;
-    }
-    return true;
+  // Check if mock API is enabled
+  const isMockApiEnabled = process.env.NEXT_PUBLIC_APP_MOCK_API === 'true';
+
+  // Password strength indicator
+  const getPasswordStrength = (password: string) => {
+    if (password.length === 0) return { score: 0, text: "", color: "" };
+    
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    const strength = [
+      { text: "Very Weak", color: "text-red-500" },
+      { text: "Weak", color: "text-red-400" },
+      { text: "Fair", color: "text-yellow-500" },
+      { text: "Good", color: "text-blue-500" },
+      { text: "Strong", color: "text-green-500" },
+    ];
+
+    return { score, ...strength[Math.min(score, 4)] };
+  };
+
+  const passwordStrength = getPasswordStrength(formData.password);
+  const passwordsMatch = formData.password === formData.confirmPassword && formData.confirmPassword !== "";
+
+  const handleInputChange = (field: string, value: string | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
 
-    if (!validateForm()) return;
+    // Validation
+    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please fill in all fields",
+      });
+      return;
+    }
 
-    setLoading(true);
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        variant: "destructive",
+        title: "Password Mismatch",
+        description: "Passwords do not match",
+      });
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      toast({
+        variant: "destructive",
+        title: "Weak Password",
+        description: "Password must be at least 8 characters long",
+      });
+      return;
+    }
+
+    if (!formData.agreedToTerms) {
+      toast({
+        variant: "destructive",
+        title: "Terms Agreement Required",
+        description: "Please agree to the terms and conditions",
+      });
+      return;
+    }
 
     try {
-      // TODO: Implement actual registration logic here
-      console.log("Registration attempt:", { name, email, password });
+      await register(formData.name, formData.email, formData.password);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      toast({
+        title: "Registration Successful!",
+        description: "Your account has been created successfully. Redirecting to login...",
+      });
       
-      // For now, redirect to dashboard on successful registration
-      router.push("/dashboard");
-    } catch {
-      setError("Registration failed. Please try again.");
-    } finally {
-      setLoading(false);
+      // Redirect to login after success
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000);
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Registration Failed",
+        description: err instanceof Error ? err.message : "Registration failed. Please try again.",
+      });
     }
   };
 
-  const passwordStrength = password.length >= 8 ? "strong" : password.length >= 6 ? "medium" : "weak";
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-green-50 p-4">
       <div className="w-full max-w-md">
         {/* Logo/Brand Section */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl mb-4 shadow-lg">
-            <Shield className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-600 to-green-700 rounded-2xl mb-4 shadow-lg">
+            <UserPlus className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Join Our Platform</h1>
-          <p className="text-gray-600 mt-2">Create your ERP account to get started</p>
+          <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
+          <p className="text-gray-600 mt-2">Join our ERP system today</p>
         </div>
+
+        {/* Mock API Notice */}
+        {isMockApiEnabled && (
+          <Alert className="mb-6 border-green-200 bg-green-50">
+            <Info className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800">
+              <strong>Demo Mode:</strong> Registration will work with any valid email and password
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-2xl text-center font-semibold">Create Account</CardTitle>
+            <CardTitle className="text-2xl text-center font-semibold">Sign Up</CardTitle>
             <CardDescription className="text-center text-gray-600">
-              Fill in your information to create your account
+              Create your account to get started
             </CardDescription>
           </CardHeader>
           
           <CardContent className="space-y-4">
             <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <Alert className="border-red-200 bg-red-50">
-                  <AlertDescription className="text-red-700">{error}</AlertDescription>
-                </Alert>
-              )}
-
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-sm font-medium">
                   Full Name
@@ -110,9 +162,9 @@ export default function RegisterPage() {
                     id="name"
                     type="text"
                     placeholder="Enter your full name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    className="pl-10 h-12 border-gray-200 focus:border-green-500 focus:ring-green-500"
                     required
                   />
                 </div>
@@ -128,9 +180,9 @@ export default function RegisterPage() {
                     id="email"
                     type="email"
                     placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    className="pl-10 h-12 border-gray-200 focus:border-green-500 focus:ring-green-500"
                     required
                   />
                 </div>
@@ -141,13 +193,14 @@ export default function RegisterPage() {
                   Password
                 </Label>
                 <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Create a password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pr-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange("password", e.target.value)}
+                    className="pl-10 pr-10 h-12 border-gray-200 focus:border-green-500 focus:ring-green-500"
                     required
                   />
                   <button
@@ -158,25 +211,20 @@ export default function RegisterPage() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                {password && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <div className="flex-1 bg-gray-200 rounded-full h-1.5">
-                      <div 
-                        className={`h-1.5 rounded-full transition-all ${
-                          passwordStrength === "strong" ? "bg-green-500 w-full" :
-                          passwordStrength === "medium" ? "bg-yellow-500 w-2/3" :
-                          "bg-red-500 w-1/3"
-                        }`}
-                      />
+                
+                {formData.password && (
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <div
+                          key={i}
+                          className={`w-2 h-2 rounded-full ${
+                            i < passwordStrength.score ? 'bg-current' : 'bg-gray-200'
+                          } ${passwordStrength.color}`}
+                        />
+                      ))}
                     </div>
-                    <span className={`text-xs font-medium ${
-                      passwordStrength === "strong" ? "text-green-600" :
-                      passwordStrength === "medium" ? "text-yellow-600" :
-                      "text-red-600"
-                    }`}>
-                      {passwordStrength === "strong" ? "Strong" :
-                       passwordStrength === "medium" ? "Medium" : "Weak"}
-                    </span>
+                    <span className={passwordStrength.color}>{passwordStrength.text}</span>
                   </div>
                 )}
               </div>
@@ -186,13 +234,14 @@ export default function RegisterPage() {
                   Confirm Password
                 </Label>
                 <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm your password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pr-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                    className="pl-10 pr-10 h-12 border-gray-200 focus:border-green-500 focus:ring-green-500"
                     required
                   />
                   <button
@@ -202,38 +251,49 @@ export default function RegisterPage() {
                   >
                     {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
-                  {confirmPassword && password === confirmPassword && (
-                    <Check className="absolute right-10 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
-                  )}
                 </div>
+                
+                {formData.confirmPassword && (
+                  <div className="flex items-center gap-1 text-xs">
+                    {passwordsMatch ? (
+                      <>
+                        <Check className="w-3 h-3 text-green-500" />
+                        <span className="text-green-500">Passwords match</span>
+                      </>
+                    ) : (
+                      <>
+                        <X className="w-3 h-3 text-red-500" />
+                        <span className="text-red-500">Passwords don&apos;t match</span>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-start space-x-2 pt-2">
-                <input
+              <div className="flex items-center space-x-2 pt-2">
+                <Checkbox
                   id="terms"
-                  type="checkbox"
-                  checked={acceptedTerms}
-                  onChange={(e) => setAcceptedTerms(e.target.checked)}
-                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  checked={formData.agreedToTerms}
+                  onCheckedChange={(checked) => handleInputChange("agreedToTerms", checked)}
                 />
-                <label htmlFor="terms" className="text-sm text-gray-600 leading-5">
+                <Label htmlFor="terms" className="text-sm text-gray-600 leading-5">
                   I agree to the{" "}
-                  <Link href="/terms" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">
-                    Terms of Service
+                  <Link href="/terms" className="text-green-600 hover:text-green-700 hover:underline">
+                    Terms and Conditions
                   </Link>{" "}
                   and{" "}
-                  <Link href="/privacy" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">
+                  <Link href="/privacy" className="text-green-600 hover:text-green-700 hover:underline">
                     Privacy Policy
                   </Link>
-                </label>
+                </Label>
               </div>
 
               <Button
                 type="submit"
-                className="w-full h-12 text-base font-medium"
-                disabled={loading}
+                className="w-full h-12 text-base font-medium bg-green-600 hover:bg-green-700"
+                disabled={isLoading}
               >
-                {loading ? (
+                {isLoading ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Creating account...
@@ -252,7 +312,7 @@ export default function RegisterPage() {
                 Already have an account?{" "}
                 <Link 
                   href="/login" 
-                  className="text-blue-600 hover:text-blue-700 font-medium hover:underline"
+                  className="text-green-600 hover:text-green-700 font-medium hover:underline"
                 >
                   Sign in
                 </Link>
