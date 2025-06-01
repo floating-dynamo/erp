@@ -2,13 +2,12 @@ import { connectDB } from '@/lib/db';
 import { Hono } from 'hono';
 import CustomerModel from '../model';
 import { createCustomerSchema, updateCustomerSchema } from '../schemas';
-import uuid4 from 'uuid4';
 import EnquiryModel from '@/features/enquiries/model';
 import QuotationModel from '@/features/quotations/model';
 import { NextRequest } from 'next/server';
 import path from 'path';
 import fs from 'fs';
-import { v4 as uuidv4 } from 'uuid';
+import v4 from 'uuid4';
 
 // Configure file upload directory
 const uploadDir = path.join(process.cwd(), 'uploads', 'customers');
@@ -56,7 +55,7 @@ const app = new Hono()
       const body = await c.req.json();
 
       const parsedData = createCustomerSchema.parse(body);
-      parsedData.id = uuid4();
+      parsedData.id = v4();
 
       const newCustomer = new CustomerModel(parsedData);
       await newCustomer.save();
@@ -212,7 +211,7 @@ const app = new Hono()
         }
 
         // Generate unique filename
-        const uniqueId = uuidv4();
+        const uniqueId = v4();
         const ext = path.extname(file.name);
         const filename = `${uniqueId}${ext}`;
         const filepath = path.join(uploadDir, filename);
@@ -237,7 +236,7 @@ const app = new Hono()
       }
 
       // Update customer with new file attachments
-      const updatedCustomer = await CustomerModel.findOneAndUpdate(
+      await CustomerModel.findOneAndUpdate(
         { id: customerId },
         { $push: { attachments: { $each: uploadedFiles } } },
         { new: true }
