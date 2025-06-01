@@ -48,6 +48,7 @@ import { useGetCustomerDetails } from '../api/use-get-customer-details';
 import { useEditCustomer } from '../api/use-edit-customer';
 import { CustomerNotFound } from './customer-not-found';
 import { useToast } from '@/hooks/use-toast';
+import { FileUploadManager } from './file-upload-manager';
 
 // Infer the form schema type
 type CreateCustomerFormSchema = z.infer<typeof createCustomerSchema>;
@@ -77,6 +78,7 @@ export const CreateCustomerForm = ({
   const router = useRouter();
   const [countrySelectOpen, setCountrySelectOpen] = useState(false);
   const [stateSelectOpen, setStateSelectOpen] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const isEdit = !!customerId;
   const isPending = isPendingAddCustomer || isPendingEditCustomer;
   const { toast } = useToast();
@@ -95,6 +97,7 @@ export const CreateCustomerForm = ({
       vendorId: '',
       customerType: '',
       poc: [],
+      attachments: [],
     },
   });
   const inputRef = useRef<HTMLInputElement>(null);
@@ -150,6 +153,10 @@ export const CreateCustomerForm = ({
         },
       });
     }
+  };
+
+  const handleFilesChange = (files: FileList | null) => {
+    setSelectedFiles(files);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -643,6 +650,28 @@ export const CreateCustomerForm = ({
                 </div>
               )}
             />
+
+            {/* File Attachments Section */}
+            <div className='space-y-4'>
+              <h2 className='text-lg font-semibold'>File Attachments</h2>
+              <p className='text-sm text-muted-foreground'>
+                Upload documents, contracts, or other files related to this customer.
+              </p>
+              
+              <FileUploadManager
+                customerId={isEdit ? customerId : undefined}
+                attachments={form.watch('attachments') || []}
+                onFilesChange={handleFilesChange}
+                disabled={isPending}
+                showUploadButton={isEdit} // Only show upload button for existing customers
+              />
+              
+              {!isEdit && selectedFiles && selectedFiles.length > 0 && (
+                <div className='text-sm text-blue-600 bg-blue-50 p-3 rounded-lg'>
+                  📄 {selectedFiles.length} file(s) selected. Files will be uploaded after the customer is created.
+                </div>
+              )}
+            </div>
 
             <Separator className='my-6' />
 
