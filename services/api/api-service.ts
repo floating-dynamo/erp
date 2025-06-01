@@ -477,6 +477,70 @@ const apiService: IApiService = {
       throw new Error(`Failed to fetch metadata: ${(error as Error).message}`);
     }
   },
+
+  // Customer File Endpoints
+  async uploadCustomerFiles({ customerId, files }) {
+    try {
+      const formData = new FormData();
+      Array.from(files).forEach((file) => {
+        formData.append('files', file);
+      });
+
+      const response = await axios.post(`/api/customers/${customerId}/files`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading customer files:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to upload files');
+      }
+      throw new Error('Network error while uploading files');
+    }
+  },
+
+  async getCustomerFiles({ customerId }) {
+    try {
+      const response = await axios.get(`/api/customers/${customerId}/files`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching customer files:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to fetch files');
+      }
+      throw new Error('Network error while fetching files');
+    }
+  },
+
+  async downloadCustomerFile({ customerId, fileId, filename }) {
+    try {
+      const response = await axios.get(`/api/customers/${customerId}/files/${fileId}/${filename}`, {
+        responseType: 'blob',
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error downloading customer file:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error('Failed to download file');
+      }
+      throw new Error('Network error while downloading file');
+    }
+  },
+
+  async deleteCustomerFile({ customerId, fileId }) {
+    try {
+      const response = await axios.delete(`/api/customers/${customerId}/files/${fileId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting customer file:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to delete file');
+      }
+      throw new Error('Network error while deleting file');
+    }
+  },
 };
 
 export default apiService;

@@ -17,6 +17,18 @@ export const customerPOCSchema = z.object({
   email: z.string().email(),
 });
 
+// Define the schema for Customer File Attachments
+export const customerFileSchema = z.object({
+  id: z.string(),
+  originalName: z.string(),
+  filename: z.string(), // Unique filename stored on server
+  mimetype: z.string(),
+  size: z.number(),
+  uploadedAt: z.date().optional(),
+  uploadedBy: z.string().optional(), // User ID who uploaded
+  description: z.string().optional(), // Optional description for the file
+});
+
 // Helper function to validate base64 image size
 const validateBase64ImageSize = (value: string) => {
   // Base64 encoding increases size by ~33%, so 7.5MB image becomes ~10MB base64
@@ -51,8 +63,10 @@ export const createCustomerSchema = z.object({
         .transform((value) => (value === '' ? undefined : value)),
     ])
     .optional(),
+  attachments: z.array(customerFileSchema).optional().default([]),
 });
 
 export const updateCustomerSchema = createCustomerSchema.partial();
 
 export type Customer = z.infer<typeof createCustomerSchema>;
+export type CustomerFile = z.infer<typeof customerFileSchema>;

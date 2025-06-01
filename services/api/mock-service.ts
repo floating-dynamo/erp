@@ -5,7 +5,7 @@ import {
   UserProfileResponse,
 } from '@/lib/types';
 import { CUSTOMERS_MOCK_DATA } from './mocks/customers';
-import { Customer } from '@/features/customers/schemas';
+import { Customer, CustomerFile } from '@/features/customers/schemas';
 import { Enquiry } from '@/features/enquiries/schemas';
 import { ENQUIRIES_MOCK_DATA } from './mocks/enquiries';
 import axios from 'axios';
@@ -23,7 +23,11 @@ import {
 } from '@/features/metadata/model/mock-data';
 import Fuse from 'fuse.js';
 
-const customers: Customer[] = CUSTOMERS_MOCK_DATA;
+// Initialize customers with attachments property to match Customer type
+const customers: Customer[] = CUSTOMERS_MOCK_DATA.map(customer => ({
+  ...customer,
+  attachments: (customer as Customer).attachments || [] // Use Customer type assertion instead of any
+}));
 const enquiries: Enquiry[] = ENQUIRIES_MOCK_DATA;
 const quotations: Quotation[] = QUOTATIONS_MOCK_DATA;
 const companies: Company[] = COMPANIES_MOCK_DATA;
@@ -832,6 +836,76 @@ const mockService: IApiService = {
       }, 1000);
     });
   },
+
+  // Customer File Management - using proper CustomerFile types
+  async getCustomerFiles({ customerId }: { customerId: string }): Promise<{ files: CustomerFile[] }> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const customer = customers.find(c => c.id === customerId);
+    return {
+      files: customer?.attachments || []
+    };
+  },
+
+  async uploadCustomerFiles({ customerId, files }: { customerId: string; files: FileList }): Promise<{ success: boolean; message: string }> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) {
+      return { success: false, message: 'Customer not found' };
+    }
+    
+    // Initialize attachments if it doesn't exist
+    if (!customer.attachments) {
+      customer.attachments = [];
+    }
+    
+    // Simulate file upload - create proper CustomerFile objects
+    Array.from(files).forEach(file => {
+      const customerFile: CustomerFile = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        originalName: file.name,
+        filename: `${Date.now()}_${file.name}`,
+        mimetype: file.type,
+        size: file.size,
+        uploadedAt: new Date(),
+      };
+      customer.attachments!.push(customerFile);
+    });
+    
+    return { success: true, message: 'Files uploaded successfully' };
+  },
+
+  async downloadCustomerFile({ customerId, fileId }: { customerId: string; fileId: string; filename: string }): Promise<Blob> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer || !customer.attachments?.find(f => f.id === fileId)) {
+      throw new Error('File not found');
+    }
+    
+    // Return a mock blob
+    return new Blob(['Mock file content'], { type: 'application/octet-stream' });
+  },
+
+  async deleteCustomerFile({ customerId, fileId }: { customerId: string; fileId: string }): Promise<{ success: boolean; message: string }> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) {
+      return { success: false, message: 'Customer not found' };
+    }
+    
+    if (!customer.attachments) {
+      return { success: false, message: 'File not found' };
+    }
+    
+    const initialLength = customer.attachments.length;
+    customer.attachments = customer.attachments.filter(file => file.id !== fileId);
+    
+    if (customer.attachments.length === initialLength) {
+      return { success: false, message: 'File not found' };
+    }
+    
+    return { success: true, message: 'File deleted successfully' };
+  },
+
 };
 
 export default mockService;

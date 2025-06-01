@@ -16,6 +16,17 @@ const customerPOCSchema = new Schema({
   email: { type: String, required: true },
 });
 
+const customerFileSchema = new Schema({
+  id: { type: String, required: true },
+  originalName: { type: String, required: true },
+  filename: { type: String, required: true },
+  mimetype: { type: String, required: true },
+  size: { type: Number, required: true },
+  uploadedAt: { type: Date, default: Date.now },
+  uploadedBy: { type: String },
+  description: { type: String },
+});
+
 const customerSchema = new Schema({
   id: { type: String },
   name: { type: String, required: true, trim: true },
@@ -30,6 +41,7 @@ const customerSchema = new Schema({
     required: false,
     maxlength: 10485760 // 10MB limit for base64 images (approximately 7.5MB actual image)
   },
+  attachments: { type: [customerFileSchema], default: [] },
 });
 
 interface ICustomer extends Document, Omit<Customer, 'id'> {}

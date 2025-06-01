@@ -9,13 +9,12 @@ import companies from '@/features/companies/server/route';
 import supplierDc from '@/features/supplier-dc/server/route';
 import purchaseOrders from '@/features/purchase-orders/server/route';
 import auth from '@/features/users/server/route';
+import files from '@/app/api/files/route';
 
 export const runtime = 'nodejs';
 
-const app = new Hono().basePath('/api');
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const routes = app
+const app = new Hono()
+  .basePath('/api')
   .route('/auth', auth)
   .route('/customers', customers)
   .route('/enquiries', enquiries)
@@ -23,10 +22,12 @@ const routes = app
   .route('/countries', countries)
   .route('/companies', companies)
   .route('/purchase-orders', purchaseOrders)
-  .route('/supplier-dcs', supplierDc);
+  .route('/supplier-dcs', supplierDc)
+  .route('/files', files);
 
 export const GET = handle(app);
 export const POST = handle(app);
 export const PATCH = handle(app);
+export const DELETE = handle(app);
 
-export type AppType = typeof routes;
+export type AppType = typeof app;
