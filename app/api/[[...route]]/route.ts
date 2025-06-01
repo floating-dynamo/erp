@@ -9,7 +9,6 @@ import companies from '@/features/companies/server/route';
 import supplierDc from '@/features/supplier-dc/server/route';
 import purchaseOrders from '@/features/purchase-orders/server/route';
 import auth from '@/features/users/server/route';
-import files from '@/app/api/files/route';
 
 export const runtime = 'nodejs';
 
@@ -22,8 +21,7 @@ const app = new Hono()
   .route('/countries', countries)
   .route('/companies', companies)
   .route('/purchase-orders', purchaseOrders)
-  .route('/supplier-dcs', supplierDc)
-  .route('/files', files);
+  .route('/supplier-dcs', supplierDc);
 
 export const GET = handle(app);
 export const POST = handle(app);
