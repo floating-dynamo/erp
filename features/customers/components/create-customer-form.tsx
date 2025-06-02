@@ -49,6 +49,7 @@ import { useEditCustomer } from '../api/use-edit-customer';
 import { CustomerNotFound } from './customer-not-found';
 import { useToast } from '@/hooks/use-toast';
 import { FileUploadManager } from './file-upload-manager';
+import apiService from '@/services/api';
 
 // Infer the form schema type
 type CreateCustomerFormSchema = z.infer<typeof createCustomerSchema>;
@@ -131,27 +132,77 @@ export const CreateCustomerForm = ({
     name: 'poc',
   });
 
-  const onSubmit = (values: CreateCustomerFormSchema) => {
-    // No need to transform image anymore since it's already base64
-    console.log('Customer: ', values);
+  const onSubmit = async (data: CreateCustomerFormSchema) => {
+    const customerData = {
+      ...data,
+      attachments: [], // Remove attachments from customer data as they'll be uploaded separately
+    };
+
     if (isEdit) {
-      console.log('Editing Customer Details...');
       editCustomer(
-        { id: customerId, customer: values },
+        { id: customerId!, customer: customerData },
         {
           onSuccess: () => {
-            form.reset();
-            router.push(`/customers/${customerId}`);
+            toast({
+              title: 'Success',
+              description: 'Customer updated successfully',
+            });
+            router.push('/customers');
+          },
+          onError: (error) => {
+            toast({
+              title: 'Error',
+              description: error.message,
+              variant: 'destructive',
+            });
           },
         }
       );
     } else {
-      addCustomer(values, {
-        onSuccess: () => {
-          form.reset();
-          router.push('/customers');
-        },
-      });
+      addCustomer(
+        customerData,
+        {
+          onSuccess: async (response) => {
+            toast({
+              title: 'Success',
+              description: 'Customer created successfully',
+            });
+
+            // Upload files if any are selected and we have a customer ID
+            if (selectedFiles && selectedFiles.length > 0 && response?.customer?.id) {
+              try {
+                const uploadResult = await apiService.uploadCustomerFiles({
+                  customerId: response.customer.id,
+                  files: selectedFiles,
+                });
+                
+                if (uploadResult.success) {
+                  toast({
+                    title: 'Files Uploaded',
+                    description: `${selectedFiles.length} file(s) uploaded successfully`,
+                  });
+                }
+              } catch (error) {
+                console.error('File upload error:', error);
+                toast({
+                  title: 'File Upload Warning',
+                  description: 'Customer created but file upload failed. You can upload files later.',
+                  variant: 'destructive',
+                });
+              }
+            }
+
+            router.push('/customers');
+          },
+          onError: (error) => {
+            toast({
+              title: 'Error',
+              description: error.message,
+              variant: 'destructive',
+            });
+          },
+        }
+      );
     }
   };
 
@@ -657,7 +708,7 @@ export const CreateCustomerForm = ({
               <p className='text-sm text-muted-foreground'>
                 Upload documents, contracts, or other files related to this customer.
               </p>
-              
+
               <FileUploadManager
                 customerId={isEdit ? customerId : undefined}
                 attachments={form.watch('attachments') || []}
@@ -665,7 +716,7 @@ export const CreateCustomerForm = ({
                 disabled={isPending}
                 showUploadButton={isEdit} // Only show upload button for existing customers
               />
-              
+
               {!isEdit && selectedFiles && selectedFiles.length > 0 && (
                 <div className='text-sm text-blue-600 bg-blue-50 p-3 rounded-lg'>
                   📄 {selectedFiles.length} file(s) selected. Files will be uploaded after the customer is created.

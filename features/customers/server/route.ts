@@ -64,6 +64,7 @@ const app = new Hono()
         {
           success: true,
           message: 'Customer added successfully',
+          customer: newCustomer, // Include the created customer data
         },
         201
       );

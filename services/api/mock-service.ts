@@ -4,6 +4,7 @@ import {
   AuthResponse,
   UserProfileResponse,
 } from '@/lib/types';
+import { ICustomer } from '@/lib/types/customer';
 import { CUSTOMERS_MOCK_DATA } from './mocks/customers';
 import { Customer, CustomerFile } from '@/features/customers/schemas';
 import { Enquiry } from '@/features/enquiries/schemas';
@@ -323,12 +324,34 @@ const mockService: IApiService = {
     });
   },
   async addCustomer({ customer }) {
+    // Generate an ID if not provided
+    if (!customer.id) {
+      customer.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    }
+
+    // Ensure address.pincode is a number if provided, otherwise set to 0
+    if (customer.address) {
+      if (customer.address.pincode === undefined || customer.address.pincode === null) {
+        customer.address.pincode = 0;
+      }
+    }
+
+    // Create a properly typed customer object for the response
+    const typedCustomer: ICustomer = {
+      ...customer,
+      address: customer.address ? {
+        ...customer.address,
+        pincode: customer.address.pincode ?? 0, // Ensure pincode is always a number
+      } : undefined,
+    };
+
     customers.push(customer);
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
           message: 'Customer added successfully',
           success: true,
+          customer: typedCustomer, // Return the properly typed customer
         });
       }, 1000);
     });

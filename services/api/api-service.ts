@@ -151,11 +151,8 @@ const apiService: IApiService = {
   },
   async addCustomer({ customer }) {
     try {
-      await axios.post('/api/customers', customer);
-      return {
-        message: 'Customer added successfully',
-        success: true,
-      };
+      const response = await axios.post('/api/customers', customer);
+      return response.data; // Return the full response data which now includes the customer object
     } catch (error) {
       console.error(error);
       throw new Error(`Error adding new customer ${(error as Error).message}`);
