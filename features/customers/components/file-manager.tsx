@@ -86,7 +86,6 @@ export function FileManager({ customerId }: FileManagerProps) {
       const blob = await apiService.downloadCustomerFile({
         customerId,
         fileId: file.id,
-        filename: file.name,
       });
 
       const url = window.URL.createObjectURL(blob);

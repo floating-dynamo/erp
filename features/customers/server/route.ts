@@ -376,7 +376,7 @@ const app = new Hono()
       // Read file and return as response
       const fileBuffer = fs.readFileSync(filepath);
 
-      return new Response(fileBuffer, {
+      return new Response(new Uint8Array(fileBuffer), {
         headers: {
           'Content-Type': fileInfo.mimetype,
           'Content-Disposition': `attachment; filename="${fileInfo.originalName}"`,

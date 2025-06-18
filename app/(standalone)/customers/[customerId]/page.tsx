@@ -19,7 +19,6 @@ import {
   Building2Icon,
   Copy,
   DownloadIcon,
-  MailIcon,
   MapPinIcon,
   MoreHorizontalIcon,
   PenIcon,
@@ -340,7 +339,7 @@ const PocDetailsCard = ({
   poc: {
     name: string;
     mobile?: number;
-    email: string;
+    email?: string;
   }[];
 }) => {
   return (
@@ -363,15 +362,7 @@ const PocDetailsCard = ({
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
-                  <div className="flex items-center gap-2">
-                    <MailIcon className="h-4 w-4 text-muted-foreground" />
-                    <a
-                      href={`mailto:${email}`}
-                      className="font-medium hover:underline"
-                    >
-                      {email}
-                    </a>
-                  </div>
+                  <p className="font-medium">{email || 'N/A'}</p>
                 </div>
               </div>
               {mobile && (

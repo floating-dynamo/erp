@@ -25,9 +25,9 @@ import {
 import Fuse from 'fuse.js';
 
 // Initialize customers with attachments property to match Customer type
-const customers: Customer[] = CUSTOMERS_MOCK_DATA.map(customer => ({
+const customers: Customer[] = CUSTOMERS_MOCK_DATA.map((customer) => ({
   ...customer,
-  attachments: (customer as Customer).attachments || [] // Use Customer type assertion instead of any
+  attachments: (customer as Customer).attachments || [], // Use Customer type assertion instead of any
 }));
 const enquiries: Enquiry[] = ENQUIRIES_MOCK_DATA;
 const quotations: Quotation[] = QUOTATIONS_MOCK_DATA;
@@ -326,12 +326,16 @@ const mockService: IApiService = {
   async addCustomer({ customer }) {
     // Generate an ID if not provided
     if (!customer.id) {
-      customer.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+      customer.id =
+        Date.now().toString() + Math.random().toString(36).substr(2, 9);
     }
 
     // Ensure address.pincode is a number if provided, otherwise set to 0
     if (customer.address) {
-      if (customer.address.pincode === undefined || customer.address.pincode === null) {
+      if (
+        customer.address.pincode === undefined ||
+        customer.address.pincode === null
+      ) {
         customer.address.pincode = 0;
       }
     }
@@ -339,10 +343,35 @@ const mockService: IApiService = {
     // Create a properly typed customer object for the response
     const typedCustomer: ICustomer = {
       ...customer,
-      address: customer.address ? {
-        ...customer.address,
-        pincode: customer.address.pincode ?? 0, // Ensure pincode is always a number
-      } : undefined,
+      address: customer.address
+        ? {
+            ...customer.address,
+            address1: customer.address.address1 ?? '',
+            address2: customer.address.address2 ?? '',
+            city: customer.address.city ?? '',
+            state: customer.address.state ?? '',
+            country: customer.address.country ?? '',
+            pincode: customer.address.pincode ?? 0, // Ensure pincode is always a number
+          }
+        : undefined,
+      poc: customer.poc
+        ? customer.poc.map(
+            (poc: {
+              name?: string;
+              mobile?: string | number;
+              email?: string;
+            }) => ({
+              name: poc.name ?? '',
+              mobile:
+                poc.mobile !== undefined && poc.mobile !== null
+                  ? typeof poc.mobile === 'string'
+                    ? Number(poc.mobile)
+                    : poc.mobile
+                  : undefined,
+              email: poc.email ?? '', // Ensure email is always a string
+            })
+          )
+        : undefined,
     };
 
     customers.push(customer);
@@ -861,28 +890,38 @@ const mockService: IApiService = {
   },
 
   // Customer File Management - using proper CustomerFile types
-  async getCustomerFiles({ customerId }: { customerId: string }): Promise<{ files: CustomerFile[] }> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const customer = customers.find(c => c.id === customerId);
+  async getCustomerFiles({
+    customerId,
+  }: {
+    customerId: string;
+  }): Promise<{ files: CustomerFile[] }> {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const customer = customers.find((c) => c.id === customerId);
     return {
-      files: customer?.attachments || []
+      files: customer?.attachments || [],
     };
   },
 
-  async uploadCustomerFiles({ customerId, files }: { customerId: string; files: FileList }): Promise<{ success: boolean; message: string }> {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const customer = customers.find(c => c.id === customerId);
+  async uploadCustomerFiles({
+    customerId,
+    files,
+  }: {
+    customerId: string;
+    files: FileList;
+  }): Promise<{ success: boolean; message: string }> {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const customer = customers.find((c) => c.id === customerId);
     if (!customer) {
       return { success: false, message: 'Customer not found' };
     }
-    
+
     // Initialize attachments if it doesn't exist
     if (!customer.attachments) {
       customer.attachments = [];
     }
-    
+
     // Simulate file upload - create proper CustomerFile objects
-    Array.from(files).forEach(file => {
+    Array.from(files).forEach((file) => {
       const customerFile: CustomerFile = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         originalName: file.name,
@@ -893,42 +932,57 @@ const mockService: IApiService = {
       };
       customer.attachments!.push(customerFile);
     });
-    
+
     return { success: true, message: 'Files uploaded successfully' };
   },
 
-  async downloadCustomerFile({ customerId, fileId }: { customerId: string; fileId: string }): Promise<Blob> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const customer = customers.find(c => c.id === customerId);
-    if (!customer || !customer.attachments?.find(f => f.id === fileId)) {
+  async downloadCustomerFile({
+    customerId,
+    fileId,
+  }: {
+    customerId: string;
+    fileId: string;
+  }): Promise<Blob> {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const customer = customers.find((c) => c.id === customerId);
+    if (!customer || !customer.attachments?.find((f) => f.id === fileId)) {
       throw new Error('File not found');
     }
-    
+
     // Return a mock blob
-    return new Blob(['Mock file content'], { type: 'application/octet-stream' });
+    return new Blob(['Mock file content'], {
+      type: 'application/octet-stream',
+    });
   },
 
-  async deleteCustomerFile({ customerId, fileId }: { customerId: string; fileId: string }): Promise<{ success: boolean; message: string }> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const customer = customers.find(c => c.id === customerId);
+  async deleteCustomerFile({
+    customerId,
+    fileId,
+  }: {
+    customerId: string;
+    fileId: string;
+  }): Promise<{ success: boolean; message: string }> {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const customer = customers.find((c) => c.id === customerId);
     if (!customer) {
       return { success: false, message: 'Customer not found' };
     }
-    
+
     if (!customer.attachments) {
       return { success: false, message: 'File not found' };
     }
-    
+
     const initialLength = customer.attachments.length;
-    customer.attachments = customer.attachments.filter(file => file.id !== fileId);
-    
+    customer.attachments = customer.attachments.filter(
+      (file) => file.id !== fileId
+    );
+
     if (customer.attachments.length === initialLength) {
       return { success: false, message: 'File not found' };
     }
-    
+
     return { success: true, message: 'File deleted successfully' };
   },
-
 };
 
 export default mockService;
