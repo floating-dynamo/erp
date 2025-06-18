@@ -35,7 +35,14 @@ export const customerFileSchema = z.object({
   filename: z.string(), // Unique filename stored on server
   mimetype: z.string(),
   size: z.number(),
-  uploadedAt: z.date().optional(),
+  uploadedAt: z.union([z.date(), z.string()]).optional().transform((val) => {
+    if (!val) return undefined;
+    if (typeof val === 'string') {
+      const date = new Date(val);
+      return isNaN(date.getTime()) ? undefined : date;
+    }
+    return val;
+  }),
   uploadedBy: z.string().optional(), // User ID who uploaded
   description: z.string().optional(), // Optional description for the file
 });

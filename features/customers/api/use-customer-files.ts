@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiService from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import { QueryKeyString } from '@/lib/types';
 
 // Hook for uploading files to a customer
 export const useUploadCustomerFiles = () => {
@@ -14,7 +15,9 @@ export const useUploadCustomerFiles = () => {
       return result;
     },
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['customer', variables.customerId] });
+      // Invalidate both the customer details and the general customers list
+      queryClient.invalidateQueries({ queryKey: [QueryKeyString.CUSTOMERS, variables.customerId] });
+      queryClient.invalidateQueries({ queryKey: [QueryKeyString.CUSTOMERS] });
       toast({
         title: 'Files Uploaded',
         description: data.message,
@@ -79,7 +82,9 @@ export const useDeleteCustomerFile = () => {
       return await apiService.deleteCustomerFile({ customerId, fileId });
     },
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['customer', variables.customerId] });
+      // Invalidate both the customer details and the general customers list
+      queryClient.invalidateQueries({ queryKey: [QueryKeyString.CUSTOMERS, variables.customerId] });
+      queryClient.invalidateQueries({ queryKey: [QueryKeyString.CUSTOMERS] });
       toast({
         title: 'File Deleted',
         description: data.message,
