@@ -164,16 +164,22 @@ export const CreateCustomerForm = ({
   });
 
   const onSubmit = async (data: CreateCustomerFormSchema) => {
+    console.log('Form submitted with data:', data);
+    console.log('Is edit mode:', isEdit);
+    console.log('Customer ID:', customerId);
+    
     const customerData = {
       ...data,
       attachments: [], // Remove attachments from customer data as they'll be uploaded separately
     };
 
     if (isEdit) {
+      console.log('Attempting to edit customer...');
       editCustomer(
         { id: customerId!, customer: customerData },
         {
           onSuccess: () => {
+            console.log('Edit success callback triggered');
             toast({
               title: 'Success',
               description: 'Customer updated successfully',
@@ -181,6 +187,7 @@ export const CreateCustomerForm = ({
             router.push('/customers');
           },
           onError: (error) => {
+            console.error('Edit error callback triggered:', error);
             toast({
               title: 'Error',
               description: error.message,
@@ -774,10 +781,41 @@ export const CreateCustomerForm = ({
             <Separator className='my-6' />
 
             {/* Submit Button */}
-            <div className='flex items-center lg:justify-end justify-center w-full'>
-              <Button type='submit' disabled={isPending}>
-                {isEdit ? 'Update' : 'Submit'}
+            <div className='flex flex-col sm:flex-row items-stretch sm:items-center justify-center sm:justify-end gap-3 w-full mt-8'>
+              <Button 
+                type='submit' 
+                disabled={isPending}
+                className='w-full sm:w-auto min-w-[120px] h-11 text-base font-medium'
+                size="default"
+                onClick={(e) => {
+                  console.log('Update button clicked');
+                  console.log('Form state:', form.formState);
+                  console.log('Form errors:', form.formState.errors);
+                  console.log('Form values:', form.getValues());
+                }}
+              >
+                {isPending ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>{isEdit ? 'Updating...' : 'Creating...'}</span>
+                  </div>
+                ) : (
+                  <span>{isEdit ? 'Update Customer' : 'Create Customer'}</span>
+                )}
               </Button>
+              
+              {/* Cancel/Back Button for mobile */}
+              {showBackButton && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                  disabled={isPending}
+                  className='w-full sm:w-auto min-w-[120px] h-11 text-base font-medium order-first sm:order-last'
+                >
+                  Cancel
+                </Button>
+              )}
             </div>
           </form>
         </Form>

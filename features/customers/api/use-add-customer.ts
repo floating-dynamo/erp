@@ -1,12 +1,12 @@
 import APIService from '@/services/api';
-import { QueryClient, useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AddCustomerResponse } from '@/lib/types/customer';
 import { Customer } from '../schemas';
 import { toast } from '@/hooks/use-toast';
 import { QueryKeyString } from '@/lib/types';
 
 export const useAddCustomer = () => {
-  const queryClient = new QueryClient();
+  const queryClient = useQueryClient();
 
   const mutation = useMutation<AddCustomerResponse, Error, Customer>({
     mutationFn: async (customer) => {
