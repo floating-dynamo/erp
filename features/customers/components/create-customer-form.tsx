@@ -152,7 +152,7 @@ export const CreateCustomerForm = ({
         setCountryStates([]);
       }
     }
-  }, [countriesData, form.watch('address.country')]);
+  }, [countriesData, form]);
 
   const {
     fields: pocFields,
@@ -168,15 +168,11 @@ export const CreateCustomerForm = ({
     console.log('Is edit mode:', isEdit);
     console.log('Customer ID:', customerId);
     
-    const customerData = {
-      ...data,
-      attachments: [], // Remove attachments from customer data as they'll be uploaded separately
-    };
-
     if (isEdit) {
+      // For editing, include all data including attachments
       console.log('Attempting to edit customer...');
       editCustomer(
-        { id: customerId!, customer: customerData },
+        { id: customerId!, customer: data },
         {
           onSuccess: () => {
             console.log('Edit success callback triggered');
@@ -197,6 +193,12 @@ export const CreateCustomerForm = ({
         }
       );
     } else {
+      // For creating new customers, remove attachments as they'll be uploaded separately
+      const customerData = {
+        ...data,
+        attachments: [],
+      };
+      
       addCustomer(
         customerData,
         {
@@ -787,7 +789,7 @@ export const CreateCustomerForm = ({
                 disabled={isPending}
                 className='w-full sm:w-auto min-w-[120px] h-11 text-base font-medium'
                 size="default"
-                onClick={(e) => {
+                onClick={() => {
                   console.log('Update button clicked');
                   console.log('Form state:', form.formState);
                   console.log('Form errors:', form.formState.errors);
