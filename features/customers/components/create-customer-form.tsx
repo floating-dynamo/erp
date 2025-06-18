@@ -90,15 +90,19 @@ export const CreateCustomerForm = ({
       name: '',
       address: {
         address1: '',
+        address2: '',
         city: '',
         state: '',
         country: '',
+        pincode: undefined,
       },
+      contactDetails: '',
       gstNumber: '',
       vendorId: '',
       customerType: '',
       poc: [],
       attachments: [],
+      image: undefined,
     },
   });
   const inputRef = useRef<HTMLInputElement>(null);
@@ -106,21 +110,48 @@ export const CreateCustomerForm = ({
 
   useEffect(() => {
     if (isEdit && customerData) {
-      form.reset(customerData);
+      // Ensure proper data transformation for editing
+      const formData = {
+        ...customerData,
+        address: customerData.address ? {
+          address1: customerData.address.address1 || '',
+          address2: customerData.address.address2 || '',
+          city: customerData.address.city || '',
+          state: customerData.address.state || '',
+          country: customerData.address.country || '',
+          pincode: customerData.address.pincode || undefined,
+        } : {
+          address1: '',
+          address2: '',
+          city: '',
+          state: '',
+          country: '',
+          pincode: undefined,
+        },
+        poc: customerData.poc || [],
+        contactDetails: customerData.contactDetails || '',
+        gstNumber: customerData.gstNumber || '',
+        vendorId: customerData.vendorId || '',
+        customerType: customerData.customerType || '',
+        attachments: customerData.attachments || [],
+      };
+      form.reset(formData);
     }
   }, [isEdit, customerData, form]);
 
   useEffect(() => {
     if (countriesData?.data) {
       const currentCountry = form.getValues('address.country');
-      console.log('Current Country ', currentCountry);
-      const selectedCountry = countriesData.data.find(
-        (country) => country.country === currentCountry
-      );
-      const states = selectedCountry?.cities || [];
-      setCountryStates(states);
+      if (currentCountry) {
+        const selectedCountry = countriesData.data.find(
+          (country) => country.country === currentCountry
+        );
+        const states = selectedCountry?.cities || [];
+        setCountryStates(states);
+      } else {
+        setCountryStates([]);
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [countriesData, form.watch('address.country')]);
 
   const {
@@ -320,7 +351,8 @@ export const CreateCustomerForm = ({
                               placeholder={`Enter ${key}`}
                               onChange={(e) => {
                                 if (key === 'pincode') {
-                                  field.onChange(Number(e.target.value) || '');
+                                  const value = e.target.value;
+                                  field.onChange(value === '' ? undefined : Number(value) || undefined);
                                 } else {
                                   field.onChange(e.target.value);
                                 }
@@ -522,10 +554,11 @@ export const CreateCustomerForm = ({
                         <FormControl>
                           <Input
                             {...field}
-                            value={field.value}
-                            onChange={(e) =>
-                              field.onChange(Number(e.target.value) || null)
-                            }
+                            value={field.value || ''}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              field.onChange(value === '' ? undefined : Number(value) || undefined);
+                            }}
                             placeholder='Enter mobile number'
                             type='number'
                           />
@@ -586,6 +619,20 @@ export const CreateCustomerForm = ({
             </div>
 
             {/* Other Fields */}
+            <FormField
+              control={form.control}
+              name='contactDetails'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contact Details</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder='Enter contact details' />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name='gstNumber'

@@ -8,6 +8,7 @@ import { NextRequest } from 'next/server';
 import path from 'path';
 import fs from 'fs';
 import v4 from 'uuid4';
+import { ZodError } from 'zod';
 
 // Configure file upload directory
 const uploadDir = path.join(process.cwd(), 'uploads', 'customers');
@@ -99,41 +100,76 @@ const app = new Hono()
       const { id } = c.req.param();
       const body = await c.req.json();
 
+      // Log the incoming data for debugging
+      console.log('Updating customer with ID:', id);
+      console.log('Request body:', JSON.stringify(body, null, 2));
+
       const parsedData = updateCustomerSchema.parse(body);
+      
+      // Clean up the data - remove empty strings and convert them to appropriate values
+      const cleanedData = {
+        ...parsedData,
+        address: parsedData.address ? {
+          ...parsedData.address,
+          pincode: parsedData.address.pincode || undefined,
+        } : undefined,
+        poc: parsedData.poc?.map(contact => ({
+          ...contact,
+          mobile: contact.mobile || undefined,
+        })) || [],
+      };
 
       const updatedCustomer = await CustomerModel.findOneAndUpdate(
         { id },
-        parsedData,
-        { new: true }
+        cleanedData,
+        { new: true, runValidators: true }
       );
 
       if (!updatedCustomer) {
         return c.json({ error: 'Customer not found' }, 404);
       }
 
-      await EnquiryModel.findOneAndUpdate(
-        { customerId: id },
-        { customerName: updatedCustomer.name }
-      );
+      // Update related documents with the new customer name if it changed
+      if (parsedData.name && parsedData.name !== updatedCustomer.name) {
+        await EnquiryModel.updateMany(
+          { customerId: id },
+          { customerName: parsedData.name }
+        );
 
-      await QuotationModel.findOneAndUpdate(
-        { customerId: id },
-        { customerName: updatedCustomer.name }
-      );
+        await QuotationModel.updateMany(
+          { customerId: id },
+          { customerName: parsedData.name }
+        );
+      }
 
       return c.json(
         {
           message: 'Customer updated successfully',
           success: true,
+          customer: updatedCustomer,
         },
         200
       );
     } catch (error) {
-      console.log(error);
+      console.error('Error updating customer:', error);
+      
+      // Handle Zod validation errors
+      if (error instanceof Error && error.name === 'ZodError') {
+        return c.json(
+          {
+            message: 'Validation error',
+            success: false,
+            errors: (error as ZodError).errors,
+          },
+          400
+        );
+      }
+      
       return c.json(
         {
           message: 'Error updating customer',
           success: false,
+          error: error instanceof Error ? error.message : 'Unknown error occurred',
         },
         400
       );

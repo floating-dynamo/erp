@@ -2,18 +2,24 @@ import { z } from 'zod';
 
 // Define the schema for CustomerAddress
 export const customerAddressSchema = z.object({
-  address1: z.string(),
+  address1: z.string().optional(),
   address2: z.string().optional(),
-  city: z.string(),
-  state: z.string(),
-  country: z.string(),
-  pincode: z.number().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  country: z.string().optional(),
+  pincode: z.union([z.number(), z.string()]).optional().transform((val) => {
+    if (val === undefined || val === null || val === '') return undefined;
+    return typeof val === 'string' ? Number(val) || undefined : val;
+  }),
 });
 
 // Define the schema for CustomerPOC
 export const customerPOCSchema = z.object({
   name: z.string().trim().min(1, 'Required'),
-  mobile: z.number().optional(),
+  mobile: z.union([z.number(), z.string()]).optional().transform((val) => {
+    if (val === undefined || val === null || val === '') return undefined;
+    return typeof val === 'string' ? Number(val) || undefined : val;
+  }),
   email: z.string().email(),
 });
 
