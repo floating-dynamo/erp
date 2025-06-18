@@ -20,7 +20,12 @@ export const customerPOCSchema = z.object({
     if (val === undefined || val === null || val === '') return undefined;
     return typeof val === 'string' ? Number(val) || undefined : val;
   }),
-  email: z.string().email(),
+  email: z.union([
+    z.string().email(),
+    z.literal(''),
+  ]).optional().transform((val) => {
+    return val === '' || val === undefined ? undefined : val;
+  }),
 });
 
 // Define the schema for Customer File Attachments
