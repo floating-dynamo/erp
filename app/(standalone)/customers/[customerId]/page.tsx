@@ -44,6 +44,7 @@ import { useDownloadCustomerFile, useDeleteCustomerFile } from '@/features/custo
 import { CustomerFile } from '@/features/customers/schemas';
 import { useState, useEffect } from 'react';
 import apiService from '@/services/api';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface CustomerDetailsPageProps {
   params: Promise<{ customerId: string }>;
@@ -404,6 +405,8 @@ const FileAttachmentsCard = ({
   const { toast } = useToast();
   const downloadFile = useDownloadCustomerFile();
   const deleteFile = useDeleteCustomerFile();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<CustomerFile | null>(null);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -436,120 +439,141 @@ const FileAttachmentsCard = ({
     });
   };
 
-  const handleDelete = (file: CustomerFile) => {
-    if (window.confirm(`Are you sure you want to delete "${file.originalName}"?`)) {
-      deleteFile.mutate(
-        {
-          customerId,
-          fileId: file.id,
+  const handleDeleteClick = (file: CustomerFile) => {
+    setFileToDelete(file);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!fileToDelete) return;
+
+    deleteFile.mutate(
+      {
+        customerId,
+        fileId: fileToDelete.id,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: 'File Deleted',
+            description: 'The file has been deleted successfully.',
+          });
+          onFileDeleted();
+          setFileToDelete(null);
         },
-        {
-          onSuccess: () => {
-            toast({
-              title: 'File Deleted',
-              description: 'The file has been deleted successfully.',
-            });
-            onFileDeleted();
-          },
-          onError: () => {
-            toast({
-              title: 'Error',
-              description: 'Failed to delete the file.',
-              variant: 'destructive',
-            });
-          },
-        }
-      );
-    }
+        onError: () => {
+          toast({
+            title: 'Error',
+            description: 'Failed to delete the file.',
+            variant: 'destructive',
+          });
+          setFileToDelete(null);
+        },
+      }
+    );
   };
 
   return (
-    <Card className="md:col-span-2">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FileIcon className="h-5 w-5" />
-            <span className="text-xl font-bold">File Attachments</span>
-          </div>
-          <Badge variant="secondary">
-            {files.length} {files.length === 1 ? 'file' : 'files'}
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-            <span className="ml-2 text-muted-foreground">Loading files...</span>
-          </div>
-        ) : files.length === 0 ? (
-          <div className="text-center py-8">
-            <FileIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-muted-foreground">No files attached to this customer</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Files can be uploaded when editing the customer
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {files.map((file) => (
-              <div
-                key={file.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <span className="text-2xl">{getFileIcon(file.mimetype)}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {file.originalName}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <span>{formatFileSize(file.size)}</span>
-                      <span>•</span>
-                      <span>
-                        {file.uploadedAt
-                          ? new Date(file.uploadedAt).toLocaleDateString()
-                          : 'Unknown date'}
-                      </span>
-                      {file.uploadedBy && (
-                        <>
-                          <span>•</span>
-                          <span>by {file.uploadedBy}</span>
-                        </>
-                      )}
+    <>
+      <Card className="md:col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileIcon className="h-5 w-5" />
+              <span className="text-xl font-bold">File Attachments</span>
+            </div>
+            <Badge variant="secondary">
+              {files.length} {files.length === 1 ? 'file' : 'files'}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              <span className="ml-2 text-muted-foreground">Loading files...</span>
+            </div>
+          ) : files.length === 0 ? (
+            <div className="text-center py-8">
+              <FileIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-muted-foreground">No files attached to this customer</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Files can be uploaded when editing the customer
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {files.map((file) => (
+                <div
+                  key={file.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span className="text-2xl">{getFileIcon(file.mimetype)}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {file.originalName}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <span>{formatFileSize(file.size)}</span>
+                        <span>•</span>
+                        <span>
+                          {file.uploadedAt
+                            ? new Date(file.uploadedAt).toLocaleDateString()
+                            : 'Unknown date'}
+                        </span>
+                        {file.uploadedBy && (
+                          <>
+                            <span>•</span>
+                            <span>by {file.uploadedBy}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDownload(file)}
-                    disabled={downloadFile.isPending}
-                    className="flex items-center gap-1"
-                  >
-                    <Download className="w-4 h-4" />
-                    Download
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(file)}
-                    disabled={deleteFile.isPending}
-                    className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDownload(file)}
+                      disabled={downloadFile.isPending}
+                      className="flex items-center gap-1"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteClick(file)}
+                      disabled={deleteFile.isPending}
+                      className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <ConfirmationDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete File"
+        description={`Are you sure you want to delete "${fileToDelete?.originalName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
+        loading={deleteFile.isPending}
+      />
+    </>
   );
 };
