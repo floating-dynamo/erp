@@ -36,14 +36,14 @@ export const useDownloadCustomerFile = () => {
 
   return useMutation({
     mutationFn: async ({ customerId, fileId, filename }: { customerId: string; fileId: string; filename: string }) => {
-      // API returns a Blob directly, not an object with success/url properties
-      const blob = await apiService.downloadCustomerFile({ customerId, fileId, filename });
+      // API now only needs customerId and fileId
+      const blob = await apiService.downloadCustomerFile({ customerId, fileId });
 
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = filename;
+      link.download = filename; // Use the filename passed to the hook for download
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

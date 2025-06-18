@@ -897,7 +897,7 @@ const mockService: IApiService = {
     return { success: true, message: 'Files uploaded successfully' };
   },
 
-  async downloadCustomerFile({ customerId, fileId }: { customerId: string; fileId: string; filename: string }): Promise<Blob> {
+  async downloadCustomerFile({ customerId, fileId }: { customerId: string; fileId: string }): Promise<Blob> {
     await new Promise(resolve => setTimeout(resolve, 300));
     const customer = customers.find(c => c.id === customerId);
     if (!customer || !customer.attachments?.find(f => f.id === fileId)) {

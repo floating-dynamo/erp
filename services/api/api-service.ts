@@ -511,9 +511,9 @@ const apiService: IApiService = {
     }
   },
 
-  async downloadCustomerFile({ customerId, fileId, filename }) {
+  async downloadCustomerFile({ customerId, fileId }) {
     try {
-      const response = await axios.get(`/api/customers/${customerId}/files/${fileId}/${filename}`, {
+      const response = await axios.get(`/api/customers/${customerId}/files/${fileId}`, {
         responseType: 'blob',
       });
       return response.data;

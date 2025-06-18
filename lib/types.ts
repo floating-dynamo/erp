@@ -162,11 +162,9 @@ export interface IApiService {
   downloadCustomerFile: ({
     customerId,
     fileId,
-    filename,
   }: {
     customerId: string;
     fileId: string;
-    filename: string;
   }) => Promise<Blob>;
   deleteCustomerFile: ({
     customerId,

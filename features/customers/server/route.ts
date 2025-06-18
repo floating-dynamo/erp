@@ -260,6 +260,40 @@ const app = new Hono()
     }
   })
 
+  // GET all files for a customer endpoint
+  .get('/:id/files', async (c) => {
+    try {
+      await connectDB();
+      const customerId = c.req.param('id');
+
+      // Check if customer exists
+      const customer = await CustomerModel.findOne({ id: customerId });
+      if (!customer) {
+        return c.json(
+          {
+            success: false,
+            message: 'Customer not found',
+          },
+          404
+        );
+      }
+
+      // Return customer files
+      return c.json({
+        files: customer.attachments || [],
+      });
+    } catch (error) {
+      console.error('Error fetching customer files:', error);
+      return c.json(
+        {
+          success: false,
+          message: 'Error fetching files',
+        },
+        500
+      );
+    }
+  })
+
   // File download endpoint
   .get('/:id/files/:fileId', async (c) => {
     try {
