@@ -220,6 +220,7 @@ export const EnquiryPdfDocument = ({ enquiry }: { enquiry: Enquiry }) => (
           </Text>
         </View>
         <View style={styles.headerRight}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
           <Image src={LOGO_URL} style={styles.companyLogo} />
           <Text style={styles.documentTitle}>ENQUIRY</Text>
           <Text style={styles.documentInfo}>

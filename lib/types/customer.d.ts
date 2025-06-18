@@ -33,6 +33,7 @@ export interface GetCusomtersResponse {
 export interface AddCustomerResponse {
   message: string;
   success: boolean;
+  customer?: ICustomer; // Add the customer object to the response
 }
 
 export interface EditCustomerResponse {

@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ERP System
+
+A modern ERP (Enterprise Resource Planning) web application built with Next.js, React, Hono, and MongoDB. It provides modules for managing customers, enquiries, quotations, purchase orders, supplier delivery challans, companies, and user authentication/authorization.
+
+## Features
+
+- **User Authentication & Authorization**: Role-based access (admin, manager, employee, etc.) with granular privileges.
+- **Customer Management**: Add, edit, view, and manage customers, including file attachments (PDF, DOC, XLS, images, etc.).
+- **Enquiries**: Track customer requirements, upload related files, and manage enquiry lifecycle.
+- **Quotations**: Generate, edit, and export quotations linked to enquiries and customers.
+- **Purchase Orders**: Manage purchase orders with itemized details and filters.
+- **Supplier Delivery Challans (DCs)**: Track supplier DCs with work order management.
+- **Company Management**: Store and manage company details.
+- **File Upload/Download**: Secure file upload/download for customer attachments (max 10MB, type-restricted).
+- **PDF/Excel Export**: Export data and documents as PDF or Excel.
+- **Responsive UI**: Built with React, Tailwind CSS, and Radix UI for a modern, responsive experience.
+
+## Technologies Used
+
+- **Frontend**: Next.js, React, Tailwind CSS, Radix UI, React Query, Zod
+- **Backend**: Hono (API routes), MongoDB (Mongoose ODM)
+- **Authentication**: JWT, HTTP-only cookies
+- **File Handling**: Multer, Node.js fs
+- **PDF/Excel**: @react-pdf/renderer, xlsx-js-style
 
 ## Getting Started
 
-First, run the development server:
+1. **Clone the repository:**
+   ```bash
+   git clone <repo-url>
+   cd erp
+   ```
+2. **Install dependencies:**
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+3. **Configure environment variables:**
+   - Copy `.example.env` to `.env` and update values as needed:
+     ```bash
+     cp .example.env .env
+     ```
+   - Required variables:
+     - `MONGODB_URI` (MongoDB connection string)
+     - `NEXT_PUBLIC_APP_MOCK_API` (set to `false` for production)
+     - Listing page limits, debounce delay, etc.
+4. **Run the development server:**
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Usage
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Access modules from the sidebar: Customers, Enquiries, Quotations, Purchase Orders, Supplier DCs, Companies, Settings.
+- Use the file manager in the customer details page to upload/download/delete attachments.
+- Export quotations/enquiries as PDF or Excel.
+- Manage users and roles from the settings (admin only).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## File Upload/Download
+- Allowed types: PDF, DOC, DOCX, XLS, XLSX, images (JPG, PNG, GIF), TXT, CSV
+- Max file size: 10MB per file
+- Files are stored in `/uploads/customers/` on the server
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Authentication
+- JWT-based authentication with HTTP-only cookies
+- Role-based access control (admin, manager, employee, etc.)
+- Register/login via `/register` and `/login` routes
 
-## Learn More
+## Database
+- MongoDB (see `MONGODB_URI` in `.env`)
+- Models: Customer, Enquiry, Quotation, PurchaseOrder, SupplierDc, Company, User
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
+- `npm run dev` – Start development server
+- `npm run build` – Build for production
+- `npm start` – Start production server
+- `npm run lint` – Lint codebase
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Contributing
+1. Fork the repo and create your branch from `main`.
+2. Make your changes and add tests if applicable.
+3. Run `npm run lint` and ensure all checks pass.
+4. Submit a pull request.
