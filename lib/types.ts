@@ -1,4 +1,4 @@
-import { Customer } from '@/features/customers/schemas';
+import { Customer, CustomerFile } from '@/features/customers/schemas';
 import {
   AddCustomerResponse,
   EditCustomerResponse,
@@ -149,6 +149,34 @@ export interface IApiService {
     id: string;
     data: Customer;
   }) => Promise<EditCustomerResponse>;
+
+  // Customer File Endpoints
+  uploadCustomerFiles: ({
+    customerId,
+    files,
+  }: {
+    customerId: string;
+    files: FileList;
+  }) => Promise<{ success: boolean; message: string }>;
+  getCustomerFiles: ({
+    customerId,
+  }: {
+    customerId: string;
+  }) => Promise<{ files: CustomerFile[] }>;
+  downloadCustomerFile: ({
+    customerId,
+    fileId,
+  }: {
+    customerId: string;
+    fileId: string;
+  }) => Promise<Blob>;
+  deleteCustomerFile: ({
+    customerId,
+    fileId,
+  }: {
+    customerId: string;
+    fileId: string;
+  }) => Promise<{ success: boolean; message: string }>;
 
   // Enquiry Endpoints
   getEnquiries: ({

@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { useGetCustomerDetails } from '@/features/customers/api/use-get-customer-details';
 import { useToast } from '@/hooks/use-toast';
 import { cn, generateCsv } from '@/lib/utils';
@@ -18,12 +19,14 @@ import {
   Building2Icon,
   Copy,
   DownloadIcon,
-  MailIcon,
   MapPinIcon,
   MoreHorizontalIcon,
   PenIcon,
   PhoneIcon,
   UserIcon,
+  FileIcon,
+  Download,
+  Trash2,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -36,6 +39,11 @@ import { redirect } from 'next/navigation';
 import { use } from 'react';
 import CustomerDetailsPDFExport from '@/features/customers/components/customer-details-pdf-export';
 import { CustomerNotFound } from '@/features/customers/components/customer-not-found';
+import { useDownloadCustomerFile, useDeleteCustomerFile } from '@/features/customers/api/use-customer-files';
+import { CustomerFile } from '@/features/customers/schemas';
+import { useState, useEffect } from 'react';
+import apiService from '@/services/api';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface CustomerDetailsPageProps {
   params: Promise<{ customerId: string }>;
@@ -50,6 +58,32 @@ export default function CustomerDetailsPage({
   });
   const { toast } = useToast();
   const customerDetailsElementId = `customer-details-${customerId}`;
+  const [customerFiles, setCustomerFiles] = useState<CustomerFile[]>([]);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(true);
+
+  // Fetch customer files
+  useEffect(() => {
+    const fetchFiles = async () => {
+      if (!customerId) return;
+      
+      try {
+        setIsLoadingFiles(true);
+        const result = await apiService.getCustomerFiles({ customerId });
+        setCustomerFiles(result.files || []);
+      } catch (error) {
+        console.error('Error fetching customer files:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load customer files',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoadingFiles(false);
+      }
+    };
+
+    fetchFiles();
+  }, [customerId, toast]);
 
   if (isFetching) {
     return <Loader text="Loading customer details" />;
@@ -193,6 +227,23 @@ export default function CustomerDetailsPage({
         />
         <AddressDetailsCard {...customer?.address} />
         <PocDetailsCard poc={customer?.poc || []} />
+        <FileAttachmentsCard 
+          customerId={customerId}
+          files={customerFiles}
+          isLoading={isLoadingFiles}
+          onFileDeleted={() => {
+            // Refresh files after deletion
+            const fetchFiles = async () => {
+              try {
+                const result = await apiService.getCustomerFiles({ customerId });
+                setCustomerFiles(result.files || []);
+              } catch (error) {
+                console.error('Error refreshing files:', error);
+              }
+            };
+            fetchFiles();
+          }}
+        />
       </div>
     </div>
   );
@@ -288,7 +339,7 @@ const PocDetailsCard = ({
   poc: {
     name: string;
     mobile?: number;
-    email: string;
+    email?: string;
   }[];
 }) => {
   return (
@@ -311,15 +362,7 @@ const PocDetailsCard = ({
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
-                  <div className="flex items-center gap-2">
-                    <MailIcon className="h-4 w-4 text-muted-foreground" />
-                    <a
-                      href={`mailto:${email}`}
-                      className="font-medium hover:underline"
-                    >
-                      {email}
-                    </a>
-                  </div>
+                  <p className="font-medium">{email || 'N/A'}</p>
                 </div>
               </div>
               {mobile && (
@@ -336,5 +379,192 @@ const PocDetailsCard = ({
         </div>
       </CardContent>
     </Card>
+  );
+};
+
+const FileAttachmentsCard = ({
+  customerId,
+  files,
+  isLoading,
+  onFileDeleted,
+}: {
+  customerId: string;
+  files: CustomerFile[];
+  isLoading: boolean;
+  onFileDeleted: () => void;
+}) => {
+  const { toast } = useToast();
+  const downloadFile = useDownloadCustomerFile();
+  const deleteFile = useDeleteCustomerFile();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<CustomerFile | null>(null);
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getFileIcon = (mimetype: string) => {
+    if (mimetype.startsWith('image/')) {
+      return '🖼️';
+    } else if (mimetype.includes('pdf')) {
+      return '📄';
+    } else if (mimetype.includes('word') || mimetype.includes('document')) {
+      return '📝';
+    } else if (mimetype.includes('excel') || mimetype.includes('sheet')) {
+      return '📊';
+    } else if (mimetype.includes('text')) {
+      return '📄';
+    }
+    return '📎';
+  };
+
+  const handleDownload = (file: CustomerFile) => {
+    downloadFile.mutate({
+      customerId,
+      fileId: file.id,
+      filename: file.originalName,
+    });
+  };
+
+  const handleDeleteClick = (file: CustomerFile) => {
+    setFileToDelete(file);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!fileToDelete) return;
+
+    deleteFile.mutate(
+      {
+        customerId,
+        fileId: fileToDelete.id,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: 'File Deleted',
+            description: 'The file has been deleted successfully.',
+          });
+          onFileDeleted();
+          setFileToDelete(null);
+        },
+        onError: () => {
+          toast({
+            title: 'Error',
+            description: 'Failed to delete the file.',
+            variant: 'destructive',
+          });
+          setFileToDelete(null);
+        },
+      }
+    );
+  };
+
+  return (
+    <>
+      <Card className="md:col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileIcon className="h-5 w-5" />
+              <span className="text-xl font-bold">File Attachments</span>
+            </div>
+            <Badge variant="secondary">
+              {files.length} {files.length === 1 ? 'file' : 'files'}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              <span className="ml-2 text-muted-foreground">Loading files...</span>
+            </div>
+          ) : files.length === 0 ? (
+            <div className="text-center py-8">
+              <FileIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-muted-foreground">No files attached to this customer</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Files can be uploaded when editing the customer
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {files.map((file) => (
+                <div
+                  key={file.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span className="text-2xl">{getFileIcon(file.mimetype)}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {file.originalName}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <span>{formatFileSize(file.size)}</span>
+                        <span>•</span>
+                        <span>
+                          {file.uploadedAt
+                            ? new Date(file.uploadedAt).toLocaleDateString()
+                            : 'Unknown date'}
+                        </span>
+                        {file.uploadedBy && (
+                          <>
+                            <span>•</span>
+                            <span>by {file.uploadedBy}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDownload(file)}
+                      disabled={downloadFile.isPending}
+                      className="flex items-center gap-1"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteClick(file)}
+                      disabled={deleteFile.isPending}
+                      className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <ConfirmationDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete File"
+        description={`Are you sure you want to delete "${fileToDelete?.originalName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
+        loading={deleteFile.isPending}
+      />
+    </>
   );
 };

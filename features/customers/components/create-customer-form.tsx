@@ -48,6 +48,8 @@ import { useGetCustomerDetails } from '../api/use-get-customer-details';
 import { useEditCustomer } from '../api/use-edit-customer';
 import { CustomerNotFound } from './customer-not-found';
 import { useToast } from '@/hooks/use-toast';
+import { FileUploadManager } from './file-upload-manager';
+import apiService from '@/services/api';
 
 // Infer the form schema type
 type CreateCustomerFormSchema = z.infer<typeof createCustomerSchema>;
@@ -77,6 +79,7 @@ export const CreateCustomerForm = ({
   const router = useRouter();
   const [countrySelectOpen, setCountrySelectOpen] = useState(false);
   const [stateSelectOpen, setStateSelectOpen] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const isEdit = !!customerId;
   const isPending = isPendingAddCustomer || isPendingEditCustomer;
   const { toast } = useToast();
@@ -87,14 +90,19 @@ export const CreateCustomerForm = ({
       name: '',
       address: {
         address1: '',
+        address2: '',
         city: '',
         state: '',
         country: '',
+        pincode: undefined,
       },
+      contactDetails: '',
       gstNumber: '',
       vendorId: '',
       customerType: '',
       poc: [],
+      attachments: [],
+      image: undefined,
     },
   });
   const inputRef = useRef<HTMLInputElement>(null);
@@ -102,22 +110,49 @@ export const CreateCustomerForm = ({
 
   useEffect(() => {
     if (isEdit && customerData) {
-      form.reset(customerData);
+      // Ensure proper data transformation for editing
+      const formData = {
+        ...customerData,
+        address: customerData.address ? {
+          address1: customerData.address.address1 || '',
+          address2: customerData.address.address2 || '',
+          city: customerData.address.city || '',
+          state: customerData.address.state || '',
+          country: customerData.address.country || '',
+          pincode: customerData.address.pincode || undefined,
+        } : {
+          address1: '',
+          address2: '',
+          city: '',
+          state: '',
+          country: '',
+          pincode: undefined,
+        },
+        poc: customerData.poc || [],
+        contactDetails: customerData.contactDetails || '',
+        gstNumber: customerData.gstNumber || '',
+        vendorId: customerData.vendorId || '',
+        customerType: customerData.customerType || '',
+        attachments: customerData.attachments || [],
+      };
+      form.reset(formData);
     }
   }, [isEdit, customerData, form]);
 
   useEffect(() => {
     if (countriesData?.data) {
       const currentCountry = form.getValues('address.country');
-      console.log('Current Country ', currentCountry);
-      const selectedCountry = countriesData.data.find(
-        (country) => country.country === currentCountry
-      );
-      const states = selectedCountry?.cities || [];
-      setCountryStates(states);
+      if (currentCountry) {
+        const selectedCountry = countriesData.data.find(
+          (country) => country.country === currentCountry
+        );
+        const states = selectedCountry?.cities || [];
+        setCountryStates(states);
+      } else {
+        setCountryStates([]);
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countriesData, form.watch('address.country')]);
+  }, [countriesData, form]);
 
   const {
     fields: pocFields,
@@ -128,28 +163,91 @@ export const CreateCustomerForm = ({
     name: 'poc',
   });
 
-  const onSubmit = (values: CreateCustomerFormSchema) => {
-    // No need to transform image anymore since it's already base64
-    console.log('Customer: ', values);
+  const onSubmit = async (data: CreateCustomerFormSchema) => {
+    console.log('Form submitted with data:', data);
+    console.log('Is edit mode:', isEdit);
+    console.log('Customer ID:', customerId);
+    
     if (isEdit) {
-      console.log('Editing Customer Details...');
+      // For editing, include all data including attachments
+      console.log('Attempting to edit customer...');
       editCustomer(
-        { id: customerId, customer: values },
+        { id: customerId!, customer: data },
         {
           onSuccess: () => {
-            form.reset();
-            router.push(`/customers/${customerId}`);
+            console.log('Edit success callback triggered');
+            toast({
+              title: 'Success',
+              description: 'Customer updated successfully',
+            });
+            router.push('/customers');
+          },
+          onError: (error) => {
+            console.error('Edit error callback triggered:', error);
+            toast({
+              title: 'Error',
+              description: error.message,
+              variant: 'destructive',
+            });
           },
         }
       );
     } else {
-      addCustomer(values, {
-        onSuccess: () => {
-          form.reset();
-          router.push('/customers');
-        },
-      });
+      // For creating new customers, remove attachments as they'll be uploaded separately
+      const customerData = {
+        ...data,
+        attachments: [],
+      };
+      
+      addCustomer(
+        customerData,
+        {
+          onSuccess: async (response) => {
+            toast({
+              title: 'Success',
+              description: 'Customer created successfully',
+            });
+
+            // Upload files if any are selected and we have a customer ID
+            if (selectedFiles && selectedFiles.length > 0 && response?.customer?.id) {
+              try {
+                const uploadResult = await apiService.uploadCustomerFiles({
+                  customerId: response.customer.id,
+                  files: selectedFiles,
+                });
+                
+                if (uploadResult.success) {
+                  toast({
+                    title: 'Files Uploaded',
+                    description: `${selectedFiles.length} file(s) uploaded successfully`,
+                  });
+                }
+              } catch (error) {
+                console.error('File upload error:', error);
+                toast({
+                  title: 'File Upload Warning',
+                  description: 'Customer created but file upload failed. You can upload files later.',
+                  variant: 'destructive',
+                });
+              }
+            }
+
+            router.push('/customers');
+          },
+          onError: (error) => {
+            toast({
+              title: 'Error',
+              description: error.message,
+              variant: 'destructive',
+            });
+          },
+        }
+      );
     }
+  };
+
+  const handleFilesChange = (files: FileList | null) => {
+    setSelectedFiles(files);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -262,7 +360,8 @@ export const CreateCustomerForm = ({
                               placeholder={`Enter ${key}`}
                               onChange={(e) => {
                                 if (key === 'pincode') {
-                                  field.onChange(Number(e.target.value) || '');
+                                  const value = e.target.value;
+                                  field.onChange(value === '' ? undefined : Number(value) || undefined);
                                 } else {
                                   field.onChange(e.target.value);
                                 }
@@ -464,10 +563,11 @@ export const CreateCustomerForm = ({
                         <FormControl>
                           <Input
                             {...field}
-                            value={field.value}
-                            onChange={(e) =>
-                              field.onChange(Number(e.target.value) || null)
-                            }
+                            value={field.value || ''}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              field.onChange(value === '' ? undefined : Number(value) || undefined);
+                            }}
                             placeholder='Enter mobile number'
                             type='number'
                           />
@@ -528,6 +628,20 @@ export const CreateCustomerForm = ({
             </div>
 
             {/* Other Fields */}
+            <FormField
+              control={form.control}
+              name='contactDetails'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contact Details</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder='Enter contact details' />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name='gstNumber'
@@ -644,13 +758,66 @@ export const CreateCustomerForm = ({
               )}
             />
 
+            {/* File Attachments Section */}
+            <div className='space-y-4'>
+              <h2 className='text-lg font-semibold'>File Attachments</h2>
+              <p className='text-sm text-muted-foreground'>
+                Upload documents, contracts, or other files related to this customer.
+              </p>
+
+              <FileUploadManager
+                customerId={isEdit ? customerId : undefined}
+                attachments={form.watch('attachments') || []}
+                onFilesChange={handleFilesChange}
+                disabled={isPending}
+                showUploadButton={isEdit} // Only show upload button for existing customers
+              />
+
+              {!isEdit && selectedFiles && selectedFiles.length > 0 && (
+                <div className='text-sm text-blue-600 bg-blue-50 p-3 rounded-lg'>
+                  📄 {selectedFiles.length} file(s) selected. Files will be uploaded after the customer is created.
+                </div>
+              )}
+            </div>
+
             <Separator className='my-6' />
 
             {/* Submit Button */}
-            <div className='flex items-center lg:justify-end justify-center w-full'>
-              <Button type='submit' disabled={isPending}>
-                {isEdit ? 'Update' : 'Submit'}
+            <div className='flex flex-col sm:flex-row items-stretch sm:items-center justify-center sm:justify-end gap-3 w-full mt-8'>
+              <Button 
+                type='submit' 
+                disabled={isPending}
+                className='w-full sm:w-auto min-w-[120px] h-11 text-base font-medium'
+                size="default"
+                onClick={() => {
+                  console.log('Update button clicked');
+                  console.log('Form state:', form.formState);
+                  console.log('Form errors:', form.formState.errors);
+                  console.log('Form values:', form.getValues());
+                }}
+              >
+                {isPending ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>{isEdit ? 'Updating...' : 'Creating...'}</span>
+                  </div>
+                ) : (
+                  <span>{isEdit ? 'Update Customer' : 'Create Customer'}</span>
+                )}
               </Button>
+              
+              {/* Cancel/Back Button for mobile */}
+              {showBackButton && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                  disabled={isPending}
+                  className='w-full sm:w-auto min-w-[120px] h-11 text-base font-medium order-first sm:order-last'
+                >
+                  Cancel
+                </Button>
+              )}
             </div>
           </form>
         </Form>
