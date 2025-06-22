@@ -52,11 +52,13 @@ const apiService: IApiService = {
     email,
     password,
     role = 'employee',
+    companyId,
   }: {
     name: string;
     email: string;
     password: string;
     role?: string;
+    companyId: string;
   }) {
     try {
       const response = await axios.post('/api/auth/register', {
@@ -64,6 +66,7 @@ const apiService: IApiService = {
         email,
         password,
         role,
+        companyId,
       });
       return response.data;
     } catch (error) {

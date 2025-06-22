@@ -8,10 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, UserPlus, Mail, User, Lock, Check, X, Info } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Eye, EyeOff, UserPlus, Mail, User, Lock, Check, X, Info, Building2 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { useGetCompanies } from "@/features/companies/api/use-get-companies";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -19,6 +21,7 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    companyId: "",
     agreedToTerms: false,
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -26,6 +29,7 @@ export default function RegisterPage() {
   const { register, isLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const { data: companies = [], isLoading: isLoadingCompanies } = useGetCompanies();
 
   // Check if mock API is enabled
   const isMockApiEnabled = process.env.NEXT_PUBLIC_APP_MOCK_API === 'true';
@@ -63,7 +67,7 @@ export default function RegisterPage() {
     e.preventDefault();
 
     // Validation
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
+    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword || !formData.companyId) {
       toast({
         variant: "destructive",
         title: "Validation Error",
@@ -100,7 +104,7 @@ export default function RegisterPage() {
     }
 
     try {
-      await register(formData.name, formData.email, formData.password);
+      await register(formData.name, formData.email, formData.password, formData.companyId);
       
       toast({
         title: "Registration Successful!",
@@ -268,6 +272,37 @@ export default function RegisterPage() {
                     )}
                   </div>
                 )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="company" className="text-sm font-medium">
+                  Company
+                </Label>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
+                  <Select
+                    value={formData.companyId}
+                    onValueChange={(value) => handleInputChange("companyId", value)}
+                    disabled={isLoadingCompanies}
+                  >
+                    <SelectTrigger className="pl-10 h-12 border-gray-200 focus:border-green-500 focus:ring-green-500">
+                      <SelectValue placeholder={isLoadingCompanies ? "Loading companies..." : "Select your company"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {isLoadingCompanies ? (
+                        <SelectItem value="" disabled>Loading companies...</SelectItem>
+                      ) : companies.length === 0 ? (
+                        <SelectItem value="" disabled>No companies available</SelectItem>
+                      ) : (
+                        companies.map((company, index) => (
+                          <SelectItem key={index} value={company.name}>
+                            {company.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="flex items-center space-x-2 pt-2">

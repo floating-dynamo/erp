@@ -9,6 +9,7 @@ interface User {
   name: string;
   email: string;
   role: string;
+  companyId: string;
   privileges: string[];
   isActive: boolean;
   lastLoginAt?: Date;
@@ -21,7 +22,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, companyId: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -103,14 +104,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (name: string, email: string, password: string, companyId: string) => {
     setIsLoading(true);
     try {
       const response = await APIService.register({ 
         name, 
         email, 
         password, 
-        role: 'employee' 
+        role: 'employee',
+        companyId
       });
       
       if (response.success) {

@@ -67,6 +67,7 @@ export interface AuthResponse {
     name: string;
     email: string;
     role: string;
+    companyId: string;
     privileges: string[];
     isActive: boolean;
     lastLoginAt?: Date;
@@ -83,6 +84,7 @@ export interface UserProfileResponse {
     name: string;
     email: string;
     role: string;
+    companyId: string;
     privileges: string[];
     isActive: boolean;
     lastLoginAt?: Date;
@@ -105,11 +107,13 @@ export interface IApiService {
     email,
     password,
     role,
+    companyId,
   }: {
     name: string;
     email: string;
     password: string;
     role?: string;
+    companyId: string;
   }) => Promise<AuthResponse>;
   logout: () => Promise<{ success: boolean }>;
   getCurrentUser: () => Promise<UserProfileResponse>;

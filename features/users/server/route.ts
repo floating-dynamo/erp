@@ -34,7 +34,13 @@ const app = new Hono()
       }
 
       // Create new user
-      const newUser = new UserModel(parsedData);
+      const newUser = new UserModel({
+        email: parsedData.email,
+        password: parsedData.password,
+        name: parsedData.name,
+        role: parsedData.role,
+        companyId: parsedData.companyId
+      });
       await newUser.save();
 
       return c.json(
@@ -128,6 +134,7 @@ const app = new Hono()
         name: user.name,
         email: user.email,
         role: user.role,
+        companyId: user.companyId,
         privileges: user.allPrivileges,
         isActive: user.isActive,
         lastLoginAt: user.lastLoginAt,
@@ -232,6 +239,7 @@ const app = new Hono()
         name: user.name,
         email: user.email,
         role: user.role,
+        companyId: user.companyId,
         privileges: user.allPrivileges,
         isActive: user.isActive,
         lastLoginAt: user.lastLoginAt,

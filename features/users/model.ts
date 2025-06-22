@@ -34,6 +34,11 @@ const userSchema = new Schema({
     enum: ['admin', 'manager', 'employee', 'viewer', 'accountant', 'sales', 'purchase'],
     default: 'employee'
   },
+  companyId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Company',
+    required: true
+  },
   privileges: [{
     type: String,
     enum: [

@@ -58,6 +58,7 @@ export const createUserSchema = z.object({
   tokens: z.array(z.string()).default([]),
   name: z.string().trim().min(1, 'Name is required'),
   isActive: z.boolean().default(true),
+  companyId: z.string().min(1, 'Company is required'),
   lastLoginAt: z.date().optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
@@ -80,6 +81,7 @@ export const registerUserSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
   name: z.string().trim().min(1, 'Name is required'),
   role: userRoleSchema.default('employee'),
+  companyId: z.string().min(1, 'Company is required'),
 });
 
 // Define the schema for changing password

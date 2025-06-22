@@ -80,6 +80,7 @@ const mockAuthService = {
         name: 'John Doe',
         email: 'test@example.com',
         role: 'admin',
+        companyId: '1',
         privileges: [
           'users.create',
           'users.read',
@@ -132,17 +133,19 @@ const mockAuthService = {
     email,
     password,
     role = 'employee',
+    companyId,
   }: {
     name: string;
     email: string;
     password: string;
     role?: string;
+    companyId: string;
   }): Promise<AuthResponse> {
-    console.log(role);
+    console.log(role, companyId);
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Only allow demo registration when mock API is enabled
-    if (email && password && name) {
+    if (email && password && name && companyId) {
       return {
         success: true,
         message: 'User registered successfully',
@@ -168,6 +171,7 @@ const mockAuthService = {
       name: 'John Doe',
       email: 'test@example.com',
       role: 'admin',
+      companyId: '1',
       privileges: [
         'users.create',
         'users.read',
