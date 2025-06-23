@@ -3,6 +3,7 @@ import {
   MetaDataType,
   AuthResponse,
   UserProfileResponse,
+  User,
 } from '@/lib/types';
 import { ICustomer } from '@/lib/types/customer';
 import { CUSTOMERS_MOCK_DATA } from './mocks/customers';
@@ -18,6 +19,7 @@ import { SupplierDc } from '@/features/supplier-dc/schemas';
 import { SUPPLIER_DCS_MOCK_DATA } from './mocks/supplier-dcs';
 import { PurchaseOrder } from '@/features/purchase-orders/schemas';
 import { PURCHASE_ORDERS_MOCK_DATA } from './mocks/purchase-orders';
+import { USERS_MOCK_DATA } from './mocks/users';
 import {
   CURRENCIES_MOCK_DATA,
   UOMS_MOCK_DATA,
@@ -34,6 +36,9 @@ const quotations: Quotation[] = QUOTATIONS_MOCK_DATA;
 const companies: Company[] = COMPANIES_MOCK_DATA;
 const supplierDcs: SupplierDc[] = SUPPLIER_DCS_MOCK_DATA;
 const purchaseOrders: PurchaseOrder[] = PURCHASE_ORDERS_MOCK_DATA;
+
+// Create a mutable users array for the mock service operations
+const mockUsers: User[] = USERS_MOCK_DATA.map((user) => ({ ...user }));
 
 // Fuse.js configuration for customer search
 const customerSearchKeys = [
@@ -986,6 +991,128 @@ const mockService: IApiService = {
     }
 
     return { success: true, message: 'File deleted successfully' };
+  },
+
+  // User Management Endpoints
+  async getUsers(queryString: string = '') {
+    const params = new URLSearchParams(queryString);
+    const page = parseInt(params.get('page') || '1', 10);
+    const limit = parseInt(params.get('limit') || '10', 10);
+    const searchQuery = params.get('searchQuery') || '';
+    const role = params.get('role');
+    const isActive = params.get('isActive');
+
+    // Use imported mock users data
+    let filteredUsers = [...USERS_MOCK_DATA];
+
+    // Apply filters
+    if (role && role !== 'all') {
+      filteredUsers = filteredUsers.filter((user) => user.role === role);
+    }
+
+    if (isActive && isActive !== 'all') {
+      const activeFilter = isActive === 'true';
+      filteredUsers = filteredUsers.filter(
+        (user) => user.isActive === activeFilter
+      );
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filteredUsers = filteredUsers.filter(
+        (user) =>
+          user.name.toLowerCase().includes(query) ||
+          user.email.toLowerCase().includes(query) ||
+          user.role.toLowerCase().includes(query)
+      );
+    }
+
+    const total = filteredUsers.length;
+    const totalPages = Math.ceil(total / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          users: paginatedUsers,
+          total,
+          page,
+          limit,
+          totalPages,
+        });
+      }, 1000);
+    });
+  },
+
+  async addUser({ user }) {
+    // Create a new user object with all required properties
+    const newUser = {
+      ...user,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      isActive: user.isActive !== undefined ? user.isActive : true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastLoginAt: null as Date | null,
+    };
+
+    mockUsers.push(newUser);
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'User created successfully',
+        });
+      }, 1000);
+    });
+  },
+
+  async getUserById({ id }) {
+    // Mock user data
+    const mockUser = {
+      id,
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      role: 'admin',
+      companyId: '1',
+      isActive: true,
+      lastLoginAt: new Date('2024-12-20'),
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date('2024-12-20'),
+      privileges: ['users.create', 'users.read', 'users.update', 'users.delete'],
+    };
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(mockUser);
+      }, 500);
+    });
+  },
+
+  async editUser({ id, data }) {
+    console.log('Editing user:', id, data);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'User updated successfully',
+        });
+      }, 1000);
+    });
+  },
+
+  async deleteUser({ id }) {
+    console.log('Deleting user:', id);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'User deleted successfully',
+        });
+      }, 1000);
+    });
   },
 };
 

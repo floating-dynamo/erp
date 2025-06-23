@@ -59,6 +59,7 @@ export const createUserSchema = z.object({
   name: z.string().trim().min(1, 'Name is required'),
   isActive: z.boolean().default(true),
   companyId: z.string().min(1, 'Company is required'),
+  companyName: z.string().optional(), // Add company name field
   lastLoginAt: z.date().optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),

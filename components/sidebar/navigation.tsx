@@ -60,6 +60,12 @@ const routes = [
     activeIcon: PackageOpenIcon,
   },
   {
+    label: 'Users',
+    href: '/users',
+    icon: UsersIcon,
+    activeIcon: UsersIcon,
+  },
+  {
     label: 'Settings',
     href: '/settings',
     icon: SettingsIcon,
@@ -71,7 +77,7 @@ const Navigation = () => {
   const pathname = usePathname();
 
   return (
-    <ul className="flex flex-col">
+    <ul className='flex flex-col'>
       {routes.map(({ label, href, icon, activeIcon }) => {
         const isActive = pathname === href;
         const Icon = isActive ? activeIcon : icon;
@@ -84,7 +90,7 @@ const Navigation = () => {
                 isActive && 'bg-white shadow-sm hover:opacity-100 text-primary'
               )}
             >
-              <Icon className="size-5 text-neutral-500" />
+              <Icon className='size-5 text-neutral-500' />
               {label}
             </div>
           </Link>

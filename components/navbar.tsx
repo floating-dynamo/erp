@@ -14,6 +14,11 @@ const Navbar = () => {
           title: 'Dashboard',
           description: 'Monitor all your customer data here',
         };
+      case '/users':
+        return {
+          title: 'Users',
+          description: 'Manage user accounts and permissions',
+        };
       case '/companies':
         return {
           title: 'My Company',

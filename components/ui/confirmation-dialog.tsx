@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,77 +8,68 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { AlertTriangle } from "lucide-react"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface ConfirmationDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  title: string
-  description: string
-  confirmText?: string
-  cancelText?: string
-  variant?: "default" | "destructive"
-  onConfirm: () => void
-  loading?: boolean
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  title: string;
+  description: string;
+  confirmText?: string;
+  cancelText?: string;
+  variant?: "primary" | "destructive";
+  isLoading?: boolean;
 }
 
 export function ConfirmationDialog({
   open,
   onOpenChange,
+  onConfirm,
   title,
   description,
   confirmText = "Confirm",
   cancelText = "Cancel",
-  variant = "default",
-  onConfirm,
-  loading = false,
+  variant = "primary",
+  isLoading = false,
 }: ConfirmationDialogProps) {
   const handleConfirm = () => {
-    onConfirm()
-    onOpenChange(false)
-  }
+    onConfirm();
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
-          <div className="flex items-center gap-3">
-            {variant === "destructive" && (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-              </div>
-            )}
-            <div className="flex-1">
-              <DialogTitle className={variant === "destructive" ? "text-red-900" : undefined}>
-                {title}
-              </DialogTitle>
-            </div>
-          </div>
-          <DialogDescription className="pt-2">
-            {description}
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+        <DialogFooter>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={loading}
-            className="w-full sm:w-auto"
+            disabled={isLoading}
           >
             {cancelText}
           </Button>
           <Button
-            variant={variant === "destructive" ? "destructive" : "primary"}
+            variant={variant}
             onClick={handleConfirm}
-            disabled={loading}
-            className="w-full sm:w-auto"
+            disabled={isLoading}
           >
-            {loading ? "Please wait..." : confirmText}
+            {isLoading ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+                <span>Loading...</span>
+              </div>
+            ) : (
+              confirmText
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

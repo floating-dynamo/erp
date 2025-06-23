@@ -15,6 +15,7 @@ export const runtime = 'nodejs';
 const app = new Hono()
   .basePath('/api')
   .route('/auth', auth)
+  .route('/users', auth) // Add users route for user management
   .route('/customers', customers)
   .route('/enquiries', enquiries)
   .route('/quotations', quotations)

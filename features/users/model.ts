@@ -20,8 +20,8 @@ const userSchema = new Schema({
     required: true, 
     unique: true, 
     lowercase: true,
-    trim: true,
-    index: true
+    trim: true
+    // Removed: index: true (duplicate with schema.index below)
   },
   password: { 
     type: String, 

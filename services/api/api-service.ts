@@ -541,6 +541,72 @@ const apiService: IApiService = {
       throw new Error('Network error while deleting file');
     }
   },
+
+  // User Management Endpoints
+  async getUsers(queryString: string = '') {
+    try {
+      const response = await axios.get(`/api/users${queryString}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to fetch users');
+      }
+      throw new Error('Network error while fetching users');
+    }
+  },
+
+  async addUser({ user }) {
+    try {
+      const response = await axios.post('/api/users', user);
+      return response.data;
+    } catch (error) {
+      console.error('Error adding user:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to add user');
+      }
+      throw new Error('Network error while adding user');
+    }
+  },
+
+  async getUserById({ id }) {
+    try {
+      const response = await axios.get(`/api/users/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to fetch user details');
+      }
+      throw new Error('Network error while fetching user details');
+    }
+  },
+
+  async editUser({ id, data }) {
+    try {
+      const response = await axios.patch(`/api/users/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Error editing user:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to edit user');
+      }
+      throw new Error('Network error while editing user');
+    }
+  },
+
+  async deleteUser({ id }) {
+    try {
+      const response = await axios.delete(`/api/users/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to delete user');
+      }
+      throw new Error('Network error while deleting user');
+    }
+  },
 };
 
 export default apiService;

@@ -56,6 +56,7 @@ export enum QueryKeyString {
   PURCHASE_ORDERS = 'purchase-orders',
   COUNTRIES = 'countries',
   METADATA = 'metadata',
+  USERS = 'users',
 }
 
 // Authentication response types
@@ -91,6 +92,28 @@ export interface UserProfileResponse {
     createdAt?: Date;
     updatedAt?: Date;
   };
+}
+
+// User Management Types
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  companyId: string;
+  privileges: string[];
+  isActive: boolean;
+  lastLoginAt?: Date | string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export interface GetUsersResponse {
+  users: User[];
+  total: number;
+  limit: number;
+  page: number;
+  totalPages: number;
 }
 
 export interface IApiService {
@@ -308,6 +331,23 @@ export interface IApiService {
   }) => Promise<GetMetadataResponse>;
 
   getCountries: () => Promise<GetCountriesResponse>;
+
+  // User Management Endpoints
+  getUsers: (queryString: string) => Promise<GetUsersResponse>;
+  addUser: ({
+    user,
+  }: {
+    user: Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'lastLoginAt'>;
+  }) => Promise<{ success: boolean; message: string }>;
+  getUserById: ({ id }: { id: string }) => Promise<User>;
+  editUser: ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: Partial<User>;
+  }) => Promise<{ success: boolean; message: string }>;
+  deleteUser: ({ id }: { id: string }) => Promise<{ success: boolean; message: string }>;
 }
 
 export enum MetaDataType {
