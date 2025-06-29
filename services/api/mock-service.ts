@@ -22,6 +22,8 @@ import {
   CURRENCIES_MOCK_DATA,
   UOMS_MOCK_DATA,
 } from '@/features/metadata/model/mock-data';
+import { Bom } from '@/features/bom/schemas';
+import BOMS_MOCK_DATA from './mocks/boms';
 import Fuse from 'fuse.js';
 
 // Initialize customers with attachments property to match Customer type
@@ -34,6 +36,7 @@ const quotations: Quotation[] = QUOTATIONS_MOCK_DATA;
 const companies: Company[] = COMPANIES_MOCK_DATA;
 const supplierDcs: SupplierDc[] = SUPPLIER_DCS_MOCK_DATA;
 const purchaseOrders: PurchaseOrder[] = PURCHASE_ORDERS_MOCK_DATA;
+const boms: Bom[] = BOMS_MOCK_DATA;
 
 // Fuse.js configuration for customer search
 const customerSearchKeys = [
@@ -986,6 +989,148 @@ const mockService: IApiService = {
     }
 
     return { success: true, message: 'File deleted successfully' };
+  },
+
+  // BOM Endpoints
+  async getBoms({
+    page = 1,
+    limit = 10,
+    searchQuery = '',
+    productNameFilter = '',
+    bomTypeFilter = '',
+    statusFilter = '',
+    costFrom = '',
+    costTo = '',
+  } = {}) {
+    // Check if there's a search query
+    const isSearching = searchQuery?.trim().length > 0;
+
+    // Filter BOMs based on criteria
+    let filteredBoms = [...boms];
+
+    // Apply product name filter
+    if (productNameFilter) {
+      filteredBoms = filteredBoms.filter((bom) =>
+        bom.productName.toLowerCase().includes(productNameFilter.toLowerCase())
+      );
+    }
+
+    // Apply BOM type filter
+    if (bomTypeFilter) {
+      filteredBoms = filteredBoms.filter(
+        (bom) => bom.bomType === bomTypeFilter
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter) {
+      filteredBoms = filteredBoms.filter(
+        (bom) => bom.status === statusFilter
+      );
+    }
+
+    // Apply cost range filters
+    if (costFrom) {
+      const minCost = parseFloat(costFrom);
+      filteredBoms = filteredBoms.filter(
+        (bom) => (bom.totalMaterialCost || 0) >= minCost
+      );
+    }
+
+    if (costTo) {
+      const maxCost = parseFloat(costTo);
+      filteredBoms = filteredBoms.filter(
+        (bom) => (bom.totalMaterialCost || 0) <= maxCost
+      );
+    }
+
+    // After applying filters, use search query if present
+    if (isSearching) {
+      const bomSearchKeys = [
+        'bomName',
+        'productName',
+        'productCode',
+        'bomNumber',
+        'bomType',
+        'status',
+      ];
+
+      const fuse = new Fuse(filteredBoms, {
+        keys: bomSearchKeys,
+        threshold: 0.1,
+        ignoreLocation: true,
+      });
+
+      const searchResults = fuse.search(searchQuery);
+      filteredBoms = searchResults.map((result) => result.item);
+    }
+
+    const totalBoms = filteredBoms.length;
+
+    // Apply pagination
+    let paginatedBoms;
+    if (isSearching) {
+      // Return all filtered results for client-side pagination when searching
+      paginatedBoms = filteredBoms;
+    } else {
+      // Apply server-side pagination when not searching
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      paginatedBoms = filteredBoms.slice(startIndex, endIndex);
+    }
+
+    const totalPages = Math.ceil(totalBoms / limit);
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          boms: paginatedBoms,
+          total: totalBoms,
+          page,
+          limit,
+          totalPages,
+        });
+      }, 1000);
+    });
+  },
+
+  async getBomById({ id }) {
+    const bom = boms.find((bom) => bom?.id === id) || null;
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(bom);
+      }, 1000);
+    });
+  },
+
+  async addBom({ bom }) {
+    boms.push(bom);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          message: 'BOM added successfully',
+          success: true,
+          bomNumber: bom.bomNumber || '',
+        });
+      }, 1000);
+    });
+  },
+
+  async editBom({ id, data }) {
+    const bom = boms.find((bom) => bom.id === id) || null;
+    const updatedBom = { ...bom, ...data };
+    const index = boms.findIndex((bom) => bom.id === id);
+    if (index !== -1) {
+      boms[index] = updatedBom;
+    }
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          message: 'BOM details edited',
+          success: true,
+        });
+      }, 1000);
+    });
   },
 };
 

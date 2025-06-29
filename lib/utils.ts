@@ -226,6 +226,13 @@ export const generateQuoteNumber = (isoDate: string, enquiryNumber: string) => {
   return `QUO/${formattedDate}/${enquiryNumber}`;
 };
 
+export const generateBomNumber = (isoDate: string, bomSequence: string) => {
+  const bomNumDateFormat = 'YY/MM/DD';
+  const date = dayjs(isoDate);
+  const formattedDate = date.format(bomNumDateFormat);
+  return `BOM/${formattedDate}/${bomSequence.padStart(5, '0')}`;
+};
+
 export function formatDate(date: Date) {
   return dayjs(date).format(getDateDisplayFormat());
 }

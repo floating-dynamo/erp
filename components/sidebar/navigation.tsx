@@ -14,6 +14,7 @@ import {
   SettingsIcon,
   UserIcon,
   UsersIcon,
+  ClipboardListIcon,
 } from 'lucide-react';
 
 const routes = [
@@ -42,22 +43,28 @@ const routes = [
     activeIcon: CalculatorIcon,
   },
   {
-    label: 'My Company',
-    href: '/companies',
-    icon: Building2Icon,
-    activeIcon: Building2Icon,
-  },
-  {
     label: 'Purchase Orders',
     href: '/purchase-orders',
     icon: PackageIcon,
     activeIcon: PackageOpenIcon,
   },
   {
+    label: 'Bills of Materials',
+    href: '/boms',
+    icon: ClipboardListIcon,
+    activeIcon: ClipboardListIcon,
+  },
+  {
     label: 'Supplier DCs',
     href: '/supplier-dcs',
     icon: PackageIcon,
     activeIcon: PackageOpenIcon,
+  },
+  {
+    label: 'My Company',
+    href: '/companies',
+    icon: Building2Icon,
+    activeIcon: Building2Icon,
   },
   {
     label: 'Settings',
@@ -71,9 +78,10 @@ const Navigation = () => {
   const pathname = usePathname();
 
   return (
-    <ul className="flex flex-col">
+    <ul className='flex flex-col'>
       {routes.map(({ label, href, icon, activeIcon }) => {
-        const isActive = pathname === href;
+        // Check if current path matches the route or is a nested route
+        const isActive = pathname === href || pathname.startsWith(href + '/');
         const Icon = isActive ? activeIcon : icon;
 
         return (
@@ -84,7 +92,7 @@ const Navigation = () => {
                 isActive && 'bg-white shadow-sm hover:opacity-100 text-primary'
               )}
             >
-              <Icon className="size-5 text-neutral-500" />
+              <Icon className='size-5 text-neutral-500' />
               {label}
             </div>
           </Link>

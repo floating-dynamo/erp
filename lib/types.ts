@@ -30,6 +30,12 @@ import {
   GetPurchaseOrdersResponse,
 } from './types/purchase-order';
 import { PurchaseOrder } from '@/features/purchase-orders/schemas';
+import {
+  AddBomResponse,
+  EditBomResponse,
+  GetBomsResponse,
+} from './types/bom';
+import { Bom } from '@/features/bom/schemas';
 
 export enum CurrencySymbol {
   INR = '₹',
@@ -54,6 +60,7 @@ export enum QueryKeyString {
   COMPANIES = 'companies',
   SUPPLIER_DCS = 'supplier-dcs',
   PURCHASE_ORDERS = 'purchase-orders',
+  BOMS = 'boms',
   COUNTRIES = 'countries',
   METADATA = 'metadata',
 }
@@ -299,6 +306,40 @@ export interface IApiService {
   }) => Promise<AddPurchaseOrderResponse>;
   getPurchaseOrderDetails: ({ id }: { id: string }) => Promise<PurchaseOrder | null>;
   editPurchaseOrder: ({ id, data }: { id: string; data: PurchaseOrder }) => Promise<{ message: string; success: boolean }>;
+
+  // BOM Endpoints
+  getBoms: ({
+    page,
+    limit,
+    searchQuery,
+    productNameFilter,
+    bomTypeFilter,
+    statusFilter,
+    costFrom,
+    costTo,
+  }: {
+    page?: number;
+    limit?: number;
+    searchQuery?: string;
+    productNameFilter?: string;
+    bomTypeFilter?: string;
+    statusFilter?: string;
+    costFrom?: string;
+    costTo?: string;
+  }) => Promise<GetBomsResponse>;
+  addBom: ({
+    bom,
+  }: {
+    bom: Bom;
+  }) => Promise<AddBomResponse>;
+  getBomById: ({ id }: { id: string }) => Promise<Bom | null>;
+  editBom: ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: Bom;
+  }) => Promise<EditBomResponse>;
 
   // Metadata Endpoints
   getMetadata: ({
