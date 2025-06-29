@@ -39,7 +39,10 @@ import { redirect } from 'next/navigation';
 import { use } from 'react';
 import CustomerDetailsPDFExport from '@/features/customers/components/customer-details-pdf-export';
 import { CustomerNotFound } from '@/features/customers/components/customer-not-found';
-import { useDownloadCustomerFile, useDeleteCustomerFile } from '@/features/customers/api/use-customer-files';
+import {
+  useDownloadCustomerFile,
+  useDeleteCustomerFile,
+} from '@/features/customers/api/use-customer-files';
 import { CustomerFile } from '@/features/customers/schemas';
 import { useState, useEffect } from 'react';
 import apiService from '@/services/api';
@@ -65,7 +68,7 @@ export default function CustomerDetailsPage({
   useEffect(() => {
     const fetchFiles = async () => {
       if (!customerId) return;
-      
+
       try {
         setIsLoadingFiles(true);
         const result = await apiService.getCustomerFiles({ customerId });
@@ -124,7 +127,7 @@ export default function CustomerDetailsPage({
 
     // Generate consistent color based on name
     const hash = name.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
+      a = (a << 5) - a + b.charCodeAt(0);
       return a & a;
     }, 0);
 
@@ -150,20 +153,27 @@ export default function CustomerDetailsPage({
               {/* Customer Logo */}
               {customer.image && typeof customer.image === 'string' ? (
                 <Avatar className="size-12 border-2 border-white shadow-lg">
-                  <AvatarImage src={customer.image} alt={`${customer.name} logo`} />
-                  <AvatarFallback className={cn(
-                    "text-white font-semibold text-lg",
-                    getAvatarStyle(customer.name)
-                  )}>
+                  <AvatarImage
+                    src={customer.image}
+                    alt={`${customer.name} logo`}
+                  />
+                  <AvatarFallback
+                    className={cn(
+                      'text-white font-semibold text-lg',
+                      getAvatarStyle(customer.name)
+                    )}
+                  >
                     {customer.name.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               ) : (
                 <Avatar className="size-12 border-2 border-white shadow-lg">
-                  <AvatarFallback className={cn(
-                    "text-white font-semibold text-lg",
-                    getAvatarStyle(customer.name)
-                  )}>
+                  <AvatarFallback
+                    className={cn(
+                      'text-white font-semibold text-lg',
+                      getAvatarStyle(customer.name)
+                    )}
+                  >
                     {customer.name.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -183,7 +193,7 @@ export default function CustomerDetailsPage({
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <p className="text-muted-foreground text-xs sm:text-sm">
+            <p className="text-muted-foreground bg-slate-800 w-fit py-1 px-3 rounded-full text-xs my-4 text-white sm:text-sm">
               {customer?.customerType}
             </p>
           </div>
@@ -227,7 +237,7 @@ export default function CustomerDetailsPage({
         />
         <AddressDetailsCard {...customer?.address} />
         <PocDetailsCard poc={customer?.poc || []} />
-        <FileAttachmentsCard 
+        <FileAttachmentsCard
           customerId={customerId}
           files={customerFiles}
           isLoading={isLoadingFiles}
@@ -235,7 +245,9 @@ export default function CustomerDetailsPage({
             // Refresh files after deletion
             const fetchFiles = async () => {
               try {
-                const result = await apiService.getCustomerFiles({ customerId });
+                const result = await apiService.getCustomerFiles({
+                  customerId,
+                });
                 setCustomerFiles(result.files || []);
               } catch (error) {
                 console.error('Error refreshing files:', error);
@@ -482,12 +494,16 @@ const FileAttachmentsCard = ({
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-              <span className="ml-2 text-muted-foreground">Loading files...</span>
+              <span className="ml-2 text-muted-foreground">
+                Loading files...
+              </span>
             </div>
           ) : files.length === 0 ? (
             <div className="text-center py-8">
               <FileIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-muted-foreground">No files attached to this customer</p>
+              <p className="text-muted-foreground">
+                No files attached to this customer
+              </p>
               <p className="text-sm text-muted-foreground mt-1">
                 Files can be uploaded when editing the customer
               </p>
@@ -500,7 +516,9 @@ const FileAttachmentsCard = ({
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <span className="text-2xl">{getFileIcon(file.mimetype)}</span>
+                    <span className="text-2xl">
+                      {getFileIcon(file.mimetype)}
+                    </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
                         {file.originalName}
