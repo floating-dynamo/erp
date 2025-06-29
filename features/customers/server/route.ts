@@ -11,7 +11,10 @@ import v4 from 'uuid4';
 import { ZodError } from 'zod';
 
 // Configure file upload directory
-const uploadDir = path.join(process.cwd(), 'uploads', 'customers');
+const isProd = process.env.VERCEL || process.env.NODE_ENV === 'production';
+const uploadDir = isProd
+  ? '/tmp/uploads/customers'
+  : path.join(process.cwd(), 'uploads', 'customers');
 
 // Ensure upload directory exists
 if (!fs.existsSync(uploadDir)) {
