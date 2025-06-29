@@ -1,10 +1,58 @@
 import { connectDB } from "@/lib/db";
-import { Hono } from "hono";
+import { Hono, Context } from "hono";
 import BomModel from "../model";
 import { createBomSchema, editBomSchema } from "../schemas";
 import { BomFilter, BomItemFormData } from "../types";
 import uuid4 from "uuid4";
 import { generateBomNumber } from "@/lib/utils";
+import { verify } from 'hono/jwt';
+import { getCookie } from 'hono/cookie';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+// Interface for JWT payload
+interface CustomJWTPayload {
+  userId: string;
+  email: string;
+  role: string;
+  iat?: number;
+  exp?: number;
+}
+
+// Interface for authenticated user
+interface AuthenticatedUser {
+  userId: string;
+  email: string;
+  role: string;
+}
+
+// Helper function to extract user from JWT token
+const getUserFromToken = async (c: Context): Promise<AuthenticatedUser | null> => {
+  try {
+    let token = getCookie(c, 'auth-token');
+    
+    if (!token) {
+      const authHeader = c.req.header('Authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
+
+    if (!token) {
+      return null;
+    }
+
+    const payload = await verify(token, JWT_SECRET) as unknown as CustomJWTPayload;
+    return {
+      userId: payload.userId,
+      email: payload.email,
+      role: payload.role,
+    };
+  } catch (error) {
+    console.error('Error extracting user from token:', error);
+    return null;
+  }
+};
 
 const app = new Hono()
   .get("/", async (c) => {
@@ -84,10 +132,25 @@ const app = new Hono()
   })
   .post("/", async (c) => {
     try {
+      await connectDB();
+      
+      // Extract user information from JWT token
+      const user = await getUserFromToken(c);
+      if (!user) {
+        return c.json({
+          success: false,
+          message: "Authentication required",
+        }, 401);
+      }
+
       const body = await c.req.json();
 
       const parsedData = createBomSchema.parse(body);
       parsedData.id = uuid4();
+      
+      // Automatically set createdBy field with current user's email
+      parsedData.createdBy = user.email;
+      
       const boms = await BomModel.find();
       parsedData.bomNumber = generateBomNumber(
         new Date().toISOString(),
@@ -145,10 +208,23 @@ const app = new Hono()
   .patch("/:id", async (c) => {
     try {
       await connectDB();
+      
+      // Extract user information from JWT token
+      const user = await getUserFromToken(c);
+      if (!user) {
+        return c.json({
+          success: false,
+          message: "Authentication required",
+        }, 401);
+      }
+
       const { id } = c.req.param();
       const body = await c.req.json();
 
       const parsedData = editBomSchema.parse(body);
+
+      // For updates, we don't change createdBy, but we could add updatedBy if needed
+      // parsedData.updatedBy = user.email;
 
       // Calculate total material cost recursively
       const calculateTotalCost = (items: BomItemFormData[]): number => {
