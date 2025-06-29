@@ -42,7 +42,7 @@ const customerSchema = new Schema({
     maxlength: 10485760 // 10MB limit for base64 images (approximately 7.5MB actual image)
   },
   attachments: { type: [customerFileSchema], default: [] },
-});
+}, { timestamps: true });
 
 interface ICustomer extends Document, Omit<Customer, 'id'> {}
 

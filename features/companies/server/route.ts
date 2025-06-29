@@ -29,7 +29,7 @@ const app = new Hono()
           success: false,
           message: 'Error adding company',
         },
-        400
+        500
       );
     }
   })

@@ -36,7 +36,11 @@ const app = new Hono()
       if (state) query['address.state'] = state;
       if (city) query['address.city'] = city;
 
-      const customers = await CustomerModel.find(query).skip(skip).limit(limit);
+      // Sort by updatedAt (desc), then createdAt (desc)
+      const customers = await CustomerModel.find(query)
+        .sort({ updatedAt: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
       const totalCustomers = await CustomerModel.countDocuments(query);
       return c.json({
         customers,

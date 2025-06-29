@@ -113,21 +113,23 @@ export const CreateCustomerForm = ({
       // Ensure proper data transformation for editing
       const formData = {
         ...customerData,
-        address: customerData.address ? {
-          address1: customerData.address.address1 || '',
-          address2: customerData.address.address2 || '',
-          city: customerData.address.city || '',
-          state: customerData.address.state || '',
-          country: customerData.address.country || '',
-          pincode: customerData.address.pincode || undefined,
-        } : {
-          address1: '',
-          address2: '',
-          city: '',
-          state: '',
-          country: '',
-          pincode: undefined,
-        },
+        address: customerData.address
+          ? {
+              address1: customerData.address.address1 || '',
+              address2: customerData.address.address2 || '',
+              city: customerData.address.city || '',
+              state: customerData.address.state || '',
+              country: customerData.address.country || '',
+              pincode: customerData.address.pincode || undefined,
+            }
+          : {
+              address1: '',
+              address2: '',
+              city: '',
+              state: '',
+              country: '',
+              pincode: undefined,
+            },
         poc: customerData.poc || [],
         contactDetails: customerData.contactDetails || '',
         gstNumber: customerData.gstNumber || '',
@@ -139,12 +141,12 @@ export const CreateCustomerForm = ({
     }
   }, [isEdit, customerData, form]);
 
+  const watchedCountry = form.watch('address.country');
   useEffect(() => {
     if (countriesData?.data) {
-      const currentCountry = form.getValues('address.country');
-      if (currentCountry) {
+      if (watchedCountry) {
         const selectedCountry = countriesData.data.find(
-          (country) => country.country === currentCountry
+          (country) => country.country === watchedCountry
         );
         const states = selectedCountry?.cities || [];
         setCountryStates(states);
@@ -152,7 +154,7 @@ export const CreateCustomerForm = ({
         setCountryStates([]);
       }
     }
-  }, [countriesData, form]);
+  }, [countriesData, watchedCountry]);
 
   const {
     fields: pocFields,
@@ -167,7 +169,7 @@ export const CreateCustomerForm = ({
     console.log('Form submitted with data:', data);
     console.log('Is edit mode:', isEdit);
     console.log('Customer ID:', customerId);
-    
+
     if (isEdit) {
       // For editing, include all data including attachments
       console.log('Attempting to edit customer...');
@@ -198,51 +200,53 @@ export const CreateCustomerForm = ({
         ...data,
         attachments: [],
       };
-      
-      addCustomer(
-        customerData,
-        {
-          onSuccess: async (response) => {
-            toast({
-              title: 'Success',
-              description: 'Customer created successfully',
-            });
 
-            // Upload files if any are selected and we have a customer ID
-            if (selectedFiles && selectedFiles.length > 0 && response?.customer?.id) {
-              try {
-                const uploadResult = await apiService.uploadCustomerFiles({
-                  customerId: response.customer.id,
-                  files: selectedFiles,
-                });
-                
-                if (uploadResult.success) {
-                  toast({
-                    title: 'Files Uploaded',
-                    description: `${selectedFiles.length} file(s) uploaded successfully`,
-                  });
-                }
-              } catch (error) {
-                console.error('File upload error:', error);
+      addCustomer(customerData, {
+        onSuccess: async (response) => {
+          toast({
+            title: 'Success',
+            description: 'Customer created successfully',
+          });
+
+          // Upload files if any are selected and we have a customer ID
+          if (
+            selectedFiles &&
+            selectedFiles.length > 0 &&
+            response?.customer?.id
+          ) {
+            try {
+              const uploadResult = await apiService.uploadCustomerFiles({
+                customerId: response.customer.id,
+                files: selectedFiles,
+              });
+
+              if (uploadResult.success) {
                 toast({
-                  title: 'File Upload Warning',
-                  description: 'Customer created but file upload failed. You can upload files later.',
-                  variant: 'destructive',
+                  title: 'Files Uploaded',
+                  description: `${selectedFiles.length} file(s) uploaded successfully`,
                 });
               }
+            } catch (error) {
+              console.error('File upload error:', error);
+              toast({
+                title: 'File Upload Warning',
+                description:
+                  'Customer created but file upload failed. You can upload files later.',
+                variant: 'destructive',
+              });
             }
+          }
 
-            router.push('/customers');
-          },
-          onError: (error) => {
-            toast({
-              title: 'Error',
-              description: error.message,
-              variant: 'destructive',
-            });
-          },
-        }
-      );
+          router.push('/customers');
+        },
+        onError: (error) => {
+          toast({
+            title: 'Error',
+            description: error.message,
+            variant: 'destructive',
+          });
+        },
+      });
     }
   };
 
@@ -294,40 +298,40 @@ export const CreateCustomerForm = ({
   }
 
   return (
-    <Card className='w-full h-full border-none shadow-none'>
-      <CardHeader className='flex p-7'>
-        <CardTitle className='text-xl font-bold flex gap-7 items-center'>
+    <Card className="w-full h-full border-none shadow-none">
+      <CardHeader className="flex p-7">
+        <CardTitle className="text-xl font-bold flex gap-7 items-center">
           {showBackButton && (
             <Button
-              variant='outline'
-              type='button'
-              size='icon'
+              variant="outline"
+              type="button"
+              size="icon"
               onClick={onCancel}
               disabled={false}
             >
-              <ArrowLeft className='size-4' />
+              <ArrowLeft className="size-4" />
             </Button>
           )}
           {isEdit ? 'Edit the customer details' : 'Add a new customer'}
         </CardTitle>
       </CardHeader>
-      <div className='px-7'>
+      <div className="px-7">
         <Separator />
       </div>
-      <CardContent className='p-7'>
+      <CardContent className="p-7">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Customer Name */}
             <FormField
               control={form.control}
-              name='name'
+              name="name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Customer Name <span className='text-orange-500'>*</span>
+                    Customer Name <span className="text-orange-500">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder='Enter customer name' {...field} />
+                    <Input placeholder="Enter customer name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -335,8 +339,8 @@ export const CreateCustomerForm = ({
             />
 
             {/* Address Section */}
-            <div className='space-y-4'>
-              <h2 className='text-lg font-semibold'>Address</h2>
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold">Address</h2>
               {(
                 Object.keys(customerAddressSchema.shape) as Array<
                   keyof typeof customerAddressSchema.shape
@@ -361,7 +365,11 @@ export const CreateCustomerForm = ({
                               onChange={(e) => {
                                 if (key === 'pincode') {
                                   const value = e.target.value;
-                                  field.onChange(value === '' ? undefined : Number(value) || undefined);
+                                  field.onChange(
+                                    value === ''
+                                      ? undefined
+                                      : Number(value) || undefined
+                                  );
                                 } else {
                                   field.onChange(e.target.value);
                                 }
@@ -377,13 +385,13 @@ export const CreateCustomerForm = ({
                   )
               )}
 
-              <div className='flex items-start gap-8'>
+              <div className="flex items-start gap-8">
                 {/* Address - Country */}
                 <FormField
                   control={form.control}
-                  name='address.country'
+                  name="address.country"
                   render={({ field }) => (
-                    <FormItem className='flex flex-col w-1/2'>
+                    <FormItem className="flex flex-col w-1/2">
                       <FormLabel>Country</FormLabel>
                       <FormControl>
                         <Popover
@@ -393,8 +401,8 @@ export const CreateCustomerForm = ({
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
-                                variant='outline'
-                                role='combobox'
+                                variant="outline"
+                                role="combobox"
                                 className={cn(
                                   'w-full justify-between',
                                   !field.value && 'text-muted-foreground'
@@ -406,15 +414,15 @@ export const CreateCustomerForm = ({
                                         country.country === field.value
                                     )?.country
                                   : 'Select Country'}
-                                <ChevronsUpDown className='opacity-50' />
+                                <ChevronsUpDown className="opacity-50" />
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
-                          <PopoverContent className='sm:w-[300px] w-[200px] p-0'>
+                          <PopoverContent className="sm:w-[300px] w-[200px] p-0">
                             <Command>
                               <CommandInput
-                                placeholder='Search Country...'
-                                className='h-9'
+                                placeholder="Search Country..."
+                                className="h-9"
                               />
                               <CommandList>
                                 <CommandEmpty>No Country found.</CommandEmpty>
@@ -456,9 +464,9 @@ export const CreateCustomerForm = ({
                 {/* Address - State */}
                 <FormField
                   control={form.control}
-                  name='address.state'
+                  name="address.state"
                   render={({ field }) => (
-                    <FormItem className='flex flex-col w-1/2'>
+                    <FormItem className="flex flex-col w-1/2">
                       <FormLabel>State</FormLabel>
                       <FormControl>
                         <Popover
@@ -468,49 +476,38 @@ export const CreateCustomerForm = ({
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
-                                variant='outline'
-                                role='combobox'
+                                variant="outline"
+                                role="combobox"
                                 className={cn(
                                   'w-full justify-between',
                                   !field.value && 'text-muted-foreground'
                                 )}
+                                disabled={!form.getValues('address.country')}
                               >
-                                {field.value
-                                  ? countryStates?.find(
-                                      (state) => state === field.value
-                                    )
-                                  : 'Select State'}
-                                <ChevronsUpDown className='opacity-50' />
+                                {field.value ? field.value : 'Select State'}
+                                <ChevronsUpDown className="opacity-50" />
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
-                          <PopoverContent className='sm:w-[300px] w-[200px] p-0'>
+                          <PopoverContent className="sm:w-[300px] w-[200px] p-0">
                             <Command>
                               <CommandInput
-                                placeholder='Search State...'
-                                className='h-9'
+                                placeholder="Search State..."
+                                className="h-9"
                               />
                               <CommandList>
                                 <CommandEmpty>No State found.</CommandEmpty>
                                 <CommandGroup>
-                                  {countryStates?.map((state) => (
+                                  {countryStates.map((state) => (
                                     <CommandItem
-                                      value={state}
                                       key={state}
+                                      value={state}
                                       onSelect={() => {
-                                        form.setValue('address.state', state);
+                                        field.onChange(state);
                                         setStateSelectOpen(false);
                                       }}
                                     >
                                       {state}
-                                      <Check
-                                        className={cn(
-                                          'ml-auto',
-                                          state === field.value
-                                            ? 'opacity-100'
-                                            : 'opacity-0'
-                                        )}
-                                      />
                                     </CommandItem>
                                   ))}
                                 </CommandGroup>
@@ -527,25 +524,25 @@ export const CreateCustomerForm = ({
             </div>
 
             {/* POC Section */}
-            <div className='space-y-4'>
-              <h2 className='text-lg font-semibold'>Points of Contact</h2>
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold">Points of Contact</h2>
               {pocFields.map((field, index) => (
                 <div
                   key={field.id}
-                  className='flex items-end gap-4 border-b pb-4 flex-wrap'
+                  className="flex items-end gap-4 border-b pb-4 flex-wrap"
                 >
                   {/* Name */}
                   <FormField
                     control={form.control}
                     name={`poc.${index}.name` as const}
                     render={({ field }) => (
-                      <FormItem className='flex-1'>
+                      <FormItem className="flex-1">
                         <FormLabel>Name</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder='Enter name'
-                            type='text'
+                            placeholder="Enter name"
+                            type="text"
                           />
                         </FormControl>
                         <FormMessage />
@@ -558,7 +555,7 @@ export const CreateCustomerForm = ({
                     control={form.control}
                     name={`poc.${index}.mobile` as const}
                     render={({ field }) => (
-                      <FormItem className='flex-1'>
+                      <FormItem className="flex-1">
                         <FormLabel>Mobile</FormLabel>
                         <FormControl>
                           <Input
@@ -566,10 +563,14 @@ export const CreateCustomerForm = ({
                             value={field.value || ''}
                             onChange={(e) => {
                               const value = e.target.value;
-                              field.onChange(value === '' ? undefined : Number(value) || undefined);
+                              field.onChange(
+                                value === ''
+                                  ? undefined
+                                  : Number(value) || undefined
+                              );
                             }}
-                            placeholder='Enter mobile number'
-                            type='number'
+                            placeholder="Enter mobile number"
+                            type="number"
                           />
                         </FormControl>
                         <FormMessage />
@@ -582,13 +583,13 @@ export const CreateCustomerForm = ({
                     control={form.control}
                     name={`poc.${index}.email` as const}
                     render={({ field }) => (
-                      <FormItem className='flex-1'>
+                      <FormItem className="flex-1">
                         <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder='Enter email address'
-                            type='email'
+                            placeholder="Enter email address"
+                            type="email"
                           />
                         </FormControl>
                         <FormMessage />
@@ -598,12 +599,12 @@ export const CreateCustomerForm = ({
 
                   {/* Remove Button */}
                   {/* Remove Button */}
-                  <div className='flex items-center justify-center h-full'>
+                  <div className="flex items-center justify-center h-full">
                     <Button
-                      variant='destructive'
-                      type='button'
+                      variant="destructive"
+                      type="button"
                       onClick={() => removePOC(index)}
-                      className='flex items-center justify-center mb-2'
+                      className="flex items-center justify-center mb-2"
                     >
                       <TrashIcon />
                     </Button>
@@ -613,7 +614,7 @@ export const CreateCustomerForm = ({
 
               {/* Add POC Button */}
               <Button
-                type='button'
+                type="button"
                 variant={'tertiary'}
                 onClick={() =>
                   addPOC({
@@ -623,19 +624,19 @@ export const CreateCustomerForm = ({
                   })
                 }
               >
-                <PlusCircle className='size-4' /> Add POC
+                <PlusCircle className="size-4" /> Add POC
               </Button>
             </div>
 
             {/* Other Fields */}
             <FormField
               control={form.control}
-              name='contactDetails'
+              name="contactDetails"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Contact Details</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder='Enter contact details' />
+                    <Input {...field} placeholder="Enter contact details" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -644,12 +645,12 @@ export const CreateCustomerForm = ({
 
             <FormField
               control={form.control}
-              name='gstNumber'
+              name="gstNumber"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>GST Number</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder='Enter GST Number' />
+                    <Input {...field} placeholder="Enter GST Number" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -658,12 +659,12 @@ export const CreateCustomerForm = ({
 
             <FormField
               control={form.control}
-              name='vendorId'
+              name="vendorId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Vendor ID</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder='Enter Vendor ID' />
+                    <Input {...field} placeholder="Enter Vendor ID" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -672,12 +673,12 @@ export const CreateCustomerForm = ({
 
             <FormField
               control={form.control}
-              name='customerType'
+              name="customerType"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Customer Type</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder='Enter Customer Type' />
+                    <Input {...field} placeholder="Enter Customer Type" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -687,50 +688,50 @@ export const CreateCustomerForm = ({
             {/* Customer Logo Upload */}
             <FormField
               control={form.control}
-              name='image'
+              name="image"
               render={({ field }) => (
-                <div className='flex flex-col gap-y-2'>
-                  <div className='flex items-center gap-x-5'>
+                <div className="flex flex-col gap-y-2">
+                  <div className="flex items-center gap-x-5">
                     {field.value ? (
-                      <div className='size-[72px] relative rounded-md overflow-hidden'>
+                      <div className="size-[72px] relative rounded-md overflow-hidden">
                         <Image
                           src={
                             field.value instanceof File
                               ? URL.createObjectURL(field.value)
                               : field.value
                           }
-                          alt='Logo'
+                          alt="Logo"
                           fill
-                          className='object-cover'
+                          className="object-cover"
                         />
                       </div>
                     ) : (
-                      <Avatar className='size-[72px]'>
+                      <Avatar className="size-[72px]">
                         <AvatarFallback>
-                          <ImageIcon className='size-[36px] text-neutral-400' />
+                          <ImageIcon className="size-[36px] text-neutral-400" />
                         </AvatarFallback>
                       </Avatar>
                     )}
-                    <div className='flex flex-col'>
-                      <p className='text-sm'>Company Logo</p>
-                      <p className='text-sm text-muted-foreground'>
+                    <div className="flex flex-col">
+                      <p className="text-sm">Company Logo</p>
+                      <p className="text-sm text-muted-foreground">
                         JPEG, PNG, SVG or JPEG, max 1mb
                       </p>
                       <input
-                        className='hidden'
-                        accept='.jpg, .png, .jpeg, .svg'
-                        type='file'
+                        className="hidden"
+                        accept=".jpg, .png, .jpeg, .svg"
+                        type="file"
                         ref={inputRef}
                         onChange={handleImageChange}
                         disabled={isPending}
                       />
                       {field.value ? (
                         <Button
-                          type='button'
+                          type="button"
                           disabled={isPending}
                           variant={'destructive'}
                           size={'xs'}
-                          className='w-fit mt-2'
+                          className="w-fit mt-2"
                           onClick={() => {
                             field.onChange(null);
                             if (inputRef.current) {
@@ -742,11 +743,11 @@ export const CreateCustomerForm = ({
                         </Button>
                       ) : (
                         <Button
-                          type='button'
+                          type="button"
                           disabled={isPending}
                           variant={'tertiary'}
                           size={'xs'}
-                          className='w-fit mt-2'
+                          className="w-fit mt-2"
                           onClick={() => inputRef.current?.click()}
                         >
                           Upload Image
@@ -759,10 +760,11 @@ export const CreateCustomerForm = ({
             />
 
             {/* File Attachments Section */}
-            <div className='space-y-4'>
-              <h2 className='text-lg font-semibold'>File Attachments</h2>
-              <p className='text-sm text-muted-foreground'>
-                Upload documents, contracts, or other files related to this customer.
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold">File Attachments</h2>
+              <p className="text-sm text-muted-foreground">
+                Upload documents, contracts, or other files related to this
+                customer.
               </p>
 
               <FileUploadManager
@@ -774,20 +776,21 @@ export const CreateCustomerForm = ({
               />
 
               {!isEdit && selectedFiles && selectedFiles.length > 0 && (
-                <div className='text-sm text-blue-600 bg-blue-50 p-3 rounded-lg'>
-                  📄 {selectedFiles.length} file(s) selected. Files will be uploaded after the customer is created.
+                <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
+                  📄 {selectedFiles.length} file(s) selected. Files will be
+                  uploaded after the customer is created.
                 </div>
               )}
             </div>
 
-            <Separator className='my-6' />
+            <Separator className="my-6" />
 
             {/* Submit Button */}
-            <div className='flex flex-col sm:flex-row items-stretch sm:items-center justify-center sm:justify-end gap-3 w-full mt-8'>
-              <Button 
-                type='submit' 
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center sm:justify-end gap-3 w-full mt-8">
+              <Button
+                type="submit"
                 disabled={isPending}
-                className='w-full sm:w-auto min-w-[120px] h-11 text-base font-medium'
+                className="w-full sm:w-auto min-w-[120px] h-11 text-base font-medium"
                 size="default"
                 onClick={() => {
                   console.log('Update button clicked');
@@ -805,7 +808,7 @@ export const CreateCustomerForm = ({
                   <span>{isEdit ? 'Update Customer' : 'Create Customer'}</span>
                 )}
               </Button>
-              
+
               {/* Cancel/Back Button for mobile */}
               {showBackButton && (
                 <Button
@@ -813,7 +816,7 @@ export const CreateCustomerForm = ({
                   variant="outline"
                   onClick={onCancel}
                   disabled={isPending}
-                  className='w-full sm:w-auto min-w-[120px] h-11 text-base font-medium order-first sm:order-last'
+                  className="w-full sm:w-auto min-w-[120px] h-11 text-base font-medium order-first sm:order-last"
                 >
                   Cancel
                 </Button>

@@ -59,7 +59,10 @@ export const CustomerFilters: React.FC<CustomerFiltersProps> = ({
   const selectedCountryData = countries.find(
     (country) => country.country === localFilters.country
   );
-  const states = selectedCountryData?.cities || [];
+  // If cities array is present and non-empty, use as states
+  const states = selectedCountryData?.cities && selectedCountryData.cities.length > 0
+    ? selectedCountryData.cities
+    : [];
 
   const handleApplyFilters = () => {
     // Convert "all" values back to empty strings for the API

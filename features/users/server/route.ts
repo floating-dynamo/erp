@@ -34,12 +34,18 @@ const app = new Hono()
       }
 
       // Create new user
+      // Find company by custom id field
+      const company = await (await import('../../companies/model')).default.findOne({ id: parsedData.companyId });
+      if (!company) {
+        return c.json({ success: false, message: 'Company not found' }, 400);
+      }
+
       const newUser = new UserModel({
         email: parsedData.email,
         password: parsedData.password,
         name: parsedData.name,
         role: parsedData.role,
-        companyId: parsedData.companyId
+        companyId: company._id // Use the MongoDB ObjectId
       });
       await newUser.save();
 
