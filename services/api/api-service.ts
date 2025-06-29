@@ -541,6 +541,79 @@ const apiService: IApiService = {
       throw new Error('Network error while deleting file');
     }
   },
+
+  // BOM Endpoints
+  async getBoms({
+    page,
+    limit,
+    searchQuery,
+    productNameFilter,
+    bomTypeFilter,
+    statusFilter,
+    costFrom,
+    costTo,
+  }: {
+    page?: number;
+    limit?: number;
+    searchQuery?: string;
+    productNameFilter?: string;
+    bomTypeFilter?: string;
+    statusFilter?: string;
+    costFrom?: string;
+    costTo?: string;
+  } = {}) {
+    try {
+      const boms = await axios.get('/api/boms', {
+        params: {
+          page,
+          limit,
+          searchQuery,
+          productNameFilter,
+          bomTypeFilter,
+          statusFilter,
+          costFrom,
+          costTo,
+        },
+      });
+      return boms.data;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  },
+
+  async addBom({ bom }) {
+    try {
+      const { data } = await axios.post('/api/boms', bom);
+      return {
+        message: 'BOM added successfully',
+        success: true,
+        bomNumber: data?.bomNumber,
+      };
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error adding new BOM ${(error as Error).message}`);
+    }
+  },
+
+  async getBomById({ id }) {
+    try {
+      const bom = await axios.get(`/api/boms/${id}`);
+      return bom.data;
+    } catch (error) {
+      console.error(error);
+    }
+  },
+
+  async editBom({ id, data }) {
+    try {
+      const response = await axios.patch(`/api/boms/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error editing BOM ${(error as Error).message}`);
+    }
+  },
 };
 
 export default apiService;
