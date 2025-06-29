@@ -293,8 +293,8 @@ const BOMS_MOCK_DATA: Bom[] = [
     notes: 'Component testing in progress, awaiting final approval',
     myCompanyName: 'Mobile Tech Solutions',
     createdBy: 'Alice Chen',
-    approvedBy: null,
-    approvalDate: null
+    approvedBy: undefined,
+    approvalDate: undefined
   }
 ];
 
