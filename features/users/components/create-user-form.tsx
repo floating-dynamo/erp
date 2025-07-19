@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { ArrowLeft, Save, User, Mail, Building2, Shield } from 'lucide-react';
+import { Save, User, Mail, Building2, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import APIService from '@/services/api';
@@ -34,7 +34,7 @@ interface UserFormData {
   isActive: boolean;
 }
 
-export default function UserForm({ userId, mode }: UserFormProps) {
+export default function CreateUserForm({ userId, mode }: UserFormProps) {
   const [formData, setFormData] = React.useState<UserFormData>({
     name: '',
     email: '',
@@ -224,14 +224,6 @@ export default function UserForm({ userId, mode }: UserFormProps) {
     <div className="w-full max-w-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => router.push('/users')}
-        >
-          <ArrowLeft className="size-4" />
-          Back to Users
-        </Button>
         <h1 className="text-2xl font-bold">
           {mode === 'create' ? 'Create New User' : 'Edit User'}
         </h1>
@@ -338,7 +330,7 @@ export default function UserForm({ userId, mode }: UserFormProps) {
                   </SelectTrigger>
                   <SelectContent>
                     {companies.map((company) => (
-                      <SelectItem key={company.id} value={company.id || ''}>
+                      <SelectItem key={company.id ?? company.name} value={company.id!}>
                         {company.name}
                       </SelectItem>
                     ))}

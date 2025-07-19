@@ -11,7 +11,6 @@ import {
   Calendar, 
   Shield, 
   Activity,
-  ArrowLeft,
   Edit,
   Trash2
 } from 'lucide-react';
@@ -150,15 +149,7 @@ export default function UserDetails({ userId }: UserDetailsProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.push('/users')}
-          >
-            <ArrowLeft className="size-4" />
-            Back to Users
-          </Button>
-          <h1 className="text-2xl font-bold">User Details</h1>
+          <h1 className="text-2xl font-bold">{user.name}</h1>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleEdit}>

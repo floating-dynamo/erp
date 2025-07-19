@@ -1,10 +1,10 @@
-import UserForm from '@/features/users/components/user-form';
+import CreateUserForm from '@/features/users/components/create-user-form';
 import React from 'react';
 
 const CreateUserPage = () => {
   return (
     <div className="w-full" data-testid="create-user-page">
-      <UserForm mode="create" />
+      <CreateUserForm mode="create" />
     </div>
   );
 };

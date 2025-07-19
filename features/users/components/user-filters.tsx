@@ -283,7 +283,7 @@ export const UserFilters: React.FC<UserFiltersProps> = ({
                       </CommandItem>
                       {companies.map((company) => (
                         <CommandItem
-                          key={company.id}
+                          key={company.id || company.name}
                           value={company.name}
                           onSelect={() => {
                             setLocalFilters(prev => ({ ...prev, companyFilter: company.id || '' }));
