@@ -1,16 +1,17 @@
 import UserDetails from '@/features/users/components/user-details';
-import React from 'react';
+import React, { use } from 'react';
 
 interface UserDetailsPageProps {
-  params: {
-    id: string;
-  };
+  params: Promise<{
+    userId: string;
+  }>;
 }
 
 const UserDetailsPage = ({ params }: UserDetailsPageProps) => {
+  const { userId } = use(params);
   return (
     <div className="w-full" data-testid="user-details-page">
-      <UserDetails userId={params.id} />
+      <UserDetails userId={userId} />
     </div>
   );
 };
