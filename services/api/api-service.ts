@@ -1,5 +1,6 @@
 import { IApiService } from '@/lib/types';
 import { PurchaseOrderFiltersParams } from '@/features/purchase-orders/types';
+import { AdminCreateUser, AdminEditUser } from '@/features/users/schemas';
 import axios from 'axios';
 
 // Configure axios defaults
@@ -139,6 +140,83 @@ const apiService: IApiService = {
         );
       }
       throw new Error('Network error while changing password');
+    }
+  },
+
+  // User Management Endpoints (Admin only)
+  async getUsers(filters: Record<string, string | number | boolean> = {}) {
+    try {
+      const queryParams = new URLSearchParams();
+
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') {
+          queryParams.append(key, value.toString());
+        }
+      });
+
+      const queryString = queryParams.toString();
+      const url = queryString ? `/api/auth/admin/users?${queryString}` : '/api/auth/admin/users';
+      
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      console.error('Get users error:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to fetch users');
+      }
+      throw new Error('Network error while fetching users');
+    }
+  },
+
+  async getUserById({ id }: { id: string }) {
+    try {
+      const response = await axios.get(`/api/auth/admin/users/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get user details error:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to fetch user details');
+      }
+      throw new Error('Network error while fetching user details');
+    }
+  },
+
+  async addUser({ user }: { user: AdminCreateUser }) {
+    try {
+      const response = await axios.post('/api/auth/admin/users', user);
+      return response.data;
+    } catch (error) {
+      console.error('Add user error:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to create user');
+      }
+      throw new Error('Network error while creating user');
+    }
+  },
+
+  async editUser({ id, data }: { id: string; data: AdminEditUser }) {
+    try {
+      const response = await axios.patch(`/api/auth/admin/users/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Edit user error:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to update user');
+      }
+      throw new Error('Network error while updating user');
+    }
+  },
+
+  async deleteUser({ id }: { id: string }) {
+    try {
+      const response = await axios.delete(`/api/auth/admin/users/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Delete user error:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to deactivate user');
+      }
+      throw new Error('Network error while deactivating user');
     }
   },
 

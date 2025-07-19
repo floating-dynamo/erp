@@ -63,6 +63,7 @@ export enum QueryKeyString {
   BOMS = 'boms',
   COUNTRIES = 'countries',
   METADATA = 'metadata',
+  USERS = 'users'
 }
 
 // Authentication response types
@@ -140,6 +141,13 @@ export interface IApiService {
     newPassword: string;
     confirmPassword: string;
   }) => Promise<{ success: boolean; message: string }>;
+
+  // User Management Endpoints (Admin only)
+  getUsers: (filters?: Record<string, string | number | boolean>) => Promise<import('./types/user').GetUsersResponse>;
+  getUserById: ({ id }: { id: string }) => Promise<{ success: boolean; user?: import('./types/user').User }>;
+  addUser: ({ user }: { user: import('@/features/users/schemas').AdminCreateUser }) => Promise<import('./types/user').AddUserResponse>;
+  editUser: ({ id, data }: { id: string; data: import('@/features/users/schemas').AdminEditUser }) => Promise<import('./types/user').EditUserResponse>;
+  deleteUser: ({ id }: { id: string }) => Promise<{ success: boolean; message: string }>;
 
   // Customer Endpoints
   getCustomers: (queryString: string) => Promise<GetCusomtersResponse>;
