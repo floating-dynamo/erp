@@ -67,6 +67,12 @@ const routes = [
     activeIcon: Building2Icon,
   },
   {
+    label: 'Users',
+    href: '/users',
+    icon: UserIcon,
+    activeIcon: UsersIcon,
+  },
+  {
     label: 'Settings',
     href: '/settings',
     icon: SettingsIcon,

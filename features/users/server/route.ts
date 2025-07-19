@@ -5,7 +5,9 @@ import {
   loginUserSchema, 
   registerUserSchema, 
   updateProfileSchema, 
-  changePasswordSchema 
+  changePasswordSchema,
+  adminCreateUserSchema,
+  adminEditUserSchema
 } from '../schemas';
 import { sign, verify } from 'hono/jwt';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
@@ -415,6 +417,540 @@ const app = new Hono()
           error: error instanceof Error ? error.message : 'Unknown error'
         },
         400
+      );
+    }
+  })
+
+  // Admin: Get all users with filtering and pagination
+  .get('/admin/users', async (c) => {
+    try {
+      await connectDB();
+      
+      // Get token and verify user is admin
+      let token = getCookie(c, 'auth-token');
+      if (!token) {
+        const authHeader = c.req.header('Authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          token = authHeader.substring(7);
+        }
+      }
+
+      if (!token) {
+        return c.json(
+          { 
+            success: false, 
+            message: 'No authentication token provided' 
+          }, 
+          401
+        );
+      }
+
+      const payload = await verify(token, JWT_SECRET);
+      const user = await UserModel.findById(payload.userId);
+      
+      if (!user || user.role !== 'admin') {
+        return c.json(
+          { 
+            success: false, 
+            message: 'Admin access required' 
+          }, 
+          403
+        );
+      }
+
+      // Get query parameters
+      const searchQuery = c.req.query('searchQuery') || '';
+      const role = c.req.query('role') || '';
+      const isActive = c.req.query('isActive');
+      const companyId = c.req.query('companyId') || '';
+      const lastLoginFrom = c.req.query('lastLoginFrom') || '';
+      const lastLoginTo = c.req.query('lastLoginTo') || '';
+      const createdFrom = c.req.query('createdFrom') || '';
+      const createdTo = c.req.query('createdTo') || '';
+      const page = parseInt(c.req.query('page') || '1');
+      const limit = parseInt(c.req.query('limit') || '10');
+
+      // Build filter query
+      interface UserFilter {
+        $or?: Array<{
+          name?: { $regex: string; $options: string };
+          email?: { $regex: string; $options: string };
+        }>;
+        role?: string;
+        isActive?: boolean;
+        companyId?: string;
+        lastLoginAt?: {
+          $gte?: Date;
+          $lte?: Date;
+        };
+        createdAt?: {
+          $gte?: Date;
+          $lte?: Date;
+        };
+      }
+      
+      const filter: UserFilter = {};
+      
+      if (searchQuery) {
+        filter.$or = [
+          { name: { $regex: searchQuery, $options: 'i' } },
+          { email: { $regex: searchQuery, $options: 'i' } }
+        ];
+      }
+
+      if (role) {
+        filter.role = role;
+      }
+
+      if (isActive !== undefined && isActive !== '') {
+        filter.isActive = isActive === 'true';
+      }
+
+      if (companyId) {
+        filter.companyId = companyId;
+      }
+
+      if (lastLoginFrom || lastLoginTo) {
+        filter.lastLoginAt = {};
+        if (lastLoginFrom) {
+          filter.lastLoginAt.$gte = new Date(lastLoginFrom);
+        }
+        if (lastLoginTo) {
+          filter.lastLoginAt.$lte = new Date(lastLoginTo);
+        }
+      }
+
+      if (createdFrom || createdTo) {
+        filter.createdAt = {};
+        if (createdFrom) {
+          filter.createdAt.$gte = new Date(createdFrom);
+        }
+        if (createdTo) {
+          filter.createdAt.$lte = new Date(createdTo);
+        }
+      }
+
+      // Get total count
+      const total = await UserModel.countDocuments(filter);
+
+      // Get users with pagination
+      const users = await UserModel.find(filter)
+        .populate('companyId', 'name')
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .select('-password');
+
+      const totalPages = Math.ceil(total / limit);
+
+      // Transform users data
+      const usersData = users.map(user => {
+        const companyId = user.companyId as string | { _id: string; name: string };
+        return {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isActive: user.isActive,
+          companyId: typeof companyId === 'object' && companyId?._id ? companyId._id.toString() : companyId,
+          companyName: typeof companyId === 'object' && companyId?.name ? companyId.name : '',
+          lastLoginAt: user.lastLoginAt,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          privileges: user.allPrivileges,
+        };
+      });
+
+      return c.json({
+        success: true,
+        users: usersData,
+        total,
+        page,
+        limit,
+        totalPages,
+      });
+    } catch (error) {
+      console.error('Get users error:', error);
+      return c.json(
+        {
+          success: false,
+          message: 'Error fetching users',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        },
+        500
+      );
+    }
+  })
+
+  // Admin: Get user by ID
+  .get('/admin/users/:id', async (c) => {
+    try {
+      await connectDB();
+      
+      // Get token and verify user is admin
+      let token = getCookie(c, 'auth-token');
+      if (!token) {
+        const authHeader = c.req.header('Authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          token = authHeader.substring(7);
+        }
+      }
+
+      if (!token) {
+        return c.json(
+          { 
+            success: false, 
+            message: 'No authentication token provided' 
+          }, 
+          401
+        );
+      }
+
+      const payload = await verify(token, JWT_SECRET);
+      const currentUser = await UserModel.findById(payload.userId);
+      
+      if (!currentUser || currentUser.role !== 'admin') {
+        return c.json(
+          { 
+            success: false, 
+            message: 'Admin access required' 
+          }, 
+          403
+        );
+      }
+
+      const userId = c.req.param('id');
+      const user = await UserModel.findById(userId)
+        .populate('companyId', 'name')
+        .select('-password');
+
+      if (!user) {
+        return c.json(
+          { 
+            success: false, 
+            message: 'User not found' 
+          }, 
+          404
+        );
+      }
+
+      const userData = {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+        companyId: (user.companyId as unknown as { _id: string; name: string })._id.toString(),
+        companyName: (user.companyId as unknown as { _id: string; name: string }).name,
+        lastLoginAt: user.lastLoginAt,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        privileges: user.allPrivileges,
+      };
+
+      return c.json({
+        success: true,
+        user: userData,
+      });
+    } catch (error) {
+      console.error('Get user details error:', error);
+      return c.json(
+        {
+          success: false,
+          message: 'Error fetching user details',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        },
+        500
+      );
+    }
+  })
+
+  // Admin: Create new user
+  .post('/admin/users', async (c) => {
+    try {
+      await connectDB();
+      
+      // Get token and verify user is admin
+      let token = getCookie(c, 'auth-token');
+      if (!token) {
+        const authHeader = c.req.header('Authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          token = authHeader.substring(7);
+        }
+      }
+
+      if (!token) {
+        return c.json(
+          { 
+            success: false, 
+            message: 'No authentication token provided' 
+          }, 
+          401
+        );
+      }
+
+      const payload = await verify(token, JWT_SECRET);
+      const currentUser = await UserModel.findById(payload.userId);
+      
+      if (!currentUser || currentUser.role !== 'admin') {
+        return c.json(
+          { 
+            success: false, 
+            message: 'Admin access required' 
+          }, 
+          403
+        );
+      }
+
+      const body = await c.req.json();
+      const parsedData = adminCreateUserSchema.parse(body);
+
+      // Check if user already exists
+      const existingUser = await UserModel.findByEmail(parsedData.email);
+      if (existingUser) {
+        return c.json(
+          { 
+            success: false, 
+            message: 'User with this email already exists' 
+          }, 
+          400
+        );
+      }
+
+      // Find company by custom id field
+      const company = await (await import('../../companies/model')).default.findOne({ id: parsedData.companyId });
+      if (!company) {
+        return c.json({ success: false, message: 'Company not found' }, 400);
+      }
+
+      // Create new user
+      const newUser = new UserModel({
+        email: parsedData.email,
+        password: parsedData.password,
+        name: parsedData.name,
+        role: parsedData.role,
+        companyId: company._id,
+        isActive: parsedData.isActive,
+      });
+      await newUser.save();
+
+      const userData = {
+        id: newUser._id.toString(),
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        isActive: newUser.isActive,
+        companyId: company.id,
+        companyName: company.name,
+        createdAt: newUser.createdAt,
+        updatedAt: newUser.updatedAt,
+      };
+
+      return c.json(
+        {
+          success: true,
+          message: 'User created successfully',
+          user: userData,
+        },
+        201
+      );
+    } catch (error) {
+      console.error('Create user error:', error);
+      return c.json(
+        {
+          success: false,
+          message: 'Error creating user',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        },
+        400
+      );
+    }
+  })
+
+  // Admin: Update user
+  .patch('/admin/users/:id', async (c) => {
+    try {
+      await connectDB();
+      
+      // Get token and verify user is admin
+      let token = getCookie(c, 'auth-token');
+      if (!token) {
+        const authHeader = c.req.header('Authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          token = authHeader.substring(7);
+        }
+      }
+
+      if (!token) {
+        return c.json(
+          { 
+            success: false, 
+            message: 'No authentication token provided' 
+          }, 
+          401
+        );
+      }
+
+      const payload = await verify(token, JWT_SECRET);
+      const currentUser = await UserModel.findById(payload.userId);
+      
+      if (!currentUser || currentUser.role !== 'admin') {
+        return c.json(
+          { 
+            success: false, 
+            message: 'Admin access required' 
+          }, 
+          403
+        );
+      }
+
+      const userId = c.req.param('id');
+      const body = await c.req.json();
+      const parsedData = adminEditUserSchema.parse(body);
+
+      // Check if email is being changed and if it's already taken
+      if (parsedData.email) {
+        const existingUser = await UserModel.findByEmail(parsedData.email);
+        if (existingUser && existingUser._id.toString() !== userId) {
+          return c.json(
+            { 
+              success: false, 
+              message: 'Email is already taken by another user' 
+            }, 
+            400
+          );
+        }
+      }
+
+      // Find company by custom id field if companyId is being updated
+      let companyObjectId;
+      if (parsedData.companyId) {
+        const company = await (await import('../../companies/model')).default.findOne({ id: parsedData.companyId });
+        if (!company) {
+          return c.json({ success: false, message: 'Company not found' }, 400);
+        }
+        companyObjectId = company._id;
+      }
+
+      // Update user
+      const updateData = {
+        ...parsedData,
+        ...(companyObjectId && { companyId: companyObjectId }),
+      };
+
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        userId,
+        updateData,
+        { new: true }
+      );
+
+      if (!updatedUser) {
+        return c.json(
+          { 
+            success: false, 
+            message: 'User not found' 
+          }, 
+          404
+        );
+      }
+
+      return c.json({
+        success: true,
+        message: 'User updated successfully',
+      });
+    } catch (error) {
+      console.error('Update user error:', error);
+      return c.json(
+        {
+          success: false,
+          message: 'Error updating user',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        },
+        400
+      );
+    }
+  })
+
+  // Admin: Delete user (soft delete by deactivating)
+  .delete('/admin/users/:id', async (c) => {
+    try {
+      await connectDB();
+      
+      // Get token and verify user is admin
+      let token = getCookie(c, 'auth-token');
+      if (!token) {
+        const authHeader = c.req.header('Authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          token = authHeader.substring(7);
+        }
+      }
+
+      if (!token) {
+        return c.json(
+          { 
+            success: false, 
+            message: 'No authentication token provided' 
+          }, 
+          401
+        );
+      }
+
+      const payload = await verify(token, JWT_SECRET);
+      const currentUser = await UserModel.findById(payload.userId);
+      
+      if (!currentUser || currentUser.role !== 'admin') {
+        return c.json(
+          { 
+            success: false, 
+            message: 'Admin access required' 
+          }, 
+          403
+        );
+      }
+
+      const userId = c.req.param('id');
+
+      // Prevent admin from deleting themselves
+      if (userId === payload.userId) {
+        return c.json(
+          { 
+            success: false, 
+            message: 'Cannot delete your own account' 
+          }, 
+          400
+        );
+      }
+
+      // Soft delete by deactivating user
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        userId,
+        { isActive: false },
+        { new: true }
+      );
+
+      if (!updatedUser) {
+        return c.json(
+          { 
+            success: false, 
+            message: 'User not found' 
+          }, 
+          404
+        );
+      }
+
+      return c.json({
+        success: true,
+        message: 'User deactivated successfully',
+      });
+    } catch (error) {
+      console.error('Delete user error:', error);
+      return c.json(
+        {
+          success: false,
+          message: 'Error deactivating user',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        },
+        500
       );
     }
   });

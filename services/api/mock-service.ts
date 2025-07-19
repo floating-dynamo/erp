@@ -4,6 +4,7 @@ import {
   AuthResponse,
   UserProfileResponse,
 } from '@/lib/types';
+import { User } from '@/lib/types/user';
 import { ICustomer } from '@/lib/types/customer';
 import { CUSTOMERS_MOCK_DATA } from './mocks/customers';
 import { Customer, CustomerFile } from '@/features/customers/schemas';
@@ -24,6 +25,7 @@ import {
 } from '@/features/metadata/model/mock-data';
 import { Bom } from '@/features/bom/schemas';
 import BOMS_MOCK_DATA from './mocks/boms';
+import { USERS_MOCK_DATA } from './mocks/users';
 import Fuse from 'fuse.js';
 
 // Initialize customers with attachments property to match Customer type
@@ -37,6 +39,7 @@ const companies: Company[] = COMPANIES_MOCK_DATA;
 const supplierDcs: SupplierDc[] = SUPPLIER_DCS_MOCK_DATA;
 const purchaseOrders: PurchaseOrder[] = PURCHASE_ORDERS_MOCK_DATA;
 const boms: Bom[] = BOMS_MOCK_DATA;
+const users: User[] = USERS_MOCK_DATA;
 
 // Fuse.js configuration for customer search
 const customerSearchKeys = [
@@ -64,6 +67,21 @@ const quotationSearchKeys = [
 
 const quotationFuseOptions = {
   keys: quotationSearchKeys,
+  threshold: 0.1,
+  ignoreLocation: true,
+  includeScore: true,
+};
+
+// Fuse.js configuration for user search
+const userSearchKeys = [
+  'name',
+  'email',
+  'role',
+  'companyName',
+];
+
+const userFuseOptions = {
+  keys: userSearchKeys,
   threshold: 0.1,
   ignoreLocation: true,
   includeScore: true,
@@ -1128,6 +1146,260 @@ const mockService: IApiService = {
         resolve({
           message: 'BOM details edited',
           success: true,
+        });
+      }, 1000);
+    });
+  },
+
+  // User Management Endpoints
+  async getUsers(filters: Record<string, string | number | boolean> = {}) {
+    const {
+      role,
+      isActive,
+      companyId,
+      page = 1,
+      limit = 10,
+      searchQuery = '',
+      lastLoginFrom,
+      lastLoginTo,
+      createdFrom,
+      createdTo,
+    } = filters;
+
+    // Filter users based on criteria
+    let filteredUsers = [...users];
+
+    // Apply role filter
+    if (role) {
+      filteredUsers = filteredUsers.filter((user) => user.role === role);
+    }
+
+    // Apply active status filter
+    if (isActive !== undefined && isActive !== '') {
+      const activeStatus = isActive === 'true' || isActive === true;
+      filteredUsers = filteredUsers.filter((user) => user.isActive === activeStatus);
+    }
+
+    // Apply company filter
+    if (companyId) {
+      filteredUsers = filteredUsers.filter((user) => user.companyId === companyId);
+    }
+
+    // Apply last login date range filters
+    if (lastLoginFrom) {
+      const fromDate = new Date(lastLoginFrom as string);
+      filteredUsers = filteredUsers.filter((user) =>
+        user.lastLoginAt ? new Date(user.lastLoginAt) >= fromDate : false
+      );
+    }
+
+    if (lastLoginTo) {
+      const toDate = new Date(lastLoginTo as string);
+      filteredUsers = filteredUsers.filter((user) =>
+        user.lastLoginAt ? new Date(user.lastLoginAt) <= toDate : false
+      );
+    }
+
+    // Apply created date range filters
+    if (createdFrom) {
+      const fromDate = new Date(createdFrom as string);
+      filteredUsers = filteredUsers.filter((user) =>
+        new Date(user.createdAt) >= fromDate
+      );
+    }
+
+    if (createdTo) {
+      const toDate = new Date(createdTo as string);
+      filteredUsers = filteredUsers.filter((user) =>
+        new Date(user.createdAt) <= toDate
+      );
+    }
+
+    // Apply search query if present
+    const isSearching = (searchQuery as string).trim().length > 0;
+    if (isSearching) {
+      const fuse = new Fuse(filteredUsers, userFuseOptions);
+      const searchResults = fuse.search(searchQuery as string);
+      filteredUsers = searchResults.map((result) => result.item);
+    }
+
+    const totalUsers = filteredUsers.length;
+
+    // Apply pagination
+    const pageNum = typeof page === 'string' ? parseInt(page, 10) : (page as number);
+    const limitNum = typeof limit === 'string' ? parseInt(limit, 10) : (limit as number);
+    const startIndex = (pageNum - 1) * limitNum;
+    const endIndex = startIndex + limitNum;
+    const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+    const totalPages = Math.ceil(totalUsers / limitNum);
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          users: paginatedUsers,
+          total: totalUsers,
+          page: pageNum,
+          limit: limitNum,
+          totalPages,
+        });
+      }, 1000);
+    });
+  },
+
+  async getUserById({ id }: { id: string }) {
+    const user = users.find((user) => user.id === id) || null;
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        if (user) {
+          resolve({
+            success: true,
+            user,
+          });
+        } else {
+          resolve({
+            success: false,
+          });
+        }
+      }, 500);
+    });
+  },
+
+  async addUser({ user }: { user: { name: string; email: string; password: string; role: string; companyId: string; isActive: boolean } }) {
+    // Generate a new ID
+    const newId = (users.length + 1).toString();
+    
+    // Find company name
+    const company = companies.find((c) => c.id === user.companyId);
+    const companyName = company ? company.name : '';
+
+    // Generate default privileges based on role
+    const getPrivilegesByRole = (role: string): string[] => {
+      switch (role) {
+        case 'admin':
+          return [
+            'users.create', 'users.read', 'users.update', 'users.delete',
+            'customers.create', 'customers.read', 'customers.update', 'customers.delete',
+            'companies.create', 'companies.read', 'companies.update', 'companies.delete',
+            'enquiries.create', 'enquiries.read', 'enquiries.update', 'enquiries.delete',
+            'quotations.create', 'quotations.read', 'quotations.update', 'quotations.delete',
+            'purchase-orders.create', 'purchase-orders.read', 'purchase-orders.update', 'purchase-orders.delete',
+            'supplier-dcs.create', 'supplier-dcs.read', 'supplier-dcs.update', 'supplier-dcs.delete',
+            'settings.read', 'settings.update', 'reports.read', 'export.pdf', 'export.excel',
+          ];
+        case 'manager':
+          return [
+            'customers.create', 'customers.read', 'customers.update',
+            'enquiries.create', 'enquiries.read', 'enquiries.update',
+            'quotations.create', 'quotations.read', 'quotations.update',
+            'reports.read',
+          ];
+        case 'sales':
+          return [
+            'customers.create', 'customers.read', 'customers.update',
+            'enquiries.create', 'enquiries.read', 'enquiries.update',
+            'quotations.create', 'quotations.read', 'quotations.update',
+          ];
+        case 'purchase':
+          return [
+            'purchase-orders.create', 'purchase-orders.read', 'purchase-orders.update',
+            'supplier-dcs.create', 'supplier-dcs.read', 'supplier-dcs.update',
+          ];
+        default:
+          return ['customers.read', 'enquiries.read', 'quotations.read'];
+      }
+    };
+
+    const newUser: User = {
+      id: newId,
+      name: user.name,
+      email: user.email,
+      role: user.role as 'admin' | 'manager' | 'employee' | 'viewer' | 'accountant' | 'sales' | 'purchase',
+      privileges: getPrivilegesByRole(user.role),
+      isActive: user.isActive,
+      companyId: user.companyId,
+      companyName,
+      lastLoginAt: undefined,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    users.push(newUser);
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'User created successfully',
+          user: newUser,
+        });
+      }, 1000);
+    });
+  },
+
+  async editUser({ id, data }: { id: string; data: Partial<User> }) {
+    const userIndex = users.findIndex((user) => user.id === id);
+    if (userIndex === -1) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({
+            success: false,
+            message: 'User not found',
+          });
+        }, 500);
+      });
+    }
+
+    // Find company name if companyId is being updated
+    let companyName = users[userIndex].companyName;
+    if (data.companyId) {
+      const company = companies.find((c) => c.id === data.companyId);
+      companyName = company ? company.name : '';
+    }
+
+    // Update user
+    users[userIndex] = {
+      ...users[userIndex],
+      ...data,
+      companyName,
+      updatedAt: new Date(),
+    };
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'User updated successfully',
+        });
+      }, 1000);
+    });
+  },
+
+  async deleteUser({ id }: { id: string }) {
+    const userIndex = users.findIndex((user) => user.id === id);
+    if (userIndex === -1) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({
+            success: false,
+            message: 'User not found',
+          });
+        }, 500);
+      });
+    }
+
+    // Soft delete by deactivating the user
+    users[userIndex] = {
+      ...users[userIndex],
+      isActive: false,
+      updatedAt: new Date(),
+    };
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'User deactivated successfully',
         });
       }, 1000);
     });

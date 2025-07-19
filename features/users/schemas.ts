@@ -105,6 +105,25 @@ export const updateProfileSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
 
+// Define the schema for admin user creation
+export const adminCreateUserSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  name: z.string().trim().min(1, 'Name is required'),
+  role: userRoleSchema,
+  companyId: z.string().min(1, 'Company is required'),
+  isActive: z.boolean().default(true),
+});
+
+// Define the schema for admin user editing
+export const adminEditUserSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required'),
+  email: z.string().email('Invalid email address'),
+  role: userRoleSchema,
+  companyId: z.string().min(1, 'Company is required'),
+  isActive: z.boolean(),
+});
+
 // Type exports
 export type User = z.infer<typeof createUserSchema>;
 export type UserRole = z.infer<typeof userRoleSchema>;
@@ -114,3 +133,5 @@ export type RegisterUser = z.infer<typeof registerUserSchema>;
 export type ChangePassword = z.infer<typeof changePasswordSchema>;
 export type ResetPassword = z.infer<typeof resetPasswordSchema>;
 export type UpdateProfile = z.infer<typeof updateProfileSchema>;
+export type AdminCreateUser = z.infer<typeof adminCreateUserSchema>;
+export type AdminEditUser = z.infer<typeof adminEditUserSchema>;
