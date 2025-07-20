@@ -1,5 +1,24 @@
 import { z } from "zod";
 
+// Define the schema for Quotation File Attachments
+export const quotationFileSchema = z.object({
+  id: z.string(),
+  originalName: z.string(),
+  filename: z.string(), // Unique filename stored on server
+  mimetype: z.string(),
+  size: z.number(),
+  uploadedAt: z.union([z.date(), z.string()]).optional().transform((val) => {
+    if (!val) return undefined;
+    if (typeof val === 'string') {
+      const date = new Date(val);
+      return isNaN(date.getTime()) ? undefined : date;
+    }
+    return val;
+  }),
+  uploadedBy: z.string().optional(), // User ID who uploaded
+  description: z.string().optional(), // Optional description for the file
+});
+
 // Define the schema for the Item
 export const quotationItemSchema = z.object({
   itemCode: z.number().min(0, "Cannot be negative"),
@@ -27,6 +46,7 @@ export const createQuotationSchema = z.object({
   myCompanyGSTIN: z.string().optional(), // MyCompany GSTIN
   myCompanyPAN: z.string().optional(), // MyCompany PAN
   myCompanyName: z.string().optional(), // MyCompany Name
+  attachments: z.array(quotationFileSchema).optional().default([]), // File attachments
 });
 
 // Define the schema for editing quotations
@@ -37,3 +57,4 @@ export const editQuotationSchema = createQuotationSchema.extend({
 // Export the types for usage
 export type Quotation = z.infer<typeof createQuotationSchema>;
 export type EditQuotationSchema = z.infer<typeof editQuotationSchema>;
+export type QuotationFile = z.infer<typeof quotationFileSchema>;

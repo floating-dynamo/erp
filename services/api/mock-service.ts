@@ -11,7 +11,7 @@ import { Customer, CustomerFile } from '@/features/customers/schemas';
 import { Enquiry, EnquiryFile } from '@/features/enquiries/schemas';
 import { ENQUIRIES_MOCK_DATA } from './mocks/enquiries';
 import axios from 'axios';
-import { Quotation } from '@/features/quotations/schemas';
+import { Quotation, QuotationFile } from '@/features/quotations/schemas';
 import QUOTATIONS_MOCK_DATA from './mocks/quotations';
 import { COMPANIES_MOCK_DATA } from './mocks/companies';
 import { Company } from '@/features/companies/schemas';
@@ -769,6 +769,93 @@ const mockService: IApiService = {
       }, 1000);
     });
   },
+
+  // Quotation File Management
+  async getQuotationFiles({
+    quotationId,
+  }: {
+    quotationId: string;
+  }): Promise<{ files: QuotationFile[] }> {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const quotation = quotations.find((q) => q.id === quotationId);
+    return {
+      files: quotation?.attachments || [],
+    };
+  },
+
+  async uploadQuotationFiles({
+    quotationId,
+    files,
+  }: {
+    quotationId: string;
+    files: FileList;
+  }): Promise<{ success: boolean; message: string }> {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const quotation = quotations.find((q) => q.id === quotationId);
+    if (!quotation) {
+      return { success: false, message: 'Quotation not found' };
+    }
+
+    // Initialize attachments if it doesn't exist
+    if (!quotation.attachments) {
+      quotation.attachments = [];
+    }
+
+    // Simulate file upload - create proper QuotationFile objects
+    Array.from(files).forEach((file) => {
+      const quotationFile: QuotationFile = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        originalName: file.name,
+        filename: `${Date.now()}_${file.name}`,
+        mimetype: file.type,
+        size: file.size,
+        uploadedAt: new Date(),
+      };
+      quotation.attachments!.push(quotationFile);
+    });
+
+    return { success: true, message: 'Files uploaded successfully' };
+  },
+
+  async downloadQuotationFile({
+    quotationId,
+    fileId,
+  }: {
+    quotationId: string;
+    fileId: string;
+  }): Promise<Blob> {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const quotation = quotations.find((q) => q.id === quotationId);
+    if (!quotation || !quotation.attachments?.find((f) => f.id === fileId)) {
+      throw new Error('File not found');
+    }
+
+    // Return a mock blob
+    return new Blob(['Mock file content'], {
+      type: 'application/octet-stream',
+    });
+  },
+
+  async deleteQuotationFile({
+    quotationId,
+    fileId,
+  }: {
+    quotationId: string;
+    fileId: string;
+  }): Promise<{ success: boolean; message: string }> {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const quotation = quotations.find((q) => q.id === quotationId);
+    if (!quotation) {
+      return { success: false, message: 'Quotation not found' };
+    }
+
+    if (quotation.attachments) {
+      quotation.attachments = quotation.attachments.filter((file) => file.id !== fileId);
+    }
+
+    return { success: true, message: 'File deleted successfully' };
+  },
+
   async getCompanies() {
     return new Promise((resolve) => {
       setTimeout(() => {

@@ -406,6 +406,81 @@ const apiService: IApiService = {
       throw new Error('Network error while deleting file');
     }
   },
+
+  // Quotation File Endpoints
+  async uploadQuotationFiles({ quotationId, files }) {
+    try {
+      console.log('API Service - uploadQuotationFiles called');
+      console.log('Quotation ID:', quotationId);
+      console.log('Files:', files);
+      console.log('Number of files:', files.length);
+      
+      const formData = new FormData();
+      Array.from(files).forEach((file, index) => {
+        console.log(`Adding file ${index + 1}:`, file.name, file.size, 'bytes');
+        formData.append('files', file);
+      });
+
+      console.log('Sending request to:', `/api/quotations/${quotationId}/files`);
+      const response = await axios.post(`/api/quotations/${quotationId}/files`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      console.log('Upload response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading quotation files:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error('Error response:', error.response.data);
+        throw new Error(error.response.data.message || 'Failed to upload files');
+      }
+      throw new Error('Network error while uploading files');
+    }
+  },
+
+  async getQuotationFiles({ quotationId }) {
+    try {
+      const response = await axios.get(`/api/quotations/${quotationId}/files`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching quotation files:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to fetch files');
+      }
+      throw new Error('Network error while fetching files');
+    }
+  },
+
+  async downloadQuotationFile({ quotationId, fileId }) {
+    try {
+      const response = await axios.get(`/api/quotations/${quotationId}/files/${fileId}`, {
+        responseType: 'blob',
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error downloading quotation file:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error('Failed to download file');
+      }
+      throw new Error('Network error while downloading file');
+    }
+  },
+
+  async deleteQuotationFile({ quotationId, fileId }) {
+    try {
+      const response = await axios.delete(`/api/quotations/${quotationId}/files/${fileId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting quotation file:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to delete file');
+      }
+      throw new Error('Network error while deleting file');
+    }
+  },
+
   // Quotation Endpoints
   async getQuotations({
     page,

@@ -1,5 +1,16 @@
 import mongoose, { Schema, model } from "mongoose";
 
+const QuotationFileSchema = new Schema({
+  id: { type: String, required: true },
+  originalName: { type: String, required: true },
+  filename: { type: String, required: true }, // Unique filename on server
+  mimetype: { type: String, required: true },
+  size: { type: Number, required: true },
+  uploadedAt: { type: Date, default: Date.now },
+  uploadedBy: { type: String }, // User ID who uploaded
+  description: { type: String }, // Optional description
+});
+
 const QuotationItemSchema = new Schema({
   itemCode: { type: Number, required: true, min: 0 },
   itemDescription: { type: String, required: true, trim: true },
@@ -26,6 +37,7 @@ const QuotationSchema = new Schema(
     myCompanyGSTIN: { type: String },
     myCompanyPAN: { type: String },
     myCompanyName: { type: String },
+    attachments: [QuotationFileSchema],
   },
   { timestamps: true }
 );

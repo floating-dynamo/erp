@@ -48,6 +48,7 @@ import { useAddQuotation } from '../api/use-add-quotation';
 import { MetaDataType } from '@/lib/types';
 import { useGetQuotationDetails } from '../api/use-get-quotation-details';
 import { useEditQuotation } from '../api/use-edit-quotation';
+import { QuotationFileUploadManager } from './quotation-file-upload-manager';
 
 type CreateQuotationFormSchema = z.infer<typeof createQuotationSchema>;
 
@@ -789,6 +790,22 @@ const CreateQuotationForm = ({ quotationId }: CreateQuotationFormProps) => {
                 />
               </div>
             </div>
+
+            {/* File Upload Section - only show in edit mode when quotation exists */}
+            {isEdit && quotationData?.id && (
+              <div className="space-y-4">
+                <Separator className="my-7" />
+                <QuotationFileUploadManager
+                  quotationId={quotationData.id}
+                  files={quotationData.attachments || []}
+                  onFilesChange={() => {
+                    // Optionally refetch quotation data to update the UI
+                    window.location.reload();
+                  }}
+                />
+              </div>
+            )}
+
             <Separator className="my-7" />
             <div className="flex items-center justify-end">
               <Button
