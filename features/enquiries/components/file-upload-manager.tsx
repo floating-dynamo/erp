@@ -34,6 +34,8 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
   const deleteFile = useDeleteEnquiryFile();
 
   const handleFileSelect = (files: FileList | null) => {
+    console.log('FileUploadManager - handleFileSelect called with:', files);
+    console.log('FileUploadManager - Number of files:', files?.length || 0);
     setSelectedFiles(files);
     onFilesChange?.(files);
   };
@@ -59,6 +61,8 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('FileUploadManager - handleInputChange called');
+    console.log('FileUploadManager - Files from input:', e.target.files);
     handleFileSelect(e.target.files);
   };
 
@@ -128,7 +132,7 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
           {/* Upload Zone */}
           <div
             className={cn(
-              'border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer',
+              'border-2 border-dashed rounded-lg p-6 text-center transition-colors',
               dragActive
                 ? 'border-blue-500 bg-blue-50'
                 : 'border-gray-300 hover:border-gray-400',
@@ -138,7 +142,6 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
           >
             <Upload className="w-10 h-10 text-gray-400 mx-auto mb-4" />
             <div>

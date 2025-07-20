@@ -126,6 +126,8 @@ export const CreateEnquiryForm = ({
   }, [customer, form]);
 
   const handleFilesChange = (files: FileList | null) => {
+    console.log('CreateEnquiryForm - handleFilesChange called with:', files);
+    console.log('CreateEnquiryForm - Number of files:', files?.length || 0);
     setSelectedFiles(files);
   };
 
@@ -178,11 +180,17 @@ export const CreateEnquiryForm = ({
             selectedFiles.length > 0 &&
             response?.enquiry?.id
           ) {
+            console.log('Attempting to upload files after enquiry creation');
+            console.log('Selected files:', selectedFiles);
+            console.log('Enquiry ID:', response.enquiry.id);
+            
             try {
               const uploadResult = await apiService.uploadEnquiryFiles({
                 enquiryId: response.enquiry.id,
                 files: selectedFiles,
               });
+
+              console.log('Upload result:', uploadResult);
 
               if (uploadResult.success) {
                 toast({
@@ -199,6 +207,10 @@ export const CreateEnquiryForm = ({
                 variant: 'destructive',
               });
             }
+          } else {
+            console.log('No files to upload or enquiry ID missing');
+            console.log('Selected files:', selectedFiles);
+            console.log('Response:', response);
           }
 
           router.push('/enquiries');

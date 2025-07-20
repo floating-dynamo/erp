@@ -302,11 +302,14 @@ const apiService: IApiService = {
   },
   async addEnquiry({ enquiry }) {
     try {
-      const response = await axios.post('/api/enquiries', enquiry);
-      return response.data; // Return the full response data which includes the enquiry object
+      await axios.post('/api/enquiries', enquiry);
+      return {
+        message: 'Enquiry added successfully',
+        success: true,
+      };
     } catch (error) {
       console.error(error);
-      throw new Error(`Error adding new enquiry ${(error as Error).message}`);
+      throw new Error(`Error adding new eqnuiry ${(error as Error).message}`);
     }
   },
   async getEnquiryById({ id }) {
@@ -333,20 +336,30 @@ const apiService: IApiService = {
   // Enquiry File Endpoints
   async uploadEnquiryFiles({ enquiryId, files }) {
     try {
+      console.log('API Service - uploadEnquiryFiles called');
+      console.log('Enquiry ID:', enquiryId);
+      console.log('Files:', files);
+      console.log('Number of files:', files.length);
+      
       const formData = new FormData();
-      Array.from(files).forEach((file) => {
+      Array.from(files).forEach((file, index) => {
+        console.log(`Adding file ${index + 1}:`, file.name, file.size, 'bytes');
         formData.append('files', file);
       });
 
+      console.log('Sending request to:', `/api/enquiries/${enquiryId}/files`);
       const response = await axios.post(`/api/enquiries/${enquiryId}/files`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
+      
+      console.log('Upload response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error uploading enquiry files:', error);
       if (axios.isAxiosError(error) && error.response) {
+        console.error('Error response:', error.response.data);
         throw new Error(error.response.data.message || 'Failed to upload files');
       }
       throw new Error('Network error while uploading files');

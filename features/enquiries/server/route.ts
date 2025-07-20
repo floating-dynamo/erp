@@ -130,10 +130,13 @@ const app = new Hono()
     try {
       await connectDB();
       const enquiryId = c.req.param('id');
+      
+      console.log('Server - File upload endpoint called for enquiry:', enquiryId);
 
       // Check if enquiry exists
       const enquiry = await EnquiryModel.findOne({ id: enquiryId });
       if (!enquiry) {
+        console.log('Server - Enquiry not found:', enquiryId);
         return c.json(
           {
             success: false,
@@ -148,7 +151,13 @@ const app = new Hono()
       const formData = await req.formData();
       const files = formData.getAll('files') as File[];
 
+      console.log('Server - Received files:', files.length);
+      files.forEach((file, index) => {
+        console.log(`Server - File ${index + 1}:`, file.name, file.size, 'bytes');
+      });
+
       if (!files || files.length === 0) {
+        console.log('Server - No files provided');
         return c.json(
           {
             success: false,
@@ -167,8 +176,11 @@ const app = new Hono()
       }
 
       for (const file of files) {
+        console.log('Server - Processing file:', file.name, 'Size:', file.size, 'Type:', file.type);
+        
         // Validate file size (10MB limit)
         if (file.size > 10 * 1024 * 1024) {
+          console.log('Server - File too large:', file.name, file.size);
           return c.json(
             {
               success: false,
@@ -227,12 +239,20 @@ const app = new Hono()
         uploadedFiles.push(fileMetadata);
       }
 
+      console.log('Server - Uploaded files:', uploadedFiles.length);
+      uploadedFiles.forEach((file, index) => {
+        console.log(`Server - Uploaded file ${index + 1}:`, file.originalName, file.id);
+      });
+
       // Update enquiry with new file attachments
-      await EnquiryModel.findOneAndUpdate(
+      console.log('Server - Updating enquiry with attachments:', enquiryId);
+      const updatedEnquiry = await EnquiryModel.findOneAndUpdate(
         { id: enquiryId },
         { $push: { attachments: { $each: uploadedFiles } } },
         { new: true }
       );
+
+      console.log('Server - Enquiry updated, total attachments:', updatedEnquiry?.attachments?.length || 0);
 
       return c.json({
         success: true,
