@@ -351,7 +351,6 @@ const app = new Hono()
       }
 
       return c.json({
-        success: true,
         files: quotation.attachments || [],
       });
     } catch (error) {

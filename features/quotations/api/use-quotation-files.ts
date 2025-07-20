@@ -1,7 +1,19 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import apiService from "@/services/api";
 import { QueryKeyString } from "@/lib/types";
+
+// Get quotation files
+export const useGetQuotationFiles = (quotationId: string) => {
+  return useQuery({
+    queryKey: [QueryKeyString.QUOTATIONS, quotationId, "files"] as const,
+    queryFn: async () => {
+      const result = await apiService.getQuotationFiles({ quotationId });
+      return result;
+    },
+    enabled: !!quotationId, // Only run query if quotationId is provided
+  });
+};
 
 // Upload quotation files
 export const useUploadQuotationFiles = () => {
@@ -25,9 +37,12 @@ export const useUploadQuotationFiles = () => {
         description: data.message,
       });
       
-      // Invalidate queries to refresh the quotation data
+      // Invalidate queries to refresh the quotation data and files
       queryClient.invalidateQueries({
         queryKey: [QueryKeyString.QUOTATIONS, variables.quotationId] as const,
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeyString.QUOTATIONS, variables.quotationId, "files"] as const,
       });
       queryClient.invalidateQueries({
         queryKey: [QueryKeyString.QUOTATIONS] as const,
@@ -103,9 +118,12 @@ export const useDeleteQuotationFile = () => {
         description: data.message,
       });
       
-      // Invalidate queries to refresh the quotation data
+      // Invalidate queries to refresh the quotation data and files
       queryClient.invalidateQueries({
         queryKey: [QueryKeyString.QUOTATIONS, variables.quotationId] as const,
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeyString.QUOTATIONS, variables.quotationId, "files"] as const,
       });
       queryClient.invalidateQueries({
         queryKey: [QueryKeyString.QUOTATIONS] as const,

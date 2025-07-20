@@ -9,7 +9,8 @@ import { QuotationFile } from '../schemas';
 import { 
   useUploadQuotationFiles, 
   useDownloadQuotationFile, 
-  useDeleteQuotationFile 
+  useDeleteQuotationFile,
+  useGetQuotationFiles 
 } from '../api/use-quotation-files';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -33,9 +34,17 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  
+  // Hooks for file operations
   const uploadFilesMutation = useUploadQuotationFiles();
   const downloadFileMutation = useDownloadQuotationFile();
   const deleteFileMutation = useDeleteQuotationFile();
+  
+  // Fetch files for existing quotations
+  const { data: filesData, isFetching: isFetchingFiles } = useGetQuotationFiles(quotationId || '');
+  
+  // Use fetched files if available, otherwise fall back to passed attachments
+  const currentAttachments = quotationId ? (filesData?.files || []) : attachments;
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files || files.length === 0) {
@@ -187,6 +196,12 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
           {uploadFilesMutation.isPending && (
             <Loader2 className="mx-auto h-6 w-6 text-blue-500 animate-spin mt-2" />
           )}
+          {isFetchingFiles && quotationId && (
+            <div className="flex items-center justify-center mt-2">
+              <Loader2 className="h-4 w-4 text-blue-500 animate-spin mr-2" />
+              <span className="text-sm text-gray-500">Loading files...</span>
+            </div>
+          )}
         </div>
 
         {/* Selected Files Preview */}
@@ -257,17 +272,17 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
       </Card>
 
       {/* Existing Attachments */}
-      {attachments.length > 0 && (
+      {currentAttachments.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>Uploaded Files ({attachments.length})</span>
-              <Badge variant="secondary">{attachments.length} files</Badge>
+              <span>Uploaded Files ({currentAttachments.length})</span>
+              <Badge variant="secondary">{currentAttachments.length} files</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-            {attachments.map((file) => (
+            {currentAttachments.map((file) => (
               <div
                 key={file.id}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
@@ -334,7 +349,7 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
         </Card>
       )}
 
-      {attachments && attachments.length === 0 && (
+      {currentAttachments && currentAttachments.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           <FileText className="mx-auto h-12 w-12 text-gray-300" />
           <p className="mt-2">No files uploaded yet</p>
