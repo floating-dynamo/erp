@@ -307,13 +307,51 @@ const app = new Hono()
 
       // Update quotation with new file attachments
       console.log('Server - Updating quotation with attachments:', quotationId);
-      const updatedQuotation = await QuotationModel.findOneAndUpdate(
-        { id: quotationId },
-        { $push: { attachments: { $each: uploadedFiles } } },
-        { new: true }
-      );
+      console.log('Server - Files to be added:', uploadedFiles.map(f => ({ id: f.id, name: f.originalName })));
+      
+      try {
+        const updatedQuotation = await QuotationModel.findOneAndUpdate(
+          { id: quotationId },
+          { $push: { attachments: { $each: uploadedFiles } } },
+          { new: true, runValidators: true }
+        );
 
-      console.log('Server - Quotation updated, total attachments:', updatedQuotation?.attachments?.length || 0);
+        if (!updatedQuotation) {
+          console.error('Server - Failed to update quotation: quotation not found after update');
+          return c.json(
+            {
+              success: false,
+              message: 'Failed to update quotation with file attachments',
+            },
+            500
+          );
+        }
+
+        console.log('Server - Quotation updated successfully:', !!updatedQuotation);
+        console.log('Server - Quotation updated, total attachments:', updatedQuotation?.attachments?.length || 0);
+        console.log('Server - Updated quotation ID:', updatedQuotation?.id);
+        
+        if (updatedQuotation?.attachments && updatedQuotation.attachments.length > 0) {
+          console.log('Server - All attachments on quotation:', 
+            updatedQuotation.attachments.map((att: QuotationFile) => ({ id: att.id, name: att.originalName }))
+          );
+        }
+
+        // Verify the update by fetching the quotation again
+        const verificationQuotation = await QuotationModel.findOne({ id: quotationId });
+        console.log('Server - Verification: quotation found after update:', !!verificationQuotation);
+        console.log('Server - Verification: total attachments after update:', verificationQuotation?.attachments?.length || 0);
+
+      } catch (updateError) {
+        console.error('Server - Error during quotation update:', updateError);
+        return c.json(
+          {
+            success: false,
+            message: 'Database error while updating quotation',
+          },
+          500
+        );
+      }
 
       return c.json({
         success: true,
@@ -337,10 +375,26 @@ const app = new Hono()
     try {
       await connectDB();
       const quotationId = c.req.param('id');
+      
+      console.log('Server - Get files endpoint called for quotation:', quotationId);
+
+      // First, let's check if any quotations exist at all
+      const allQuotations = await QuotationModel.find({}).select('id quoteNumber attachments');
+      console.log('Server - Total quotations in database:', allQuotations.length);
+      console.log('Server - All quotation IDs:', allQuotations.map(q => ({ id: q.id, quoteNumber: q.quoteNumber, attachmentsCount: q.attachments?.length || 0 })));
 
       // Check if quotation exists
       const quotation = await QuotationModel.findOne({ id: quotationId });
+      console.log('Server - Quotation found:', !!quotation);
+      
       if (!quotation) {
+        console.log('Server - Quotation not found with ID:', quotationId);
+        console.log('Server - Trying alternative search with _id...');
+        
+        // Try searching with _id as well, just in case
+        const quotationById = await QuotationModel.findById(quotationId);
+        console.log('Server - Quotation found by _id:', !!quotationById);
+        
         return c.json(
           {
             success: false,
@@ -349,6 +403,11 @@ const app = new Hono()
           404
         );
       }
+
+      console.log('Server - Quotation found with id:', quotation.id);
+      console.log('Server - Quotation quoteNumber:', quotation.quoteNumber);
+      console.log('Server - Quotation attachments count:', quotation.attachments?.length || 0);
+      console.log('Server - Quotation attachments:', quotation.attachments);
 
       return c.json({
         files: quotation.attachments || [],

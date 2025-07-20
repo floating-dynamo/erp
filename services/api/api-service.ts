@@ -442,11 +442,16 @@ const apiService: IApiService = {
 
   async getQuotationFiles({ quotationId }) {
     try {
+      console.log('API Service - getQuotationFiles called with quotationId:', quotationId);
       const response = await axios.get(`/api/quotations/${quotationId}/files`);
+      console.log('API Service - getQuotationFiles response:', response.data);
+      console.log('API Service - Files count:', response.data?.files?.length || 0);
       return response.data;
     } catch (error) {
       console.error('Error fetching quotation files:', error);
       if (axios.isAxiosError(error) && error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
         throw new Error(error.response.data.message || 'Failed to fetch files');
       }
       throw new Error('Network error while fetching files');

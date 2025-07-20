@@ -25,7 +25,7 @@ const QuotationItemSchema = new Schema({
 
 const QuotationSchema = new Schema(
   {
-    id: { type: String, required: true },
+    id: { type: String, required: true, unique: true },
     customerName: { type: String, required: true, trim: true },
     customerId: { type: String, required: true },
     enquiryNumber: { type: String },
@@ -41,6 +41,9 @@ const QuotationSchema = new Schema(
   },
   { timestamps: true }
 );
+
+// Add index for the custom id field
+QuotationSchema.index({ id: 1 });
 
 // Prevent OverwriteModelError
 const QuotationModel =

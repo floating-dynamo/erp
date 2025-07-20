@@ -43,6 +43,12 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
   // Fetch files for existing quotations
   const { data: filesData, isFetching: isFetchingFiles } = useGetQuotationFiles(quotationId || '');
   
+  // Debug logging
+  console.log('QuotationFileUploadManager - quotationId:', quotationId);
+  console.log('QuotationFileUploadManager - filesData:', filesData);
+  console.log('QuotationFileUploadManager - isFetchingFiles:', isFetchingFiles);
+  console.log('QuotationFileUploadManager - files count:', filesData?.files?.length || 0);
+  
   // Use fetched files if available, otherwise fall back to passed attachments
   const currentAttachments = quotationId ? (filesData?.files || []) : attachments;
 
