@@ -404,6 +404,21 @@ export interface IApiService {
     id: string;
     data: Bom;
   }) => Promise<EditBomResponse>;
+  
+  // BOM Versioning Endpoints
+  getBomVersions: ({ id }: { id: string }) => Promise<{ versions: Bom[]; total: number }>;
+  getBomVersionHistory: ({ id }: { id: string }) => Promise<{ 
+    versionHistory: Array<{
+      versionNumber: string;
+      bomId: string;
+      createdAt: Date;
+      createdBy: string;
+      changeDescription?: string;
+    }>;
+    currentVersion: string;
+    isLatestVersion: boolean;
+  }>;
+  getLatestBomByBaseId: ({ baseId }: { baseId: string }) => Promise<Bom>;
 
   // Metadata Endpoints
   getMetadata: ({

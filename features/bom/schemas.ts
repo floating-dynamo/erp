@@ -57,11 +57,27 @@ export const createBomSchema = z.object({
   createdBy: z.string().optional(),
   approvedBy: z.string().optional(),
   approvalDate: z.string().optional(),
+  // Version control fields
+  baseId: z.string().optional(),
+  parentVersionId: z.string().optional(),
+  isLatestVersion: z.boolean().optional().default(true),
+  changeDescription: z.string().optional(), // Description of changes made in this version
+  versionHistory: z.array(z.object({
+    versionNumber: z.string(),
+    bomId: z.string(),
+    createdAt: z.date(),
+    createdBy: z.string(),
+    changeDescription: z.string().optional()
+  })).optional(),
+  // MongoDB timestamps
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
 });
 
-// Define the schema for editing BOMs
+// Define the schema for editing BOMs (creates new version)
 export const editBomSchema = createBomSchema.extend({
   id: z.string().min(1, "BOM ID is required"),
+  changeDescription: z.string().min(1, "Change description is required for version updates"), // Required for versioning
 });
 
 // Helper type for flattened BOM items (used for display)

@@ -847,6 +847,37 @@ const apiService: IApiService = {
       throw new Error(`Error editing BOM ${(error as Error).message}`);
     }
   },
+
+  // BOM Versioning Endpoints
+  async getBomVersions({ id }) {
+    try {
+      const response = await axios.get(`/api/boms/${id}/versions`);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error fetching BOM versions ${(error as Error).message}`);
+    }
+  },
+
+  async getBomVersionHistory({ id }) {
+    try {
+      const response = await axios.get(`/api/boms/${id}/history`);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error fetching BOM version history ${(error as Error).message}`);
+    }
+  },
+
+  async getLatestBomByBaseId({ baseId }) {
+    try {
+      const response = await axios.get(`/api/boms/latest/${baseId}`);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error fetching latest BOM version ${(error as Error).message}`);
+    }
+  },
 };
 
 export default apiService;

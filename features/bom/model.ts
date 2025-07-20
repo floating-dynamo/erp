@@ -42,6 +42,17 @@ const BomSchema = new Schema(
     createdBy: { type: String },
     approvedBy: { type: String },
     approvalDate: { type: Date },
+    // Version control fields
+    baseId: { type: String }, // ID of the original BOM (first version)
+    parentVersionId: { type: String }, // ID of the previous version
+    isLatestVersion: { type: Boolean, default: true }, // Flag to identify the latest version
+    versionHistory: [{ 
+      versionNumber: { type: String },
+      bomId: { type: String },
+      createdAt: { type: Date },
+      createdBy: { type: String },
+      changeDescription: { type: String }
+    }],
   },
   { timestamps: true }
 );

@@ -735,6 +735,29 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
                     </FormItem>
                   )}
                 />
+
+                {isEdit && (
+                  <FormField
+                    control={form.control}
+                    name="changeDescription"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Change Description *</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Describe the changes made in this version (required for version updates)" 
+                            rows={3}
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                        <p className="text-sm text-muted-foreground">
+                          This will create a new version of the BOM. The change description will be saved in the version history.
+                        </p>
+                      </FormItem>
+                    )}
+                  />
+                )}
               </div>
             </CardContent>
           </Card>
@@ -754,10 +777,10 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
             >
               {isLoading ? (
                 <>
-                  <Loader /> {isEdit ? 'Updating...' : 'Creating...'}
+                  <Loader /> {isEdit ? 'Creating new version...' : 'Creating...'}
                 </>
               ) : (
-                isEdit ? 'Update BOM' : 'Create BOM'
+                isEdit ? 'Create New Version' : 'Create BOM'
               )}
             </Button>
           </div>

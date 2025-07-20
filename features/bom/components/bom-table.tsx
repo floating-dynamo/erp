@@ -19,6 +19,7 @@ import {
   EyeIcon,
   CopyIcon,
   RefreshCwIcon,
+  History,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -47,6 +48,8 @@ import { useDebounce } from '@/hooks/use-debounce';
 import Loader from '@/components/loader';
 import { Badge } from '@/components/ui/badge';
 import { BomFilters } from './bom-filters';
+import BomVersionHistory from './bom-version-history';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { Bom } from '../schemas';
 
 interface ActionsProps {
@@ -55,6 +58,7 @@ interface ActionsProps {
 
 const ActionsCell: React.FC<ActionsProps> = ({ bom }) => {
   const { toast } = useToast();
+  const [showVersionHistory, setShowVersionHistory] = React.useState(false);
 
   const handleCopyBomId = (): void => {
     if (bom.id) {
@@ -85,42 +89,61 @@ const ActionsCell: React.FC<ActionsProps> = ({ bom }) => {
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
-          <span className="sr-only">Open menu</span>
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem
-          className="cursor-pointer"
-          onClick={() => redirect(`boms/${bom?.id}`)}
-        >
-          <EyeIcon className="size-3" /> View BOM
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="cursor-pointer"
-          onClick={handleCopyBomId}
-        >
-          <CopyIcon className="size-3" /> Copy BOM ID
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="cursor-pointer"
-          onClick={handleCopyBomNumber}
-        >
-          <CopyIcon className="size-3" /> Copy BOM Number
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="cursor-pointer"
-          onClick={handleCopyProductCode}
-        >
-          <CopyIcon className="size-3" /> Copy Product Code
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => redirect(`boms/${bom?.id}`)}
+          >
+            <EyeIcon className="size-3" /> View BOM
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => setShowVersionHistory(true)}
+          >
+            <History className="size-3" /> Version History
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={handleCopyBomId}
+          >
+            <CopyIcon className="size-3" /> Copy BOM ID
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={handleCopyBomNumber}
+          >
+            <CopyIcon className="size-3" /> Copy BOM Number
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={handleCopyProductCode}
+          >
+            <CopyIcon className="size-3" /> Copy Product Code
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Dialog open={showVersionHistory} onOpenChange={setShowVersionHistory}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Version History - {bom.bomName} (v{bom.version})
+            </DialogTitle>
+          </DialogHeader>
+          {bom.id && <BomVersionHistory bomId={bom.id} />}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

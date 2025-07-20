@@ -21,22 +21,26 @@ export const useEditBom = (options: UseBomMutationOptions = {}) => {
     },
     onSuccess: (data: BomUpdateResponse, { id }: EditBomParams) => {
       toast({
-        title: 'BOM updated',
-        description: 'The BOM has been edited successfully',
+        title: 'New BOM version created',
+        description: `Version ${data.newVersion} has been created successfully`,
       });
       queryClient.invalidateQueries({ queryKey: [QueryKeyString.BOMS] });
       queryClient.invalidateQueries({
         queryKey: [QueryKeyString.BOMS, id],
       });
+      // Also invalidate queries for the new version
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeyString.BOMS, data.newVersionId],
+      });
       onSuccess?.(data);
     },
     onError: (err: Error) => {
       toast({
-        title: 'Failed to update the BOM',
-        description: 'An error occurred while updating the BOM',
+        title: 'Failed to create new BOM version',
+        description: 'An error occurred while creating the new BOM version',
         variant: 'destructive',
       });
-      console.error('Failed to update the BOM: ', err);
+      console.error('Failed to create new BOM version: ', err);
       onError?.(err);
     },
   });
