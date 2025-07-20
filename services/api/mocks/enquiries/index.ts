@@ -20,6 +20,7 @@ const mockEnquiries: Enquiry[] = [
     ],
     termsAndConditions: "Terms 1",
     isQotationCreated: true,
+    attachments: [],
   },
   {
     id: "2e7b1d9e-2c4d-4b8e-8f1e-2e7b1d9e2c4d",
@@ -39,6 +40,7 @@ const mockEnquiries: Enquiry[] = [
       },
     ],
     termsAndConditions: "Terms 2",
+    attachments: [],
   },
   {
     id: "3e7b1d9e-3c4d-4b8e-8f1e-3e7b1d9e3c4d",
@@ -58,6 +60,7 @@ const mockEnquiries: Enquiry[] = [
       },
     ],
     termsAndConditions: "Terms 3",
+    attachments: [],
   },
   {
     id: "4e7b1d9e-4c4d-4b8e-8f1e-4e7b1d9e4c4d",
@@ -78,6 +81,7 @@ const mockEnquiries: Enquiry[] = [
     ],
     termsAndConditions: "Terms 4",
     isQotationCreated: true,
+    attachments: [],
   },
   {
     id: "5e7b1d9e-5c4d-4b8e-8f1e-5e7b1d9e5c4d",
@@ -97,6 +101,7 @@ const mockEnquiries: Enquiry[] = [
       },
     ],
     termsAndConditions: "Terms 5",
+    attachments: [],
   },
 ];
 
