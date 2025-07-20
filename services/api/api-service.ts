@@ -848,6 +848,16 @@ const apiService: IApiService = {
     }
   },
 
+  async updateBom({ id, data }) {
+    try {
+      const response = await axios.put(`/api/boms/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error updating BOM ${(error as Error).message}`);
+    }
+  },
+
   // BOM Versioning Endpoints
   async getBomVersions({ id }) {
     try {

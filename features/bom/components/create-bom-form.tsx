@@ -38,6 +38,7 @@ import {
 import { createBomSchema, editBomSchema, BomItem } from '../schemas';
 import { useAddBom } from '../api/use-add-bom';
 import { useEditBom } from '../api/use-edit-bom';
+import { useUpdateBom } from '../api/use-update-bom';
 import { useGetBomDetails } from '../api/use-get-bom-details';
 import { getMetaData } from '@/lib/utils';
 import { MetaDataType } from '@/lib/types';
@@ -404,6 +405,8 @@ const HierarchicalItemForm: React.FC<HierarchicalItemFormProps<CreateBomFormSche
 const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
   const router = useRouter();
   const isEdit: boolean = !!bomId;
+  const [originalVersion, setOriginalVersion] = React.useState<string>('');
+  const [isVersionChanged, setIsVersionChanged] = React.useState<boolean>(false);
 
   const { data: bomData, isFetching: isFetchingBom } = useGetBomDetails({
     id: bomId || '',
@@ -417,6 +420,12 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
   });
 
   const { mutate: editBom, isPending: isEditingBom } = useEditBom({
+    onSuccess: () => {
+      router.push('/boms');
+    },
+  });
+
+  const { mutate: updateBom, isPending: isUpdatingBom } = useUpdateBom({
     onSuccess: () => {
       router.push('/boms');
     },
@@ -456,6 +465,8 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
 
   React.useEffect(() => {
     if (isEdit && bomData) {
+      // Set the original version for comparison
+      setOriginalVersion(bomData.version || '1.0');
       form.reset({
         ...bomData,
         id: bomData.id,
@@ -463,9 +474,45 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
     }
   }, [bomData, form, isEdit]);
 
+  // Watch for version changes
+  React.useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'version' && bomData) {
+        const currentVersion = value.version;
+        const hasChanged = currentVersion !== originalVersion;
+        setIsVersionChanged(hasChanged);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form, originalVersion, bomData]);
+
   if (isEdit && isFetchingBom) {
     return <Loader />;
   }
+
+  // Helper function to auto-increment version by 0.1
+  const autoIncrementVersion = (currentVersion: string): string => {
+    const versionParts = currentVersion.split('.');
+    if (versionParts.length >= 2) {
+      const major = parseInt(versionParts[0]) || 1;
+      const minor = parseFloat(versionParts[1]) || 0;
+      return `${major}.${(minor + 0.1).toFixed(1)}`;
+    }
+    return '1.1';
+  };
+
+  // Determine if we should create a new version or update existing
+  const shouldCreateVersion = (): boolean => {
+    if (!isEdit || !bomData) return false;
+    
+    // If BOM is DRAFT, always update existing (no versioning)
+    if (bomData.status === 'DRAFT') return false;
+    
+    // If BOM is ACTIVE, create version only if version changed OR auto-increment
+    if (bomData.status === 'ACTIVE') return true;
+    
+    return false;
+  };
 
   const onSubmit = (values: CreateBomFormSchema): void => {
     // Calculate amounts for all items recursively
@@ -494,15 +541,37 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
 
     console.log('BOM Data: ', values);
 
-    if (isEdit && bomId) {
-      editBom({
-        id: bomId,
-        bom: {
+    if (isEdit && bomId && bomData) {
+      const createVersion = shouldCreateVersion();
+      
+      if (createVersion) {
+        // For ACTIVE BOMs: Create new version
+        // Auto-increment version if it hasn't been manually changed
+        if (!isVersionChanged) {
+          values.version = autoIncrementVersion(originalVersion);
+        }
+        
+        // Create new version (this requires change description)
+        editBom({
           id: bomId,
-          ...values,
-        } as EditBomFormSchema,
-      });
+          bom: {
+            id: bomId,
+            ...values,
+            changeDescription: values.changeDescription || `Version updated to ${values.version}`,
+          } as EditBomFormSchema,
+        });
+      } else {
+        // For DRAFT BOMs: Update existing record
+        updateBom({
+          id: bomId,
+          bom: {
+            ...values,
+            id: bomId,
+          },
+        });
+      }
     } else {
+      // Creating new BOM
       addBom(values);
     }
   };
@@ -525,7 +594,7 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
     addItem(newItem);
   };
 
-  const isLoading: boolean = isAddingBom || isEditingBom;
+  const isLoading: boolean = isAddingBom || isEditingBom || isUpdatingBom;
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -605,8 +674,17 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
                     <FormItem>
                       <FormLabel>Version</FormLabel>
                       <FormControl>
-                        <Input placeholder="1.0" {...field} />
+                        <Input 
+                          placeholder="1.0" 
+                          {...field} 
+                          disabled={isEdit && bomData?.status === 'DRAFT'}
+                        />
                       </FormControl>
+                      {isEdit && bomData?.status === 'DRAFT' && (
+                        <p className="text-sm text-muted-foreground">
+                          Version cannot be changed for draft BOMs
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -736,23 +814,32 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
                   )}
                 />
 
-                {isEdit && (
+                {isEdit && bomData?.status === 'ACTIVE' && (
                   <FormField
                     control={form.control}
                     name="changeDescription"
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
-                        <FormLabel>Change Description *</FormLabel>
+                        <FormLabel>
+                          Change Description {isVersionChanged ? '*' : '(Optional)'}
+                        </FormLabel>
                         <FormControl>
                           <Textarea 
-                            placeholder="Describe the changes made in this version (required for version updates)" 
+                            placeholder={
+                              isVersionChanged 
+                                ? "Describe the changes made in this version (required for version updates)" 
+                                : "Describe the changes made (will auto-increment version by 0.1)"
+                            }
                             rows={3}
                             {...field} 
                           />
                         </FormControl>
                         <FormMessage />
                         <p className="text-sm text-muted-foreground">
-                          This will create a new version of the BOM. The change description will be saved in the version history.
+                          {isVersionChanged 
+                            ? "Manual version change detected. This will create a new version of the BOM." 
+                            : "Version will be automatically incremented by 0.1 and a new version will be created."
+                          }
                         </p>
                       </FormItem>
                     )}
@@ -777,10 +864,16 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
             >
               {isLoading ? (
                 <>
-                  <Loader /> {isEdit ? 'Creating new version...' : 'Creating...'}
+                  <Loader /> 
+                  {isEdit 
+                    ? (bomData?.status === 'DRAFT' ? 'Saving changes...' : 'Creating new version...') 
+                    : 'Creating...'
+                  }
                 </>
               ) : (
-                isEdit ? 'Create New Version' : 'Create BOM'
+                isEdit 
+                  ? (bomData?.status === 'DRAFT' ? 'Save Changes' : 'Create New Version')
+                  : 'Create BOM'
               )}
             </Button>
           </div>

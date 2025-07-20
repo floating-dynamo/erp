@@ -404,6 +404,13 @@ export interface IApiService {
     id: string;
     data: Bom;
   }) => Promise<EditBomResponse>;
+  updateBom: ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: Bom;
+  }) => Promise<EditBomResponse>;
   
   // BOM Versioning Endpoints
   getBomVersions: ({ id }: { id: string }) => Promise<{ versions: Bom[]; total: number }>;

@@ -77,7 +77,7 @@ export const createBomSchema = z.object({
 // Define the schema for editing BOMs (creates new version)
 export const editBomSchema = createBomSchema.extend({
   id: z.string().min(1, "BOM ID is required"),
-  changeDescription: z.string().min(1, "Change description is required for version updates"), // Required for versioning
+  changeDescription: z.string().optional(), // Made optional - will be auto-generated if not provided
 });
 
 // Helper type for flattened BOM items (used for display)
