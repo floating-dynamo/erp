@@ -16,6 +16,9 @@ export interface GetEnquiriesResponse {
 export interface AddEnquiryResponse {
   message: string;
   success: boolean;
+  enquiry?: {
+    id: string;
+  };
 }
 
 export interface EditEnquiryResponse {

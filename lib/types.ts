@@ -9,7 +9,7 @@ import {
   EditEnquiryResponse,
   GetEnquiriesResponse,
 } from './types/requirement';
-import { Enquiry } from '@/features/enquiries/schemas';
+import { Enquiry, EnquiryFile } from '@/features/enquiries/schemas';
 import { GetCountriesResponse, GetMetadataResponse } from './types/index';
 import {
   AddQuotationResponse,
@@ -226,6 +226,34 @@ export interface IApiService {
     id: string;
     data: Enquiry;
   }) => Promise<EditEnquiryResponse>;
+
+  // Enquiry File Endpoints
+  uploadEnquiryFiles: ({
+    enquiryId,
+    files,
+  }: {
+    enquiryId: string;
+    files: FileList;
+  }) => Promise<{ success: boolean; message: string }>;
+  getEnquiryFiles: ({
+    enquiryId,
+  }: {
+    enquiryId: string;
+  }) => Promise<{ files: EnquiryFile[] }>;
+  downloadEnquiryFile: ({
+    enquiryId,
+    fileId,
+  }: {
+    enquiryId: string;
+    fileId: string;
+  }) => Promise<Blob>;
+  deleteEnquiryFile: ({
+    enquiryId,
+    fileId,
+  }: {
+    enquiryId: string;
+    fileId: string;
+  }) => Promise<{ success: boolean; message: string }>;
 
   // Quotation Endpoints
   getQuotations: ({

@@ -332,6 +332,70 @@ const apiService: IApiService = {
       );
     }
   },
+
+  // Enquiry File Endpoints
+  async uploadEnquiryFiles({ enquiryId, files }) {
+    try {
+      const formData = new FormData();
+      Array.from(files).forEach((file) => {
+        formData.append('files', file);
+      });
+
+      const response = await axios.post(`/api/enquiries/${enquiryId}/files`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading enquiry files:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to upload files');
+      }
+      throw new Error('Network error while uploading files');
+    }
+  },
+
+  async getEnquiryFiles({ enquiryId }) {
+    try {
+      const response = await axios.get(`/api/enquiries/${enquiryId}/files`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching enquiry files:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to fetch files');
+      }
+      throw new Error('Network error while fetching files');
+    }
+  },
+
+  async downloadEnquiryFile({ enquiryId, fileId }) {
+    try {
+      const response = await axios.get(`/api/enquiries/${enquiryId}/files/${fileId}`, {
+        responseType: 'blob',
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error downloading enquiry file:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error('Failed to download file');
+      }
+      throw new Error('Network error while downloading file');
+    }
+  },
+
+  async deleteEnquiryFile({ enquiryId, fileId }) {
+    try {
+      const response = await axios.delete(`/api/enquiries/${enquiryId}/files/${fileId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting enquiry file:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to delete file');
+      }
+      throw new Error('Network error while deleting file');
+    }
+  },
   // Quotation Endpoints
   async getQuotations({
     page,

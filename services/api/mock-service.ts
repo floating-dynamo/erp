@@ -8,7 +8,7 @@ import { User } from '@/lib/types/user';
 import { ICustomer } from '@/lib/types/customer';
 import { CUSTOMERS_MOCK_DATA } from './mocks/customers';
 import { Customer, CustomerFile } from '@/features/customers/schemas';
-import { Enquiry } from '@/features/enquiries/schemas';
+import { Enquiry, EnquiryFile } from '@/features/enquiries/schemas';
 import { ENQUIRIES_MOCK_DATA } from './mocks/enquiries';
 import axios from 'axios';
 import { Quotation } from '@/features/quotations/schemas';
@@ -518,6 +518,9 @@ const mockService: IApiService = {
         resolve({
           message: 'Enquiry added successfully',
           success: true,
+          enquiry: {
+            id: enquiry.id || 'mock-id',
+          },
         });
       }, 1000);
     });
@@ -545,6 +548,101 @@ const mockService: IApiService = {
         });
       }, 1000);
     });
+  },
+
+  // Enquiry File Management - using proper EnquiryFile types
+  async getEnquiryFiles({
+    enquiryId,
+  }: {
+    enquiryId: string;
+  }): Promise<{ files: EnquiryFile[] }> {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const enquiry = enquiries.find((e) => e.id === enquiryId);
+    return {
+      files: enquiry?.attachments || [],
+    };
+  },
+
+  async uploadEnquiryFiles({
+    enquiryId,
+    files,
+  }: {
+    enquiryId: string;
+    files: FileList;
+  }): Promise<{ success: boolean; message: string }> {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const enquiry = enquiries.find((e) => e.id === enquiryId);
+    if (!enquiry) {
+      return { success: false, message: 'Enquiry not found' };
+    }
+
+    // Initialize attachments if it doesn't exist
+    if (!enquiry.attachments) {
+      enquiry.attachments = [];
+    }
+
+    // Simulate file upload - create proper EnquiryFile objects
+    Array.from(files).forEach((file) => {
+      const enquiryFile: EnquiryFile = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        originalName: file.name,
+        filename: `${Date.now()}_${file.name}`,
+        mimetype: file.type,
+        size: file.size,
+        uploadedAt: new Date(),
+      };
+      enquiry.attachments!.push(enquiryFile);
+    });
+
+    return { success: true, message: 'Files uploaded successfully' };
+  },
+
+  async downloadEnquiryFile({
+    enquiryId,
+    fileId,
+  }: {
+    enquiryId: string;
+    fileId: string;
+  }): Promise<Blob> {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const enquiry = enquiries.find((e) => e.id === enquiryId);
+    if (!enquiry || !enquiry.attachments?.find((f) => f.id === fileId)) {
+      throw new Error('File not found');
+    }
+
+    // Return a mock blob
+    return new Blob(['Mock file content'], {
+      type: 'application/octet-stream',
+    });
+  },
+
+  async deleteEnquiryFile({
+    enquiryId,
+    fileId,
+  }: {
+    enquiryId: string;
+    fileId: string;
+  }): Promise<{ success: boolean; message: string }> {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const enquiry = enquiries.find((e) => e.id === enquiryId);
+    if (!enquiry) {
+      return { success: false, message: 'Enquiry not found' };
+    }
+
+    if (!enquiry.attachments) {
+      return { success: false, message: 'File not found' };
+    }
+
+    const initialLength = enquiry.attachments.length;
+    enquiry.attachments = enquiry.attachments.filter(
+      (file) => file.id !== fileId
+    );
+
+    if (enquiry.attachments.length === initialLength) {
+      return { success: false, message: 'File not found' };
+    }
+
+    return { success: true, message: 'File deleted successfully' };
   },
   async getCountries() {
     try {
