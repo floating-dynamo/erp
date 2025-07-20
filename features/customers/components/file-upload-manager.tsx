@@ -128,7 +128,7 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
           {/* Upload Zone */}
           <div
             className={cn(
-              'border-2 border-dashed rounded-lg p-6 text-center transition-colors',
+              'border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer',
               dragActive
                 ? 'border-blue-500 bg-blue-50'
                 : 'border-gray-300 hover:border-gray-400',
@@ -138,6 +138,7 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
           >
             <Upload className="w-10 h-10 text-gray-400 mx-auto mb-4" />
             <div>

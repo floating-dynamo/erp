@@ -40,6 +40,7 @@ const mockEnquiries: Enquiry[] = [
       },
     ],
     termsAndConditions: "Terms 2",
+    isQotationCreated: false,
     attachments: [],
   },
   {
@@ -60,6 +61,7 @@ const mockEnquiries: Enquiry[] = [
       },
     ],
     termsAndConditions: "Terms 3",
+    isQotationCreated: false,
     attachments: [],
   },
   {
@@ -101,6 +103,7 @@ const mockEnquiries: Enquiry[] = [
       },
     ],
     termsAndConditions: "Terms 5",
+    isQotationCreated: false,
     attachments: [],
   },
 ];

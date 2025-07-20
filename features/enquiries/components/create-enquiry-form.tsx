@@ -103,6 +103,7 @@ export const CreateEnquiryForm = ({
       termsAndConditions: '',
       file: undefined,
       isQotationCreated: false,
+      attachments: [],
     },
   });
   const router = useRouter();
@@ -142,13 +143,29 @@ export const CreateEnquiryForm = ({
         },
         {
           onSuccess: () => {
-            form.reset();
+            toast({
+              title: 'Success',
+              description: 'Enquiry updated successfully',
+            });
             router.push('/enquiries');
+          },
+          onError: (error) => {
+            toast({
+              title: 'Error',
+              description: error.message,
+              variant: 'destructive',
+            });
           },
         }
       );
     } else {
-      addEnquiry(finalValues, {
+      // For creating new enquiries, remove attachments as they'll be uploaded separately
+      const enquiryData = {
+        ...finalValues,
+        attachments: [],
+      };
+      
+      addEnquiry(enquiryData, {
         onSuccess: async (response) => {
           toast({
             title: 'Success',
@@ -184,7 +201,6 @@ export const CreateEnquiryForm = ({
             }
           }
 
-          form.reset();
           router.push('/enquiries');
         },
         onError: (error) => {

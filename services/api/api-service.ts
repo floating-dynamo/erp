@@ -302,14 +302,11 @@ const apiService: IApiService = {
   },
   async addEnquiry({ enquiry }) {
     try {
-      await axios.post('/api/enquiries', enquiry);
-      return {
-        message: 'Enquiry added successfully',
-        success: true,
-      };
+      const response = await axios.post('/api/enquiries', enquiry);
+      return response.data; // Return the full response data which includes the enquiry object
     } catch (error) {
       console.error(error);
-      throw new Error(`Error adding new eqnuiry ${(error as Error).message}`);
+      throw new Error(`Error adding new enquiry ${(error as Error).message}`);
     }
   },
   async getEnquiryById({ id }) {
