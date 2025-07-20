@@ -41,6 +41,7 @@ const QUOTATIONS_MOCK_DATA: Quotation[] = [
     myCompanyGSTIN: '123456789012345',
     myCompanyPAN: 'ABCDE1234F',
     myCompanyName: 'Tech Solutions Pvt Ltd',
+    attachments: [],
   },
   {
     id: '2',
@@ -79,6 +80,7 @@ const QUOTATIONS_MOCK_DATA: Quotation[] = [
     myCompanyGSTIN: '987654321098765',
     myCompanyPAN: 'XYZDC4321G',
     myCompanyName: 'Office Equipments Ltd.',
+    attachments: [],
   },
   {
     id: '3',
@@ -108,6 +110,7 @@ const QUOTATIONS_MOCK_DATA: Quotation[] = [
     myCompanyGSTIN: '654321098765432',
     myCompanyPAN: 'EFGHI5678J',
     myCompanyName: 'Vision Tech Ltd.',
+    attachments: [],
   },
 ];
 
