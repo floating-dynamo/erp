@@ -12,6 +12,7 @@ export interface BomFilter {
     $gte?: number;
     $lte?: number;
   };
+  isLatestVersion?: boolean;
 }
 
 /**
@@ -63,6 +64,57 @@ export interface BomFormData {
   items: BomItemFormData[];
   description?: string;
   notes?: string;
+  // Version control fields
+  baseId?: string;
+  parentVersionId?: string;
+  isLatestVersion?: boolean;
+  changeDescription?: string;
+}
+
+/**
+ * Version history entry interface
+ */
+export interface BomVersionHistoryEntry {
+  versionNumber: string;
+  bomId: string;
+  createdAt: Date;
+  createdBy: string;
+  changeDescription?: string;
+}
+
+/**
+ * BOM create/update response interfaces
+ */
+export interface BomCreateResponse {
+  message: string;
+  success: boolean;
+  bomNumber: string;
+  id: string;
+  version: string;
+}
+
+export interface BomUpdateResponse {
+  message: string;
+  success: boolean;
+  newVersion: string;
+  newVersionId: string;
+}
+
+/**
+ * BOM versions response interface
+ */
+export interface BomVersionsResponse {
+  versions: import('./schemas').Bom[];
+  total: number;
+}
+
+/**
+ * BOM version history response interface
+ */
+export interface BomVersionHistoryResponse {
+  versionHistory: BomVersionHistoryEntry[];
+  currentVersion: string;
+  isLatestVersion: boolean;
 }
 
 export interface BomItemFormData {
@@ -95,6 +147,10 @@ export interface BomTableRow {
   totalMaterialCost: number;
   bomDate?: string;
   createdBy?: string;
+  // Version control fields
+  baseId?: string;
+  parentVersionId?: string;
+  isLatestVersion?: boolean;
 }
 
 /**
