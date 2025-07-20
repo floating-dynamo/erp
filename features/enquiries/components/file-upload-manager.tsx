@@ -5,21 +5,21 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Upload, X, FileText, Download, Trash2, AlertCircle } from 'lucide-react';
-import { useUploadCustomerFiles, useDownloadCustomerFile, useDeleteCustomerFile } from '../api/use-customer-files';
-import { CustomerFile } from '../schemas';
+import { useUploadEnquiryFiles, useDownloadEnquiryFile, useDeleteEnquiryFile } from '../api/use-enquiry-files';
+import { EnquiryFile } from '../schemas';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface FileUploadManagerProps {
-  customerId?: string;
-  attachments?: CustomerFile[];
+  enquiryId?: string;
+  attachments?: EnquiryFile[];
   onFilesChange?: (files: FileList | null) => void;
   disabled?: boolean;
   showUploadButton?: boolean;
 }
 
 export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
-  customerId,
+  enquiryId,
   attachments = [],
   onFilesChange,
   disabled = false,
@@ -29,11 +29,13 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
-  const uploadFiles = useUploadCustomerFiles();
-  const downloadFile = useDownloadCustomerFile();
-  const deleteFile = useDeleteCustomerFile();
+  const uploadFiles = useUploadEnquiryFiles();
+  const downloadFile = useDownloadEnquiryFile();
+  const deleteFile = useDeleteEnquiryFile();
 
   const handleFileSelect = (files: FileList | null) => {
+    console.log('FileUploadManager - handleFileSelect called with:', files);
+    console.log('FileUploadManager - Number of files:', files?.length || 0);
     setSelectedFiles(files);
     onFilesChange?.(files);
   };
@@ -59,14 +61,16 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('FileUploadManager - handleInputChange called');
+    console.log('FileUploadManager - Files from input:', e.target.files);
     handleFileSelect(e.target.files);
   };
 
   const handleUpload = async () => {
-    if (!customerId || !selectedFiles || selectedFiles.length === 0) return;
+    if (!enquiryId || !selectedFiles || selectedFiles.length === 0) return;
 
     try {
-      await uploadFiles.mutateAsync({ customerId, files: selectedFiles });
+      await uploadFiles.mutateAsync({ enquiryId, files: selectedFiles });
       setSelectedFiles(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -76,19 +80,19 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
     }
   };
 
-  const handleDownload = (file: CustomerFile) => {
-    if (!customerId) return;
+  const handleDownload = (file: EnquiryFile) => {
+    if (!enquiryId) return;
     downloadFile.mutate({
-      customerId,
+      enquiryId,
       fileId: file.id,
       filename: file.originalName,
     });
   };
 
-  const handleDelete = (file: CustomerFile) => {
-    if (!customerId) return;
+  const handleDelete = (file: EnquiryFile) => {
+    if (!enquiryId) return;
     deleteFile.mutate({
-      customerId,
+      enquiryId,
       fileId: file.id,
     });
   };
@@ -128,7 +132,7 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
           {/* Upload Zone */}
           <div
             className={cn(
-              'border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer',
+              'border-2 border-dashed rounded-lg p-6 text-center transition-colors',
               dragActive
                 ? 'border-blue-500 bg-blue-50'
                 : 'border-gray-300 hover:border-gray-400',
@@ -138,7 +142,6 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
           >
             <Upload className="w-10 h-10 text-gray-400 mx-auto mb-4" />
             <div>
@@ -202,7 +205,7 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
               </div>
 
               {/* Upload Button */}
-              {showUploadButton && customerId && (
+              {showUploadButton && enquiryId && (
                 <Button
                   type="button"
                   onClick={handleUpload}
@@ -222,12 +225,12 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
             </div>
           )}
 
-          {/* Validation Warning for New Customer */}
-          {!customerId && selectedFiles && selectedFiles.length > 0 && (
+          {/* Validation Warning for New Enquiry */}
+          {!enquiryId && selectedFiles && selectedFiles.length > 0 && (
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Files will be uploaded after the customer is created.
+                Files will be uploaded after the enquiry is created.
               </AlertDescription>
             </Alert>
           )}
@@ -284,7 +287,7 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
                     >
                       <Download className="w-4 h-4" />
                     </Button>
-                    {customerId && (
+                    {enquiryId && (
                       <Button
                         type="button"
                         variant="ghost"

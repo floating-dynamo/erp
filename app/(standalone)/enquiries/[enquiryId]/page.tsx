@@ -32,13 +32,203 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { redirect } from 'next/navigation';
-import React, { use } from 'react';
+import React, { use, useState } from 'react';
 import EnquiryDetailsPDFExport from '@/features/enquiries/components/enquiry-details-pdf-export';
 import { EnquiryNotFound } from '@/features/enquiries/components/enquiry-not-found';
+import { EnquiryFile } from '@/features/enquiries/schemas';
+import { useDownloadEnquiryFile, useDeleteEnquiryFile } from '@/features/enquiries/api/use-enquiry-files';
+import { Badge } from '@/components/ui/badge';
+import { FileIcon, Download, Trash2 } from 'lucide-react';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface EnquiryDetailsPageProps {
   params: Promise<{ enquiryId: string }>;
 }
+
+const FileAttachmentsCard = ({
+  enquiryId,
+  files,
+}: {
+  enquiryId: string;
+  files: EnquiryFile[];
+}) => {
+  const { toast } = useToast();
+  const downloadFile = useDownloadEnquiryFile();
+  const deleteFile = useDeleteEnquiryFile();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<EnquiryFile | null>(null);
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getFileIcon = (mimetype: string) => {
+    if (mimetype.startsWith('image/')) {
+      return '🖼️';
+    } else if (mimetype.includes('pdf')) {
+      return '📄';
+    } else if (mimetype.includes('word') || mimetype.includes('document')) {
+      return '📝';
+    } else if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) {
+      return '📊';
+    } else if (mimetype.includes('text')) {
+      return '📄';
+    }
+    return '📎';
+  };
+
+  const handleDownload = (file: EnquiryFile) => {
+    downloadFile.mutate({
+      enquiryId,
+      fileId: file.id,
+      filename: file.originalName,
+    });
+  };
+
+  const handleDeleteClick = (file: EnquiryFile) => {
+    setFileToDelete(file);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!fileToDelete) return;
+
+    deleteFile.mutate(
+      {
+        enquiryId,
+        fileId: fileToDelete.id,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: 'File Deleted',
+            description: 'The file has been deleted successfully.',
+          });
+          setFileToDelete(null);
+        },
+        onError: () => {
+          toast({
+            title: 'Error',
+            description: 'Failed to delete the file.',
+            variant: 'destructive',
+          });
+          setFileToDelete(null);
+        },
+      }
+    );
+    setDeleteConfirmOpen(false);
+  };
+
+  return (
+    <>
+      <Card className="md:col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileIcon className="h-5 w-5" />
+              <span className="text-xl font-bold">File Attachments</span>
+            </div>
+            <Badge variant="secondary">
+              {files.length} {files.length === 1 ? 'file' : 'files'}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {files.length === 0 ? (
+            <div className="text-center py-8">
+              <FileIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-muted-foreground">
+                No files attached to this enquiry
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Files can be uploaded when editing the enquiry
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {files.map((file) => (
+                <div
+                  key={file.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span className="text-2xl">
+                      {getFileIcon(file.mimetype)}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {file.originalName}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <span>{formatFileSize(file.size)}</span>
+                        <span>•</span>
+                        <span>
+                          {file.uploadedAt
+                            ? new Date(file.uploadedAt).toLocaleDateString()
+                            : 'Unknown date'}
+                        </span>
+                        {file.uploadedBy && (
+                          <>
+                            <span>•</span>
+                            <span>by {file.uploadedBy}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDownload(file)}
+                      disabled={downloadFile.isPending}
+                      className="flex items-center gap-1"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteClick(file)}
+                      disabled={deleteFile.isPending}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <ConfirmationDialog
+        open={deleteConfirmOpen}
+        onOpenChange={(open) => {
+          setDeleteConfirmOpen(open);
+          if (!open) {
+            setFileToDelete(null);
+          }
+        }}
+        title="Delete File"
+        description={`Are you sure you want to delete "${fileToDelete?.originalName}"? This action cannot be undone.`}
+        onConfirm={handleConfirmDelete}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+      />
+    </>
+  );
+};
 
 const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
   const { enquiryId } = use(params);
@@ -276,6 +466,12 @@ const EnquiryDetailsPage = ({ params }: EnquiryDetailsPageProps) => {
             </CardContent>
           </Card>
         )}
+
+        {/* File Attachments Section */}
+        <FileAttachmentsCard
+          enquiryId={enquiryId}
+          files={enquiry.attachments || []}
+        />
       </div>
     </div>
   );

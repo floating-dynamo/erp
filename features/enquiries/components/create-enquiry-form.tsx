@@ -17,7 +17,6 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { createEnquirySchema } from '../schemas';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   ArrowLeft,
   CalendarIcon,
@@ -25,10 +24,8 @@ import {
   ChevronsUpDown,
   PlusCircleIcon,
   TrashIcon,
-  UploadCloudIcon,
-  XIcon,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
 import { useAddEnquiry } from '../api/use-add-enquiry';
@@ -53,6 +50,9 @@ import { useGetCustomerDetails } from '@/features/customers/api/use-get-customer
 import { useGetEnquiryDetails } from '../api/use-get-enquiry-details';
 import { useEditEnquiry } from '../api/use-edit-enquiry';
 import { EnquiryNotFound } from './enquiry-not-found';
+import { FileUploadManager } from './file-upload-manager';
+import apiService from '@/services/api';
+import { useToast } from '@/hooks/use-toast';
 
 interface CreateEnquiryFormProps {
   onCancel?: () => void;
@@ -86,8 +86,10 @@ export const CreateEnquiryForm = ({
     });
   const [customerSelectOpen, setCustomerSelectOpen] = useState(false);
   const [formKey, setFormKey] = useState(0);
+  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const isEdit = !!enquiryId;
   const isPending = isPendingEditEnquiry || isPendingAddEnquiry;
+  const { toast } = useToast();
 
   const form = useForm<ZodCreateEnquirySchema>({
     resolver: zodResolver(createEnquirySchema),
@@ -101,9 +103,9 @@ export const CreateEnquiryForm = ({
       termsAndConditions: '',
       file: undefined,
       isQotationCreated: false,
+      attachments: [],
     },
   });
-  const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -123,11 +125,10 @@ export const CreateEnquiryForm = ({
     });
   }, [customer, form]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      form.setValue('file', file);
-    }
+  const handleFilesChange = (files: FileList | null) => {
+    console.log('CreateEnquiryForm - handleFilesChange called with:', files);
+    console.log('CreateEnquiryForm - Number of files:', files?.length || 0);
+    setSelectedFiles(files);
   };
 
   const onSubmit = (values: ZodCreateEnquirySchema) => {
@@ -144,16 +145,82 @@ export const CreateEnquiryForm = ({
         },
         {
           onSuccess: () => {
-            form.reset();
+            toast({
+              title: 'Success',
+              description: 'Enquiry updated successfully',
+            });
             router.push('/enquiries');
+          },
+          onError: (error) => {
+            toast({
+              title: 'Error',
+              description: error.message,
+              variant: 'destructive',
+            });
           },
         }
       );
     } else {
-      addEnquiry(finalValues, {
-        onSuccess: () => {
-          form.reset();
+      // For creating new enquiries, remove attachments as they'll be uploaded separately
+      const enquiryData = {
+        ...finalValues,
+        attachments: [],
+      };
+      
+      addEnquiry(enquiryData, {
+        onSuccess: async (response) => {
+          toast({
+            title: 'Success',
+            description: 'Enquiry created successfully',
+          });
+
+          // Upload files if any are selected and we have an enquiry ID
+          if (
+            selectedFiles &&
+            selectedFiles.length > 0 &&
+            response?.enquiry?.id
+          ) {
+            console.log('Attempting to upload files after enquiry creation');
+            console.log('Selected files:', selectedFiles);
+            console.log('Enquiry ID:', response.enquiry.id);
+            
+            try {
+              const uploadResult = await apiService.uploadEnquiryFiles({
+                enquiryId: response.enquiry.id,
+                files: selectedFiles,
+              });
+
+              console.log('Upload result:', uploadResult);
+
+              if (uploadResult.success) {
+                toast({
+                  title: 'Files Uploaded',
+                  description: `${selectedFiles.length} file(s) uploaded successfully`,
+                });
+              }
+            } catch (error) {
+              console.error('File upload error:', error);
+              toast({
+                title: 'File Upload Warning',
+                description:
+                  'Enquiry created but file upload failed. You can upload files later.',
+                variant: 'destructive',
+              });
+            }
+          } else {
+            console.log('No files to upload or enquiry ID missing');
+            console.log('Selected files:', selectedFiles);
+            console.log('Response:', response);
+          }
+
           router.push('/enquiries');
+        },
+        onError: (error) => {
+          toast({
+            title: 'Error',
+            description: error.message,
+            variant: 'destructive',
+          });
         },
       });
     }
@@ -539,65 +606,29 @@ export const CreateEnquiryForm = ({
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="file"
-                render={({ field }) => (
-                  <div className="flex flex-col gap-y-2">
-                    <div className="flex items-center gap-x-5">
-                      <Avatar className="size-[72px]">
-                        <AvatarFallback>
-                          <UploadCloudIcon className="size-[36px] text-neutral-400" />
-                        </AvatarFallback>
-                      </Avatar>
-                      {!field.value ? (
-                        <div className="flex flex-col">
-                          <p className="text-sm">Attach a file</p>
-                          <p className="text-sm text-muted-foreground">
-                            You can add a maximum of 1 file, 20MB
-                          </p>
-                          <input
-                            className="hidden"
-                            accept=".jpg, .png, .jpeg, .svg, .pdf"
-                            type="file"
-                            ref={inputRef}
-                            onChange={handleFileChange}
-                            disabled={false}
-                          />
-                          <Button
-                            type="button"
-                            disabled={false}
-                            variant={'tertiary'}
-                            size={'xs'}
-                            className="w-fit mt-2"
-                            onClick={() => inputRef.current?.click()}
-                          >
-                            Upload File
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col">
-                          <p className="text-sm">Uploaded File</p>
-                          <div className="text-muted-foreground flex items-center gap-2">
-                            <p className="text-sm">{field.value.name}</p>
-                            <span
-                              className="font-semibold p-0 m-0"
-                              onClick={() => {
-                                field.onChange(null);
-                                if (inputRef.current) {
-                                  inputRef.current.value = '';
-                                }
-                              }}
-                            >
-                              <XIcon className="size-4 hover:opacity-75 cursor-pointer transition" />
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+              {/* File Attachments Section */}
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold">File Attachments</h2>
+                <p className="text-sm text-muted-foreground">
+                  Upload documents, contracts, or other files related to this
+                  enquiry.
+                </p>
+
+                <FileUploadManager
+                  enquiryId={isEdit ? enquiryId : undefined}
+                  attachments={form.watch('attachments') || []}
+                  onFilesChange={handleFilesChange}
+                  disabled={isPending}
+                  showUploadButton={isEdit} // Only show upload button for existing enquiries
+                />
+
+                {!isEdit && selectedFiles && selectedFiles.length > 0 && (
+                  <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
+                    📄 {selectedFiles.length} file(s) selected. Files will be
+                    uploaded after the enquiry is created.
                   </div>
                 )}
-              />
+              </div>
             </div>
             <Separator className="my-7" />
             <div className="flex items-center justify-end">
