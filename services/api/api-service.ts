@@ -524,6 +524,7 @@ const apiService: IApiService = {
         message: 'Quotation added successfully',
         success: true,
         quoteNumber: data?.quoteNumber,
+        quotation: data, // Return the quotation data with ID for file uploads
       };
     } catch (error) {
       console.error(error);

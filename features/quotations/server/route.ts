@@ -124,6 +124,7 @@ const app = new Hono()
           success: true,
           message: "Quotation added successfully",
           quoteNumber: newQuotation.quoteNumber,
+          id: newQuotation.id, // Return the ID for file uploads
         },
         201
       );

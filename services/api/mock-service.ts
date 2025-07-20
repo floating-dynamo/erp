@@ -34,8 +34,56 @@ const customers: Customer[] = CUSTOMERS_MOCK_DATA.map((customer) => ({
   attachments: (customer as Customer).attachments || [], // Use Customer type assertion instead of any
 }));
 const enquiries: Enquiry[] = ENQUIRIES_MOCK_DATA;
-const quotations: Quotation[] = QUOTATIONS_MOCK_DATA;
+
+// Initialize quotations with attachments and load any persisted attachments from localStorage
+const initializeQuotations = (): Quotation[] => {
+  const baseQuotations = QUOTATIONS_MOCK_DATA.map((quotation) => ({
+    ...quotation,
+    attachments: quotation.attachments || [], // Ensure quotations have attachments array
+  }));
+
+  // Try to load persisted attachments from localStorage
+  if (typeof window !== 'undefined') {
+    try {
+      const persistedAttachments = localStorage.getItem('quotation_attachments');
+      if (persistedAttachments) {
+        const attachmentsMap: Record<string, QuotationFile[]> = JSON.parse(persistedAttachments);
+        baseQuotations.forEach((quotation) => {
+          if (quotation.id && attachmentsMap[quotation.id]) {
+            quotation.attachments = attachmentsMap[quotation.id].map((file: QuotationFile) => ({
+              ...file,
+              uploadedAt: file.uploadedAt ? new Date(file.uploadedAt) : new Date(), // Convert back to Date object
+            }));
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error loading persisted quotation attachments:', error);
+    }
+  }
+
+  return baseQuotations;
+};
+
+const quotations: Quotation[] = initializeQuotations();
 const companies: Company[] = COMPANIES_MOCK_DATA;
+
+// Helper function to persist quotation attachments to localStorage
+const persistQuotationAttachments = () => {
+  if (typeof window !== 'undefined') {
+    try {
+      const attachmentsMap: Record<string, QuotationFile[]> = {};
+      quotations.forEach((quotation) => {
+        if (quotation.id && quotation.attachments && quotation.attachments.length > 0) {
+          attachmentsMap[quotation.id] = quotation.attachments;
+        }
+      });
+      localStorage.setItem('quotation_attachments', JSON.stringify(attachmentsMap));
+    } catch (error) {
+      console.error('Error persisting quotation attachments:', error);
+    }
+  }
+};
 const supplierDcs: SupplierDc[] = SUPPLIER_DCS_MOCK_DATA;
 const purchaseOrders: PurchaseOrder[] = PURCHASE_ORDERS_MOCK_DATA;
 const boms: Bom[] = BOMS_MOCK_DATA;
@@ -820,6 +868,9 @@ const mockService: IApiService = {
       quotation.attachments!.push(quotationFile);
     });
 
+    // Persist attachments to localStorage
+    persistQuotationAttachments();
+
     return { success: true, message: 'Files uploaded successfully' };
   },
 
@@ -858,6 +909,9 @@ const mockService: IApiService = {
     if (quotation.attachments) {
       quotation.attachments = quotation.attachments.filter((file) => file.id !== fileId);
     }
+
+    // Persist attachments to localStorage
+    persistQuotationAttachments();
 
     return { success: true, message: 'File deleted successfully' };
   },

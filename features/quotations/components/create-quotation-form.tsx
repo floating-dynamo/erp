@@ -218,11 +218,16 @@ const CreateQuotationForm = ({ quotationId }: CreateQuotationFormProps) => {
           if (
             selectedFiles &&
             selectedFiles.length > 0 &&
-            response?.quotation?.id
+            (response?.quotation?.id || response?.id)
           ) {
             try {
+              const quotationId = response?.quotation?.id || response?.id;
+              if (!quotationId) {
+                throw new Error('No quotation ID available for file upload');
+              }
+              
               const uploadResult = await apiService.uploadQuotationFiles({
-                quotationId: response.quotation.id,
+                quotationId,
                 files: selectedFiles,
               });
 
