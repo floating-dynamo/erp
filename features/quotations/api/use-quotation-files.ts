@@ -11,7 +11,7 @@ export const useGetQuotationFiles = (quotationId: string) => {
       const result = await apiService.getQuotationFiles({ quotationId });
       return result;
     },
-    enabled: !!quotationId, // Only run query if quotationId is provided
+    enabled: !!quotationId && quotationId.trim() !== '', // Only run query if quotationId is provided and not empty
   });
 };
 

@@ -45,12 +45,13 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
   
   // Debug logging
   console.log('QuotationFileUploadManager - quotationId:', quotationId);
+  console.log('QuotationFileUploadManager - quotationId valid:', !!quotationId && quotationId.trim() !== '');
   console.log('QuotationFileUploadManager - filesData:', filesData);
   console.log('QuotationFileUploadManager - isFetchingFiles:', isFetchingFiles);
   console.log('QuotationFileUploadManager - files count:', filesData?.files?.length || 0);
   
   // Use fetched files if available, otherwise fall back to passed attachments
-  const currentAttachments = quotationId ? (filesData?.files || []) : attachments;
+  const currentAttachments = (quotationId && quotationId.trim() !== '') ? (filesData?.files || []) : attachments;
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files || files.length === 0) {
@@ -90,7 +91,7 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
   };
 
   const handleFileUpload = async () => {
-    if (!quotationId || !selectedFiles || selectedFiles.length === 0) return;
+    if (!quotationId || quotationId.trim() === '' || !selectedFiles || selectedFiles.length === 0) return;
 
     try {
       await uploadFilesMutation.mutateAsync({
@@ -108,7 +109,7 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
   };
 
   const handleFileDownload = async (file: QuotationFile) => {
-    if (!quotationId) return;
+    if (!quotationId || quotationId.trim() === '') return;
     
     try {
       await downloadFileMutation.mutateAsync({
@@ -122,7 +123,7 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
   };
 
   const handleFileDelete = async (file: QuotationFile) => {
-    if (!quotationId) return;
+    if (!quotationId || quotationId.trim() === '') return;
     
     try {
       await deleteFileMutation.mutateAsync({
@@ -202,7 +203,7 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
           {uploadFilesMutation.isPending && (
             <Loader2 className="mx-auto h-6 w-6 text-blue-500 animate-spin mt-2" />
           )}
-          {isFetchingFiles && quotationId && (
+          {isFetchingFiles && quotationId && quotationId.trim() !== '' && (
             <div className="flex items-center justify-center mt-2">
               <Loader2 className="h-4 w-4 text-blue-500 animate-spin mr-2" />
               <span className="text-sm text-gray-500">Loading files...</span>
@@ -248,7 +249,7 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
             </div>
             
             {/* Upload Button */}
-            {showUploadButton && quotationId && (
+            {showUploadButton && quotationId && quotationId.trim() !== '' && (
               <Button
                 type="button"
                 onClick={handleFileUpload}
@@ -269,7 +270,7 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
         )}
 
         {/* Validation Warning for New Quotation */}
-        {!quotationId && selectedFiles && selectedFiles.length > 0 && (
+        {(!quotationId || quotationId.trim() === '') && selectedFiles && selectedFiles.length > 0 && (
           <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
             📄 Files will be uploaded after the quotation is created.
           </div>
