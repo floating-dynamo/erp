@@ -16,7 +16,7 @@ import {
   EditQuotationResponse,
   GetQuotationsResponse,
 } from './types/quotation';
-import { Quotation } from '@/features/quotations/schemas';
+import { Quotation, QuotationFile } from '@/features/quotations/schemas';
 import { Company } from '@/features/companies/schemas';
 import { GetCompaniesResponse } from './types/company';
 import {
@@ -286,6 +286,34 @@ export interface IApiService {
     id: string;
     data: Quotation;
   }) => Promise<EditQuotationResponse>;
+
+  // Quotation File Endpoints
+  uploadQuotationFiles: ({
+    quotationId,
+    files,
+  }: {
+    quotationId: string;
+    files: FileList;
+  }) => Promise<{ success: boolean; message: string }>;
+  getQuotationFiles: ({
+    quotationId,
+  }: {
+    quotationId: string;
+  }) => Promise<{ files: QuotationFile[] }>;
+  downloadQuotationFile: ({
+    quotationId,
+    fileId,
+  }: {
+    quotationId: string;
+    fileId: string;
+  }) => Promise<Blob>;
+  deleteQuotationFile: ({
+    quotationId,
+    fileId,
+  }: {
+    quotationId: string;
+    fileId: string;
+  }) => Promise<{ success: boolean; message: string }>;
 
   // Company Endpoints
   addCompany: ({

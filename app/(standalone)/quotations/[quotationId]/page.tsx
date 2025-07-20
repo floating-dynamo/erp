@@ -10,12 +10,20 @@ import {
   MoreHorizontalIcon,
   PenIcon,
   DownloadIcon,
+  FileIcon,
+  Download,
+  Trash2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { use } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { use, useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useGetQuotationDetails } from '@/features/quotations/api/use-get-quotation-details';
+import { useDownloadQuotationFile, useDeleteQuotationFile } from '@/features/quotations/api/use-quotation-files';
+import { QuotationFile } from '@/features/quotations/schemas';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import apiService from '@/services/api';
 import Loader from '@/components/loader';
 import { formatDate, generateCsv } from '@/lib/utils';
 import { redirect } from 'next/navigation';
@@ -38,6 +46,213 @@ import QuotationDetailsPDFExport from '@/features/quotations/components/quotatio
 interface QuotationDetailsPageProps {
   params: Promise<{ quotationId: string }>;
 }
+
+const FileAttachmentsCard = ({
+  quotationId,
+  files,
+}: {
+  quotationId: string;
+  files: QuotationFile[];
+}) => {
+  const { toast } = useToast();
+  const downloadFile = useDownloadQuotationFile();
+  const deleteFile = useDeleteQuotationFile();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<QuotationFile | null>(null);
+  const [quotationFiles, setQuotationFiles] = useState<QuotationFile[]>(files);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(true);
+
+  // Fetch quotation files
+  useEffect(() => {
+    const fetchFiles = async () => {
+      if (!quotationId) return;
+
+      try {
+        setIsLoadingFiles(true);
+        const result = await apiService.getQuotationFiles({ quotationId });
+        setQuotationFiles(result.files || []);
+      } catch (error) {
+        console.error('Error fetching quotation files:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load quotation files',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoadingFiles(false);
+      }
+    };
+
+    fetchFiles();
+  }, [quotationId, toast]);
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getFileIcon = (mimetype: string) => {
+    if (mimetype.startsWith('image/')) {
+      return '🖼️';
+    } else if (mimetype.includes('pdf')) {
+      return '📄';
+    } else if (mimetype.includes('word') || mimetype.includes('document')) {
+      return '📝';
+    } else if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) {
+      return '📊';
+    }
+    return '📄';
+  };
+
+  const handleDownload = (file: QuotationFile) => {
+    if (!quotationId) return;
+    downloadFile.mutate({
+      quotationId,
+      fileId: file.id,
+      fileName: file.originalName,
+    });
+  };
+
+  const handleDelete = (file: QuotationFile) => {
+    setFileToDelete(file);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (!fileToDelete || !quotationId) return;
+    
+    deleteFile.mutate(
+      {
+        quotationId,
+        fileId: fileToDelete.id,
+      },
+      {
+        onSuccess: () => {
+          // Refresh files after deletion
+          const fetchFiles = async () => {
+            try {
+              const result = await apiService.getQuotationFiles({
+                quotationId,
+              });
+              setQuotationFiles(result.files || []);
+            } catch (error) {
+              console.error('Error refreshing files:', error);
+            }
+          };
+          fetchFiles();
+        },
+      }
+    );
+    setDeleteConfirmOpen(false);
+  };
+
+  return (
+    <>
+      <Card className="md:col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileIcon className="h-5 w-5" />
+              <span className="text-xl font-bold">File Attachments</span>
+            </div>
+            <Badge variant="secondary">
+              {quotationFiles.length} {quotationFiles.length === 1 ? 'file' : 'files'}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoadingFiles ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              <span className="ml-2 text-muted-foreground">
+                Loading files...
+              </span>
+            </div>
+          ) : quotationFiles.length === 0 ? (
+            <div className="text-center py-8">
+              <FileIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-muted-foreground">
+                No files attached to this quotation
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Files can be uploaded when editing the quotation
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {quotationFiles.map((file) => (
+                <div
+                  key={file.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span className="text-2xl">
+                      {getFileIcon(file.mimetype)}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {file.originalName}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <span>{formatFileSize(file.size)}</span>
+                        <span>•</span>
+                        <span>
+                          {file.uploadedAt
+                            ? new Date(file.uploadedAt).toLocaleDateString()
+                            : 'Unknown date'}
+                        </span>
+                        {file.uploadedBy && (
+                          <>
+                            <span>•</span>
+                            <span>by {file.uploadedBy}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDownload(file)}
+                      disabled={downloadFile.isPending}
+                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(file)}
+                      disabled={deleteFile.isPending}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <ConfirmationDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete File"
+        description={`Are you sure you want to delete "${fileToDelete?.originalName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDelete}
+      />
+    </>
+  );
+};
 
 function QuotationDetails({ params }: QuotationDetailsPageProps) {
   const { quotationId } = use(params);
@@ -276,6 +491,12 @@ function QuotationDetails({ params }: QuotationDetailsPageProps) {
             </CardContent>
           </Card>
         )}
+
+        {/* File Attachments Section */}
+        <FileAttachmentsCard
+          quotationId={quotationId}
+          files={quotation.attachments || []}
+        />
       </div>
     </div>
   );

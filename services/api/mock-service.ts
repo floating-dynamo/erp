@@ -11,7 +11,7 @@ import { Customer, CustomerFile } from '@/features/customers/schemas';
 import { Enquiry, EnquiryFile } from '@/features/enquiries/schemas';
 import { ENQUIRIES_MOCK_DATA } from './mocks/enquiries';
 import axios from 'axios';
-import { Quotation } from '@/features/quotations/schemas';
+import { Quotation, QuotationFile } from '@/features/quotations/schemas';
 import QUOTATIONS_MOCK_DATA from './mocks/quotations';
 import { COMPANIES_MOCK_DATA } from './mocks/companies';
 import { Company } from '@/features/companies/schemas';
@@ -34,8 +34,56 @@ const customers: Customer[] = CUSTOMERS_MOCK_DATA.map((customer) => ({
   attachments: (customer as Customer).attachments || [], // Use Customer type assertion instead of any
 }));
 const enquiries: Enquiry[] = ENQUIRIES_MOCK_DATA;
-const quotations: Quotation[] = QUOTATIONS_MOCK_DATA;
+
+// Initialize quotations with attachments and load any persisted attachments from localStorage
+const initializeQuotations = (): Quotation[] => {
+  const baseQuotations = QUOTATIONS_MOCK_DATA.map((quotation) => ({
+    ...quotation,
+    attachments: quotation.attachments || [], // Ensure quotations have attachments array
+  }));
+
+  // Try to load persisted attachments from localStorage
+  if (typeof window !== 'undefined') {
+    try {
+      const persistedAttachments = localStorage.getItem('quotation_attachments');
+      if (persistedAttachments) {
+        const attachmentsMap: Record<string, QuotationFile[]> = JSON.parse(persistedAttachments);
+        baseQuotations.forEach((quotation) => {
+          if (quotation.id && attachmentsMap[quotation.id]) {
+            quotation.attachments = attachmentsMap[quotation.id].map((file: QuotationFile) => ({
+              ...file,
+              uploadedAt: file.uploadedAt ? new Date(file.uploadedAt) : new Date(), // Convert back to Date object
+            }));
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error loading persisted quotation attachments:', error);
+    }
+  }
+
+  return baseQuotations;
+};
+
+const quotations: Quotation[] = initializeQuotations();
 const companies: Company[] = COMPANIES_MOCK_DATA;
+
+// Helper function to persist quotation attachments to localStorage
+const persistQuotationAttachments = () => {
+  if (typeof window !== 'undefined') {
+    try {
+      const attachmentsMap: Record<string, QuotationFile[]> = {};
+      quotations.forEach((quotation) => {
+        if (quotation.id && quotation.attachments && quotation.attachments.length > 0) {
+          attachmentsMap[quotation.id] = quotation.attachments;
+        }
+      });
+      localStorage.setItem('quotation_attachments', JSON.stringify(attachmentsMap));
+    } catch (error) {
+      console.error('Error persisting quotation attachments:', error);
+    }
+  }
+};
 const supplierDcs: SupplierDc[] = SUPPLIER_DCS_MOCK_DATA;
 const purchaseOrders: PurchaseOrder[] = PURCHASE_ORDERS_MOCK_DATA;
 const boms: Bom[] = BOMS_MOCK_DATA;
@@ -741,6 +789,11 @@ const mockService: IApiService = {
     });
   },
   async addQuotation({ quotation }) {
+    // Generate an ID if not provided
+    if (!quotation.id) {
+      quotation.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    }
+    
     quotations.push(quotation);
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -748,6 +801,7 @@ const mockService: IApiService = {
           message: 'Quotation added successfully',
           success: true,
           quoteNumber: quotation.quoteNumber || '',
+          quotation: quotation, // Return the quotation with ID for file upload
         });
       }, 1000);
     });
@@ -769,6 +823,99 @@ const mockService: IApiService = {
       }, 1000);
     });
   },
+
+  // Quotation File Management
+  async getQuotationFiles({
+    quotationId,
+  }: {
+    quotationId: string;
+  }): Promise<{ files: QuotationFile[] }> {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const quotation = quotations.find((q) => q.id === quotationId);
+    return {
+      files: quotation?.attachments || [],
+    };
+  },
+
+  async uploadQuotationFiles({
+    quotationId,
+    files,
+  }: {
+    quotationId: string;
+    files: FileList;
+  }): Promise<{ success: boolean; message: string }> {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const quotation = quotations.find((q) => q.id === quotationId);
+    if (!quotation) {
+      return { success: false, message: 'Quotation not found' };
+    }
+
+    // Initialize attachments if it doesn't exist
+    if (!quotation.attachments) {
+      quotation.attachments = [];
+    }
+
+    // Simulate file upload - create proper QuotationFile objects
+    Array.from(files).forEach((file) => {
+      const quotationFile: QuotationFile = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        originalName: file.name,
+        filename: `${Date.now()}_${file.name}`,
+        mimetype: file.type,
+        size: file.size,
+        uploadedAt: new Date(),
+      };
+      quotation.attachments!.push(quotationFile);
+    });
+
+    // Persist attachments to localStorage
+    persistQuotationAttachments();
+
+    return { success: true, message: 'Files uploaded successfully' };
+  },
+
+  async downloadQuotationFile({
+    quotationId,
+    fileId,
+  }: {
+    quotationId: string;
+    fileId: string;
+  }): Promise<Blob> {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const quotation = quotations.find((q) => q.id === quotationId);
+    if (!quotation || !quotation.attachments?.find((f) => f.id === fileId)) {
+      throw new Error('File not found');
+    }
+
+    // Return a mock blob
+    return new Blob(['Mock file content'], {
+      type: 'application/octet-stream',
+    });
+  },
+
+  async deleteQuotationFile({
+    quotationId,
+    fileId,
+  }: {
+    quotationId: string;
+    fileId: string;
+  }): Promise<{ success: boolean; message: string }> {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const quotation = quotations.find((q) => q.id === quotationId);
+    if (!quotation) {
+      return { success: false, message: 'Quotation not found' };
+    }
+
+    if (quotation.attachments) {
+      quotation.attachments = quotation.attachments.filter((file) => file.id !== fileId);
+    }
+
+    // Persist attachments to localStorage
+    persistQuotationAttachments();
+
+    return { success: true, message: 'File deleted successfully' };
+  },
+
   async getCompanies() {
     return new Promise((resolve) => {
       setTimeout(() => {

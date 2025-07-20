@@ -12,6 +12,8 @@ export interface AddQuotationResponse {
   message: string;
   success: boolean;
   quoteNumber: string;
+  quotation?: Quotation; // Optional quotation object with ID for file upload
+  id?: string; // Direct ID property for file upload
 }
 
 export interface EditQuotationResponse {
