@@ -49,6 +49,8 @@ import { MetaDataType } from '@/lib/types';
 import { useGetQuotationDetails } from '../api/use-get-quotation-details';
 import { useEditQuotation } from '../api/use-edit-quotation';
 import { QuotationFileUploadManager } from './quotation-file-upload-manager';
+import { useToast } from '@/hooks/use-toast';
+import apiService from '@/services/api';
 
 type CreateQuotationFormSchema = z.infer<typeof createQuotationSchema>;
 
@@ -71,7 +73,6 @@ const CreateQuotationForm = ({ quotationId }: CreateQuotationFormProps) => {
     useGetCustomerDetails({
       id: enquiry?.customerId || '',
     });
-  const { mutate: editQuotation } = useEditQuotation();
   const { data, isFetching: isFetchingCustomerList } = useCustomers();
   const customerList = data?.customers || [];
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>();
@@ -86,7 +87,10 @@ const CreateQuotationForm = ({ quotationId }: CreateQuotationFormProps) => {
     });
   const [customerSelectOpen, setCustomerSelectOpen] = useState(false);
   const [enquirySelectOpen, setEnquirySelectOpen] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const { mutate: addQuotation, isPending } = useAddQuotation();
+  const { mutate: editQuotation, isPending: isEditPending } = useEditQuotation();
+  const { toast } = useToast();
   const uomMetaData = getMetaData(MetaDataType.UOM);
   const currencyMetaData = getMetaData(MetaDataType.CURRENCY);
   const router = useRouter();
@@ -186,19 +190,75 @@ const CreateQuotationForm = ({ quotationId }: CreateQuotationFormProps) => {
         },
         {
           onSuccess: () => {
+            toast({
+              title: 'Success',
+              description: 'Quotation updated successfully',
+            });
             form.reset();
             router.push('/quotations');
+          },
+          onError: (error) => {
+            toast({
+              title: 'Error',
+              description: error.message,
+              variant: 'destructive',
+            });
           },
         }
       );
     } else {
       addQuotation(values, {
-        onSuccess: () => {
+        onSuccess: async (response) => {
+          toast({
+            title: 'Success',
+            description: 'Quotation created successfully',
+          });
+
+          // Upload files if any are selected and we have a quotation ID
+          if (
+            selectedFiles &&
+            selectedFiles.length > 0 &&
+            response?.quotation?.id
+          ) {
+            try {
+              const uploadResult = await apiService.uploadQuotationFiles({
+                quotationId: response.quotation.id,
+                files: selectedFiles,
+              });
+
+              if (uploadResult.success) {
+                toast({
+                  title: 'Files Uploaded',
+                  description: `${selectedFiles.length} file(s) uploaded successfully`,
+                });
+              }
+            } catch (error) {
+              console.error('File upload error:', error);
+              toast({
+                title: 'File Upload Warning',
+                description:
+                  'Quotation created but file upload failed. You can upload files later.',
+                variant: 'destructive',
+              });
+            }
+          }
+
           form.reset();
           router.push('/quotations');
         },
+        onError: (error) => {
+          toast({
+            title: 'Error',
+            description: error.message,
+            variant: 'destructive',
+          });
+        },
       });
     }
+  };
+
+  const handleFilesChange = (files: FileList | null) => {
+    setSelectedFiles(files);
   };
 
   return (
@@ -791,20 +851,32 @@ const CreateQuotationForm = ({ quotationId }: CreateQuotationFormProps) => {
               </div>
             </div>
 
-            {/* File Upload Section - only show in edit mode when quotation exists */}
-            {isEdit && quotationData?.id && (
+            {/* File Upload Section */}
+            <div className="space-y-4">
+              <Separator className="my-7" />
               <div className="space-y-4">
-                <Separator className="my-7" />
+                <h2 className="text-lg font-semibold">File Attachments</h2>
+                <p className="text-sm text-muted-foreground">
+                  Upload documents, contracts, or other files related to this
+                  quotation.
+                </p>
+
                 <QuotationFileUploadManager
-                  quotationId={quotationData.id}
-                  files={quotationData.attachments || []}
-                  onFilesChange={() => {
-                    // Optionally refetch quotation data to update the UI
-                    window.location.reload();
-                  }}
+                  quotationId={isEdit ? quotationData?.id : undefined}
+                  attachments={quotationData?.attachments || []}
+                  onFilesChange={handleFilesChange}
+                  disabled={isPending || isEditPending}
+                  showUploadButton={isEdit} // Only show upload button for existing quotations
                 />
+
+                {!isEdit && selectedFiles && selectedFiles.length > 0 && (
+                  <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
+                    📄 {selectedFiles.length} file(s) selected. Files will be
+                    uploaded after the quotation is created.
+                  </div>
+                )}
               </div>
-            )}
+            </div>
 
             <Separator className="my-7" />
             <div className="flex items-center justify-end">

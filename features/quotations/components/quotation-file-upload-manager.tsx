@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,15 +15,19 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 interface QuotationFileUploadManagerProps {
-  quotationId: string;
-  files: QuotationFile[];
-  onFilesChange?: () => void;
+  quotationId?: string;
+  attachments?: QuotationFile[];
+  onFilesChange?: (files: FileList | null) => void;
+  disabled?: boolean;
+  showUploadButton?: boolean;
 }
 
 export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProps> = ({
   quotationId,
-  files,
+  attachments = [],
   onFilesChange,
+  disabled = false,
+  showUploadButton = true,
 }) => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -42,6 +47,7 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
       return;
     }
     setSelectedFiles(files);
+    onFilesChange?.(files);
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -69,7 +75,7 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
   };
 
   const handleFileUpload = async () => {
-    if (!selectedFiles || selectedFiles.length === 0) return;
+    if (!quotationId || !selectedFiles || selectedFiles.length === 0) return;
 
     try {
       await uploadFilesMutation.mutateAsync({
@@ -80,13 +86,15 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-      onFilesChange?.();
+      onFilesChange?.(null);
     } catch (error) {
       console.error('Upload error:', error);
     }
   };
 
   const handleFileDownload = async (file: QuotationFile) => {
+    if (!quotationId) return;
+    
     try {
       await downloadFileMutation.mutateAsync({
         quotationId,
@@ -99,12 +107,14 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
   };
 
   const handleFileDelete = async (file: QuotationFile) => {
+    if (!quotationId) return;
+    
     try {
       await deleteFileMutation.mutateAsync({
         quotationId,
         fileId: file.id,
       });
-      onFilesChange?.();
+      onFilesChange?.(null);
     } catch (error) {
       console.error('Delete error:', error);
     }
@@ -128,24 +138,30 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium mb-4">File Attachments</h3>
-        
-        {/* File Upload Section */}
-        <div
-          className={cn(
-            'border-2 border-dashed rounded-lg p-6 text-center transition-colors',
-            dragActive
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-gray-300 hover:border-gray-400',
-            uploadFilesMutation.isPending && 'opacity-50 cursor-not-allowed'
-          )}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-        >
+    <div className="space-y-4">
+      {/* File Upload Area */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Upload className="w-5 h-5" />
+            File Attachments
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Upload Zone */}
+          <div
+            className={cn(
+              'border-2 border-dashed rounded-lg p-6 text-center transition-colors',
+              dragActive
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-gray-300 hover:border-gray-400',
+              disabled && 'opacity-50 cursor-not-allowed'
+            )}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+          >
           <Upload className="w-10 h-10 text-gray-400 mx-auto mb-4" />
           <div>
             <Label htmlFor="file-upload" className="cursor-pointer">
@@ -159,7 +175,7 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
               id="file-upload"
               type="file"
               multiple
-              disabled={uploadFilesMutation.isPending}
+              disabled={disabled}
               onChange={handleInputChange}
               className="hidden"
               accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv"
@@ -209,32 +225,49 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
                 </div>
               ))}
             </div>
-            <Button
-              onClick={handleFileUpload}
-              disabled={uploadFilesMutation.isPending}
-              className="w-full mt-3"
-            >
-              {uploadFilesMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Uploading...
-                </>
-              ) : (
-                'Upload Files'
-              )}
-            </Button>
+            
+            {/* Upload Button */}
+            {showUploadButton && quotationId && (
+              <Button
+                type="button"
+                onClick={handleFileUpload}
+                disabled={uploadFilesMutation.isPending || disabled}
+                className="w-full"
+              >
+                {uploadFilesMutation.isPending ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Uploading...
+                  </div>
+                ) : (
+                  <>Upload {selectedFiles.length} file(s)</>
+                )}
+              </Button>
+            )}
           </div>
         )}
-      </div>
 
-      {/* Uploaded Files List */}
-      {files && files.length > 0 && (
-        <div>
-          <h4 className="text-md font-medium mb-3">
-            Uploaded Files ({files.length})
-          </h4>
-          <div className="space-y-2">
-            {files.map((file) => (
+        {/* Validation Warning for New Quotation */}
+        {!quotationId && selectedFiles && selectedFiles.length > 0 && (
+          <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
+            📄 Files will be uploaded after the quotation is created.
+          </div>
+        )}
+        </CardContent>
+      </Card>
+
+      {/* Existing Attachments */}
+      {attachments.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Uploaded Files ({attachments.length})</span>
+              <Badge variant="secondary">{attachments.length} files</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+            {attachments.map((file) => (
               <div
                 key={file.id}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
@@ -296,11 +329,12 @@ export const QuotationFileUploadManager: React.FC<QuotationFileUploadManagerProp
                 </div>
               </div>
             ))}
-          </div>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {files && files.length === 0 && (
+      {attachments && attachments.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           <FileText className="mx-auto h-12 w-12 text-gray-300" />
           <p className="mt-2">No files uploaded yet</p>

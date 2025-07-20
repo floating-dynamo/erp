@@ -741,6 +741,11 @@ const mockService: IApiService = {
     });
   },
   async addQuotation({ quotation }) {
+    // Generate an ID if not provided
+    if (!quotation.id) {
+      quotation.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    }
+    
     quotations.push(quotation);
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -748,6 +753,7 @@ const mockService: IApiService = {
           message: 'Quotation added successfully',
           success: true,
           quoteNumber: quotation.quoteNumber || '',
+          quotation: quotation, // Return the quotation with ID for file upload
         });
       }, 1000);
     });
