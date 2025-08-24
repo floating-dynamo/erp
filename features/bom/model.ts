@@ -34,6 +34,10 @@ const BomSchema = new Schema(
       enum: ["DRAFT", "ACTIVE", "INACTIVE", "ARCHIVED"], 
       default: "DRAFT" 
     },
+    customerId: { type: String }, // Reference to customer
+    customerName: { type: String }, // Customer name for display
+    enquiryId: { type: String }, // Reference to enquiry
+    enquiryNumber: { type: String }, // Enquiry number for display
     items: [BomItemSchema],
     totalMaterialCost: { type: Number, default: 0 },
     description: { type: String },

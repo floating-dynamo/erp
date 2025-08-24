@@ -60,6 +60,8 @@ export interface BomFormData {
   version?: string;
   bomType: 'MANUFACTURING' | 'ENGINEERING' | 'SALES' | 'SERVICE';
   status: 'DRAFT' | 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+  customerId?: string; // Reference to customer
+  enquiryId?: string; // Reference to enquiry
   items: BomItemFormData[];
   description?: string;
   notes?: string;
