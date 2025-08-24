@@ -324,6 +324,18 @@ function BomDetails({ params }: BomDetailsPageProps): React.JSX.Element {
               <p className='text-sm text-muted-foreground'>Created By</p>
               <p className='font-medium'>{bom.createdBy || 'NA'}</p>
             </div>
+            {bom.customerName && (
+              <div>
+                <p className='text-sm text-muted-foreground'>Customer</p>
+                <p className='font-medium'>{bom.customerName}</p>
+              </div>
+            )}
+            {bom.enquiryNumber && (
+              <div>
+                <p className='text-sm text-muted-foreground'>Enquiry Number</p>
+                <p className='font-medium'>{bom.enquiryNumber}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 

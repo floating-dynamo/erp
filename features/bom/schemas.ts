@@ -49,6 +49,10 @@ export const createBomSchema = z.object({
   bomDate: z.string().optional(),
   bomType: z.enum(["MANUFACTURING", "ENGINEERING", "SALES", "SERVICE"]).default("MANUFACTURING"),
   status: z.enum(["DRAFT", "ACTIVE", "INACTIVE", "ARCHIVED"]).default("DRAFT"),
+  customerId: z.string().optional(), // Reference to customer
+  customerName: z.string().optional(), // Customer name for display
+  enquiryId: z.string().optional(), // Reference to enquiry
+  enquiryNumber: z.string().optional(), // Enquiry number for display
   items: z.array(bomItemSchema).min(1, "At least one item is required"),
   totalMaterialCost: z.number().min(0).optional(),
   description: z.string().optional(),

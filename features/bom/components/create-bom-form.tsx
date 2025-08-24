@@ -29,15 +29,33 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
   PlusIcon,
   TrashIcon,
   ChevronRight,
   ChevronDown,
   ArrowLeftIcon,
+  Check,
+  ChevronsUpDown,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { createBomSchema, editBomSchema, BomItem } from '../schemas';
 import { useAddBom } from '../api/use-add-bom';
 import { useEditBom } from '../api/use-edit-bom';
+import { useCustomers } from '@/features/customers/api/use-customers';
+import { useEnquiries } from '@/features/enquiries/api/use-enquiries';
 import { useGetBomDetails } from '../api/use-get-bom-details';
 import { getMetaData } from '@/lib/utils';
 import { MetaDataType } from '@/lib/types';
@@ -405,10 +423,32 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
   const router = useRouter();
   const isEdit: boolean = !!bomId;
 
+  // Customer and Enquiry state for dropdowns
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
+  const [customerSelectOpen, setCustomerSelectOpen] = useState<boolean>(false);
+  const [enquirySelectOpen, setEnquirySelectOpen] = useState<boolean>(false);
+
   const { data: bomData, isFetching: isFetchingBom } = useGetBomDetails({
     id: bomId || '',
     enabled: !!bomId,
   });
+
+  // Customer and Enquiry data fetching
+  const { data: customersData, isFetching: isFetchingCustomers } = useCustomers({
+    page: 1,
+    limit: 1000,
+  });
+  const customerList = customersData?.customers || [];
+
+  const { 
+    data: enquiriesData, 
+    refetch: refetchEnquiries 
+  } = useEnquiries({
+    page: 1,
+    limit: 1000,
+    customerId: selectedCustomerId || undefined,
+  });
+  const enquiryList = enquiriesData?.enquiries || [];
 
   const { mutate: addBom, isPending: isAddingBom } = useAddBom({
     onSuccess: () => {
@@ -422,7 +462,7 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
     },
   });
 
-  const form: UseFormReturn<CreateBomFormSchema> = useForm<CreateBomFormSchema>({
+  const form = useForm<CreateBomFormSchema>({
     resolver: zodResolver(isEdit ? editBomSchema : createBomSchema),
     defaultValues: {
       bomName: '',
@@ -431,6 +471,10 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
       version: '1.0',
       bomType: 'MANUFACTURING',
       status: 'DRAFT',
+      customerId: '',
+      customerName: '',
+      enquiryId: '',
+      enquiryNumber: '',
       items: [{
         itemCode: 0,
         itemDescription: '',
@@ -460,10 +504,25 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
         ...bomData,
         id: bomData.id,
       });
+      // Set selected customer ID from loaded BOM data
+      if (bomData.customerId) {
+        setSelectedCustomerId(bomData.customerId);
+      }
     }
   }, [bomData, form, isEdit]);
 
+  // Refetch enquiries when selectedCustomerId changes
+  React.useEffect(() => {
+    if (selectedCustomerId) {
+      refetchEnquiries();
+    }
+  }, [selectedCustomerId, refetchEnquiries]);
+
   if (isEdit && isFetchingBom) {
+    return <Loader />;
+  }
+
+  if (isFetchingCustomers) {
     return <Loader />;
   }
 
@@ -659,6 +718,156 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
                     </FormItem>
                   )}
                 />
+
+                {/* Customer Selection */}
+                <FormField
+                  control={form.control}
+                  name="customerId"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Customer</FormLabel>
+                      <FormControl>
+                        <Popover
+                          open={customerSelectOpen}
+                          onOpenChange={setCustomerSelectOpen}
+                        >
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  'w-full justify-between',
+                                  !field.value && 'text-muted-foreground'
+                                )}
+                              >
+                                {field.value
+                                  ? customerList?.find(
+                                      ({ id }) => id === field.value
+                                    )?.name
+                                  : 'Select Customer'}
+                                <ChevronsUpDown className="opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0">
+                            <Command>
+                              <CommandInput
+                                placeholder="Search Customer..."
+                                className="h-9"
+                              />
+                              <CommandList>
+                                <CommandEmpty>No Customer found.</CommandEmpty>
+                                <CommandGroup>
+                                  {customerList?.map(({ id, name }) => (
+                                    <CommandItem
+                                      value={name}
+                                      key={id}
+                                      onSelect={() => {
+                                        form.setValue('customerId', id);
+                                        form.setValue('customerName', name);
+                                        form.setValue('enquiryId', ''); // Clear enquiry when customer changes
+                                        form.setValue('enquiryNumber', ''); // Clear enquiry number when customer changes
+                                        setCustomerSelectOpen(false);
+                                        setSelectedCustomerId(id);
+                                      }}
+                                    >
+                                      {name}
+                                      <Check
+                                        className={cn(
+                                          'ml-auto',
+                                          id === field.value
+                                            ? 'opacity-100'
+                                            : 'opacity-0'
+                                        )}
+                                      />
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Enquiry Selection */}
+                <FormField
+                  control={form.control}
+                  name="enquiryId"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Enquiry</FormLabel>
+                      <FormControl>
+                        <Popover
+                          open={enquirySelectOpen}
+                          onOpenChange={setEnquirySelectOpen}
+                        >
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  'w-full justify-between',
+                                  !field.value && 'text-muted-foreground'
+                                )}
+                                disabled={!selectedCustomerId}
+                              >
+                                {field.value
+                                  ? enquiryList?.find(
+                                      ({ id }) => id === field.value
+                                    )?.enquiryNumber
+                                  : selectedCustomerId 
+                                    ? 'Select Enquiry' 
+                                    : 'Select Customer first'}
+                                <ChevronsUpDown className="opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0">
+                            <Command>
+                              <CommandInput
+                                placeholder="Search Enquiry..."
+                                className="h-9"
+                              />
+                              <CommandList>
+                                <CommandEmpty>No Enquiry found.</CommandEmpty>
+                                <CommandGroup>
+                                  {enquiryList?.map(({ id, enquiryNumber }) => (
+                                    <CommandItem
+                                      value={enquiryNumber}
+                                      key={id}
+                                      onSelect={() => {
+                                        form.setValue('enquiryId', id);
+                                        form.setValue('enquiryNumber', enquiryNumber);
+                                        setEnquirySelectOpen(false);
+                                      }}
+                                    >
+                                      {enquiryNumber}
+                                      <Check
+                                        className={cn(
+                                          'ml-auto',
+                                          id === field.value
+                                            ? 'opacity-100'
+                                            : 'opacity-0'
+                                        )}
+                                      />
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </CardContent>
           </Card>
@@ -685,7 +894,7 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
                   key={field.id}
                   itemIndex={index}
                   level={0}
-                  form={form}
+                  form={form as unknown as UseFormReturn<CreateBomFormSchema>}
                   onRemove={itemFields.length > 1 ? () => removeItem(index) : undefined}
                   canRemove={itemFields.length > 1}
                 />
