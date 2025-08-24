@@ -51,9 +51,10 @@ import {
   ChevronsUpDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { createBomSchema, editBomSchema, BomItem } from '../schemas';
+import { createBomSchema, editBomSchema, BomItem, Bom } from '../schemas';
 import { useAddBom } from '../api/use-add-bom';
 import { useEditBom } from '../api/use-edit-bom';
+import { useBoms } from '../api/use-boms';
 import { useCustomers } from '@/features/customers/api/use-customers';
 import { useEnquiries } from '@/features/enquiries/api/use-enquiries';
 import { useGetBomDetails } from '../api/use-get-bom-details';
@@ -427,11 +428,24 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
   const [customerSelectOpen, setCustomerSelectOpen] = useState<boolean>(false);
   const [enquirySelectOpen, setEnquirySelectOpen] = useState<boolean>(false);
+  
+  // Template selection state
+  const [templateSelectOpen, setTemplateSelectOpen] = useState<boolean>(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [creationMode, setCreationMode] = useState<'scratch' | 'template'>('scratch');
 
   const { data: bomData, isFetching: isFetchingBom } = useGetBomDetails({
     id: bomId || '',
     enabled: !!bomId,
   });
+
+  // Fetch existing BOMs for template selection (only when creating new BOM)
+  const { data: templateBomsData, isFetching: isFetchingTemplates } = useBoms({
+    page: 1,
+    limit: 1000,
+    enabled: !isEdit, // Only fetch when creating new BOM
+  });
+  const templateBomList = templateBomsData?.boms || [];
 
   // Customer and Enquiry data fetching
   const { data: customersData, isFetching: isFetchingCustomers } = useCustomers({
@@ -518,11 +532,59 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
     }
   }, [selectedCustomerId, refetchEnquiries]);
 
+  // Function to handle template selection
+  const handleTemplateSelection = (templateBom: Bom) => {
+    try {
+      // Reset the form with template data
+      form.reset({
+        bomName: `${templateBom.bomName} (Copy)`, // Add "Copy" to distinguish from original
+        productName: templateBom.productName,
+        productCode: `${templateBom.productCode}-COPY`, // Add suffix to avoid conflicts
+        version: '1.0', // Reset version for new BOM
+        bomType: templateBom.bomType,
+        status: 'DRAFT', // Always start as draft for new BOM
+        customerId: templateBom.customerId || '',
+        customerName: templateBom.customerName || '',
+        enquiryId: templateBom.enquiryId || '',
+        enquiryNumber: templateBom.enquiryNumber || '',
+        items: templateBom.items?.length ? templateBom.items : [{
+          itemCode: 0,
+          itemDescription: '',
+          quantity: 1,
+          rate: 0,
+          amount: 0,
+          level: 0,
+          children: [],
+        }],
+        description: templateBom.description || '',
+        notes: templateBom.notes || '',
+      });
+
+      // Set customer ID for enquiry filtering if template has customer
+      if (templateBom.customerId) {
+        setSelectedCustomerId(templateBom.customerId);
+      }
+
+      setCreationMode('template');
+      setSelectedTemplateId(templateBom.id || '');
+      setTemplateSelectOpen(false);
+    } catch (error) {
+      console.error('Error loading template:', error);
+      // Reset to scratch mode if template loading fails
+      setCreationMode('scratch');
+      setSelectedTemplateId('');
+    }
+  };
+
   if (isEdit && isFetchingBom) {
     return <Loader />;
   }
 
   if (isFetchingCustomers) {
+    return <Loader />;
+  }
+
+  if (!isEdit && isFetchingTemplates) {
     return <Loader />;
   }
 
@@ -601,13 +663,180 @@ const CreateBomForm: React.FC<CreateBomFormComponentProps> = ({ bomId }) => {
             {isEdit ? 'Edit BOM' : 'Create New BOM'}
           </h1>
           <p className="text-muted-foreground">
-            {isEdit ? 'Update BOM details and items' : 'Create a new bill of materials with hierarchical items'}
+            {isEdit 
+              ? 'Update BOM details and items' 
+              : creationMode === 'template' && selectedTemplateId
+                ? `Creating new BOM from template: ${templateBomList?.find(bom => bom.id === selectedTemplateId)?.bomName || 'Selected Template'}`
+                : 'Create a new bill of materials with hierarchical items'
+            }
           </p>
         </div>
       </div>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Template Selection - Only show when creating new BOM */}
+          {!isEdit && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Creation Mode</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex gap-4">
+                    <Button
+                      type="button"
+                      variant={creationMode === 'scratch' ? 'primary' : 'outline'}
+                      onClick={() => {
+                        setCreationMode('scratch');
+                        setSelectedTemplateId('');
+                        // Reset form to default values
+                        form.reset({
+                          bomName: '',
+                          productName: '',
+                          productCode: '',
+                          version: '1.0',
+                          bomType: 'MANUFACTURING',
+                          status: 'DRAFT',
+                          customerId: '',
+                          customerName: '',
+                          enquiryId: '',
+                          enquiryNumber: '',
+                          items: [{
+                            itemCode: 0,
+                            itemDescription: '',
+                            quantity: 1,
+                            rate: 0,
+                            amount: 0,
+                            level: 0,
+                            children: [],
+                          }],
+                          description: '',
+                          notes: '',
+                        });
+                        setSelectedCustomerId('');
+                      }}
+                    >
+                      Create from Scratch
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={creationMode === 'template' ? 'primary' : 'outline'}
+                      onClick={() => setCreationMode('template')}
+                    >
+                      Create from Template
+                    </Button>
+                  </div>
+
+                  {creationMode === 'template' && (
+                    <div className="w-full max-w-md">
+                      <div className="flex items-center justify-between">
+                        <FormLabel className="text-sm font-medium">Select BOM Template</FormLabel>
+                        {selectedTemplateId && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedTemplateId('');
+                              setCreationMode('scratch');
+                              // Reset to default form
+                              form.reset({
+                                bomName: '',
+                                productName: '',
+                                productCode: '',
+                                version: '1.0',
+                                bomType: 'MANUFACTURING',
+                                status: 'DRAFT',
+                                customerId: '',
+                                customerName: '',
+                                enquiryId: '',
+                                enquiryNumber: '',
+                                items: [{
+                                  itemCode: 0,
+                                  itemDescription: '',
+                                  quantity: 1,
+                                  rate: 0,
+                                  amount: 0,
+                                  level: 0,
+                                  children: [],
+                                }],
+                                description: '',
+                                notes: '',
+                              });
+                              setSelectedCustomerId('');
+                            }}
+                          >
+                            Clear Template
+                          </Button>
+                        )}
+                      </div>
+                      <Popover
+                        open={templateSelectOpen}
+                        onOpenChange={setTemplateSelectOpen}
+                      >
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className={cn(
+                              'w-full justify-between mt-2',
+                              !selectedTemplateId && 'text-muted-foreground'
+                            )}
+                          >
+                            {selectedTemplateId
+                              ? templateBomList?.find(
+                                  (bom) => bom.id === selectedTemplateId
+                                )?.bomName
+                              : 'Select a BOM template...'}
+                            <ChevronsUpDown className="opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <Command>
+                            <CommandInput
+                              placeholder="Search BOMs..."
+                              className="h-9"
+                            />
+                            <CommandList>
+                              <CommandEmpty>No BOM templates found.</CommandEmpty>
+                              <CommandGroup>
+                                {templateBomList?.map((bom) => (
+                                  <CommandItem
+                                    value={`${bom.bomName} ${bom.bomNumber || ''}`}
+                                    key={bom.id}
+                                    onSelect={() => handleTemplateSelection(bom)}
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{bom.bomName}</span>
+                                      {bom.bomNumber && (
+                                        <span className="text-sm text-muted-foreground">
+                                          {bom.bomNumber}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <Check
+                                      className={cn(
+                                        'ml-auto',
+                                        bom.id === selectedTemplateId
+                                          ? 'opacity-100'
+                                          : 'opacity-0'
+                                      )}
+                                    />
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Basic Information */}
           <Card>
             <CardHeader>
