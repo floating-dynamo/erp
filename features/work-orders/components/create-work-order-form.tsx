@@ -84,7 +84,9 @@ const CreateWorkOrderForm = ({
           setupTime: 0,
           runTime: 0,
           totalPlannedTime: 0,
+          actualTime: 0,
           status: 'PLANNED',
+          qualityChecks: [],
         },
       ],
       resources: [],
@@ -154,7 +156,9 @@ const CreateWorkOrderForm = ({
       setupTime: 0,
       runTime: 0,
       totalPlannedTime: 0,
+      actualTime: 0,
       status: 'PLANNED',
+      qualityChecks: [],
     });
   };
 
@@ -164,8 +168,10 @@ const CreateWorkOrderForm = ({
       resourceName: '',
       resourceCode: '',
       plannedQuantity: 1,
+      actualQuantity: 0,
       uom: '',
       standardCost: 0,
+      actualCost: 0,
       currency: 'INR',
       status: 'PLANNED',
     });
