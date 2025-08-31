@@ -15,6 +15,7 @@ import {
   UserIcon,
   UsersIcon,
   ClipboardListIcon,
+  WrenchIcon,
 } from 'lucide-react';
 
 const routes = [
@@ -43,7 +44,7 @@ const routes = [
     activeIcon: CalculatorIcon,
   },
   {
-    label: 'Purchase Orders',
+    label: 'Customer PO',
     href: '/purchase-orders',
     icon: PackageIcon,
     activeIcon: PackageOpenIcon,
@@ -53,6 +54,18 @@ const routes = [
     href: '/boms',
     icon: ClipboardListIcon,
     activeIcon: ClipboardListIcon,
+  },
+  {
+    label: 'Work Orders',
+    href: '/work-orders',
+    icon: WrenchIcon,
+    activeIcon: WrenchIcon,
+  },
+  {
+    label: 'Supplier PO',
+    href: '/purchase-orders/supplier-po',
+    icon: PackageIcon,
+    activeIcon: PackageOpenIcon,
   },
   {
     label: 'Supplier DCs',

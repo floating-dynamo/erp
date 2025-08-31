@@ -847,6 +847,137 @@ const apiService: IApiService = {
       throw new Error(`Error editing BOM ${(error as Error).message}`);
     }
   },
+
+  // Work Order Endpoints
+  async getWorkOrders({
+    page = 1,
+    limit = 10,
+    searchQuery = '',
+    workOrderTypeFilter = '',
+    statusFilter = '',
+    priorityFilter = '',
+    customerIdFilter = '',
+    departmentFilter = '',
+    startDateFrom = '',
+    startDateTo = '',
+    dueDateFrom = '',
+    dueDateTo = '',
+    costFrom = '',
+    costTo = '',
+  } = {}) {
+    try {
+      const workOrders = await axios.get('/api/work-orders', {
+        params: {
+          page,
+          limit,
+          searchQuery,
+          workOrderTypeFilter,
+          statusFilter,
+          priorityFilter,
+          customerIdFilter,
+          departmentFilter,
+          startDateFrom,
+          startDateTo,
+          dueDateFrom,
+          dueDateTo,
+          costFrom,
+          costTo,
+        },
+      });
+      return workOrders.data;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  },
+
+  async addWorkOrder({ workOrder }) {
+    try {
+      const { data } = await axios.post('/api/work-orders', workOrder);
+      return {
+        message: 'Work Order created successfully',
+        success: true,
+        workOrderNumber: data?.workOrderNumber,
+      };
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error creating Work Order ${(error as Error).message}`);
+    }
+  },
+
+  async getWorkOrderById({ id }) {
+    try {
+      const workOrder = await axios.get(`/api/work-orders/${id}`);
+      return workOrder.data;
+    } catch (error) {
+      console.error(error);
+    }
+  },
+
+  async editWorkOrder({ id, data }) {
+    try {
+      const response = await axios.patch(`/api/work-orders/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error editing Work Order ${(error as Error).message}`);
+    }
+  },
+
+  async deleteWorkOrder({ id }) {
+    try {
+      const response = await axios.delete(`/api/work-orders/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error deleting Work Order ${(error as Error).message}`);
+    }
+  },
+
+  async updateWorkOrderStatus({ id, status, actualStartDate, actualEndDate, remarks }) {
+    try {
+      const response = await axios.patch(`/api/work-orders/${id}/status`, {
+        status,
+        actualStartDate,
+        actualEndDate,
+        remarks,
+      });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error updating Work Order status ${(error as Error).message}`);
+    }
+  },
+
+  async updateWorkOrderOperation({ workOrderId, operationSequence, ...operationData }) {
+    try {
+      const response = await axios.patch(`/api/work-orders/${workOrderId}/operations/${operationSequence}`, operationData);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error updating Work Order operation ${(error as Error).message}`);
+    }
+  },
+
+  async updateWorkOrderResourceConsumption({ workOrderId, resourceIndex, ...resourceData }) {
+    try {
+      const response = await axios.patch(`/api/work-orders/${workOrderId}/resources/${resourceIndex}`, resourceData);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Error updating Work Order resource ${(error as Error).message}`);
+    }
+  },
+
+  async getWorkOrderStats() {
+    try {
+      const response = await axios.get('/api/work-orders/stats/dashboard');
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  },
 };
 
 export default apiService;
