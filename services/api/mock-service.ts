@@ -26,6 +26,8 @@ import {
 import { Bom } from '@/features/bom/schemas';
 import BOMS_MOCK_DATA from './mocks/boms';
 import { USERS_MOCK_DATA } from './mocks/users';
+import { WorkOrder } from '@/features/work-orders/schemas';
+import { WORK_ORDERS_MOCK_DATA } from './mocks/work-orders';
 import Fuse from 'fuse.js';
 
 // Initialize customers with attachments property to match Customer type
@@ -88,6 +90,7 @@ const supplierDcs: SupplierDc[] = SUPPLIER_DCS_MOCK_DATA;
 const purchaseOrders: PurchaseOrder[] = PURCHASE_ORDERS_MOCK_DATA;
 const boms: Bom[] = BOMS_MOCK_DATA;
 const users: User[] = USERS_MOCK_DATA;
+const workOrders: WorkOrder[] = WORK_ORDERS_MOCK_DATA;
 
 // Fuse.js configuration for customer search
 const customerSearchKeys = [
@@ -1645,6 +1648,333 @@ const mockService: IApiService = {
         resolve({
           success: true,
           message: 'User deactivated successfully',
+        });
+      }, 1000);
+    });
+  },
+
+  // Work Orders
+  async getWorkOrders({
+    page = 1,
+    limit = 10,
+    searchQuery = '',
+    statusFilter = '',
+    priorityFilter = '',
+    workOrderTypeFilter = '',
+    departmentFilter = '',
+  } = {}) {
+    // Check if there's a search query
+    const isSearching = searchQuery?.trim().length > 0;
+
+    // Filter work orders based on criteria
+    let filteredWorkOrders = [...workOrders];
+
+    // Apply status filter
+    if (statusFilter) {
+      filteredWorkOrders = filteredWorkOrders.filter(
+        (workOrder) => workOrder.status === statusFilter
+      );
+    }
+
+    // Apply priority filter
+    if (priorityFilter) {
+      filteredWorkOrders = filteredWorkOrders.filter(
+        (workOrder) => workOrder.priority === priorityFilter
+      );
+    }
+
+    // Apply type filter
+    if (workOrderTypeFilter) {
+      filteredWorkOrders = filteredWorkOrders.filter(
+        (workOrder) => workOrder.workOrderType === workOrderTypeFilter
+      );
+    }
+
+    // Apply department filter
+    if (departmentFilter) {
+      filteredWorkOrders = filteredWorkOrders.filter(
+        (workOrder) => workOrder.department === departmentFilter
+      );
+    }
+
+    // Apply fuzzy search if search query exists
+    if (isSearching) {
+      const searchKeys = [
+        'workOrderNumber',
+        'workOrderName',
+        'customerName',
+        'productName',
+        'productCode',
+      ];
+      const fuseOptions = {
+        keys: searchKeys,
+        threshold: 0.1,
+        ignoreLocation: true,
+        includeScore: true,
+      };
+      const fuse = new Fuse(filteredWorkOrders, fuseOptions);
+      const searchResults = fuse.search(searchQuery);
+      filteredWorkOrders = searchResults.map((result) => result.item);
+    }
+
+    const totalWorkOrders = filteredWorkOrders.length;
+
+    // Apply pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedWorkOrders = filteredWorkOrders.slice(startIndex, endIndex);
+
+    const totalPages = Math.ceil(totalWorkOrders / limit);
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          workOrders: paginatedWorkOrders,
+          total: totalWorkOrders,
+          page,
+          limit,
+          totalPages,
+        });
+      }, 1000);
+    });
+  },
+
+  async addWorkOrder({ workOrder }) {
+    // Generate work order number if not provided
+    const workOrderNumber = workOrder.workOrderNumber || 
+      `WO/${new Date().getFullYear()}/${String(new Date().getMonth() + 1).padStart(2, '0')}/${String(new Date().getDate()).padStart(2, '0')}/${String(workOrders.length + 1).padStart(5, '0')}`;
+    
+    const newWorkOrder: WorkOrder = {
+      ...workOrder,
+      id: workOrder.id || `wo${Date.now()}`,
+      workOrderNumber,
+    };
+
+    workOrders.unshift(newWorkOrder);
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'Work order added successfully',
+          workOrderNumber,
+        });
+      }, 1000);
+    });
+  },
+
+  async getWorkOrderById({ id }) {
+    const workOrder = workOrders.find((wo) => wo.id === id);
+
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (workOrder) {
+          resolve(workOrder);
+        } else {
+          reject(new Error('Work order not found'));
+        }
+      }, 1000);
+    });
+  },
+
+  async editWorkOrder({ id, data }) {
+    const index = workOrders.findIndex((wo) => wo.id === id);
+
+    if (index === -1) {
+      return new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('Work order not found'));
+        }, 1000);
+      });
+    }
+
+    workOrders[index] = {
+      ...workOrders[index],
+      ...data,
+      id,
+    };
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'Work order updated successfully',
+        });
+      }, 1000);
+    });
+  },
+
+  async deleteWorkOrder({ id }) {
+    const index = workOrders.findIndex((wo) => wo.id === id);
+
+    if (index === -1) {
+      return new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('Work order not found'));
+        }, 1000);
+      });
+    }
+
+    workOrders.splice(index, 1);
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'Work order deleted successfully',
+        });
+      }, 1000);
+    });
+  },
+
+  async updateWorkOrderStatus({ id, status, actualStartDate, actualEndDate }) {
+    const index = workOrders.findIndex((wo) => wo.id === id);
+
+    if (index === -1) {
+      return new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('Work order not found'));
+        }, 1000);
+      });
+    }
+
+    const updates: Partial<WorkOrder> = { 
+      status: status as WorkOrder['status']
+    };
+    if (actualStartDate) updates.actualStartDate = actualStartDate;
+    if (actualEndDate) updates.actualEndDate = actualEndDate;
+
+    workOrders[index] = {
+      ...workOrders[index],
+      ...updates,
+    };
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'Work order status updated successfully',
+        });
+      }, 1000);
+    });
+  },
+
+  async updateWorkOrderOperation({ workOrderId, operationSequence, ...operationData }) {
+    const workOrderIndex = workOrders.findIndex((wo) => wo.id === workOrderId);
+
+    if (workOrderIndex === -1) {
+      return new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('Work order not found'));
+        }, 1000);
+      });
+    }
+
+    const operationIndex = workOrders[workOrderIndex].operations?.findIndex(
+      (op) => op.operationSequence === operationSequence
+    );
+
+    if (operationIndex === -1 || operationIndex === undefined) {
+      return new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('Operation not found'));
+        }, 1000);
+      });
+    }
+
+    if (workOrders[workOrderIndex].operations) {
+      workOrders[workOrderIndex].operations[operationIndex] = {
+        ...workOrders[workOrderIndex].operations[operationIndex],
+        ...operationData,
+      };
+    }
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'Work order operation updated successfully',
+        });
+      }, 1000);
+    });
+  },
+
+  async updateWorkOrderResourceConsumption({ workOrderId, resourceIndex, ...resourceData }) {
+    const workOrderIndex = workOrders.findIndex((wo) => wo.id === workOrderId);
+
+    if (workOrderIndex === -1) {
+      return new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('Work order not found'));
+        }, 1000);
+      });
+    }
+
+    if (!workOrders[workOrderIndex].resources || 
+        resourceIndex < 0 || 
+        resourceIndex >= workOrders[workOrderIndex].resources!.length) {
+      return new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('Resource not found'));
+        }, 1000);
+      });
+    }
+
+    workOrders[workOrderIndex].resources![resourceIndex] = {
+      ...workOrders[workOrderIndex].resources![resourceIndex],
+      ...resourceData,
+    };
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'Work order resource consumption updated successfully',
+        });
+      }, 1000);
+    });
+  },
+
+  async getWorkOrderStats() {
+    const totalWorkOrders = workOrders.length;
+    const plannedWorkOrders = workOrders.filter(wo => wo.status === 'PLANNED').length;
+    const inProgressWorkOrders = workOrders.filter(wo => wo.status === 'STARTED').length;
+    const completedWorkOrders = workOrders.filter(wo => wo.status === 'COMPLETED').length;
+    const overdueWorkOrders = workOrders.filter(wo => 
+      wo.dueDate && new Date(wo.dueDate) < new Date() && wo.status !== 'COMPLETED'
+    ).length;
+    
+    const totalPlannedCost = workOrders.reduce((sum, wo) => sum + (wo.plannedCost || 0), 0);
+    const totalActualCost = workOrders.reduce((sum, wo) => sum + (wo.actualCost || 0), 0);
+    
+    const completedWorkOrdersWithDates = workOrders.filter(wo => 
+      wo.status === 'COMPLETED' && wo.actualStartDate && wo.actualEndDate
+    );
+    
+    const averageCompletionTime = completedWorkOrdersWithDates.length > 0 
+      ? completedWorkOrdersWithDates.reduce((sum, wo) => {
+          const start = new Date(wo.actualStartDate!);
+          const end = new Date(wo.actualEndDate!);
+          return sum + (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24); // days
+        }, 0) / completedWorkOrdersWithDates.length
+      : 0;
+    
+    const efficiencyPercentage = totalPlannedCost > 0 
+      ? Math.min(100, (totalPlannedCost / Math.max(totalActualCost, 1)) * 100)
+      : 100;
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          totalWorkOrders,
+          plannedWorkOrders,
+          inProgressWorkOrders,
+          completedWorkOrders,
+          overdueWorkOrders,
+          totalPlannedCost,
+          totalActualCost,
+          averageCompletionTime,
+          efficiencyPercentage,
         });
       }, 1000);
     });
