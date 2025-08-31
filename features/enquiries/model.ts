@@ -11,9 +11,14 @@ export interface EnquiryDocument extends Document {
   enquiryDate: Date;
   quotationDueDate: Date;
   items: {
-    itemCode?: number;
-    itemDescription: string;
+    itemId: string;
     quantity: number;
+    rate?: number;
+    amount?: number;
+    remarks?: string;
+    // Keep for backward compatibility during migration
+    itemCode?: number;
+    itemDescription?: string;
   }[];
   termsAndConditions?: string;
   isQotationCreated?: boolean;
@@ -53,9 +58,14 @@ const EnquirySchema = new Schema<EnquiryDocument>(
     quotationDueDate: { type: Date, required: true },
     items: [
       {
+        itemId: { type: String, required: true },
+        quantity: { type: Number, required: true, min: 0.01 },
+        rate: { type: Number, min: 0 },
+        amount: { type: Number, min: 0 },
+        remarks: { type: String },
+        // Keep for backward compatibility during migration
         itemCode: { type: Number },
-        itemDescription: { type: String, required: true },
-        quantity: { type: Number, required: true, min: 0 },
+        itemDescription: { type: String },
       },
     ],
     termsAndConditions: { type: String },

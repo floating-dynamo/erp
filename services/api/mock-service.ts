@@ -28,6 +28,8 @@ import BOMS_MOCK_DATA from './mocks/boms';
 import { USERS_MOCK_DATA } from './mocks/users';
 import { WorkOrder } from '@/features/work-orders/schemas';
 import { WORK_ORDERS_MOCK_DATA } from './mocks/work-orders';
+import { Item, CreateItem, UpdateItem } from '@/features/items/schemas';
+import { ITEMS_MOCK_DATA } from './mocks/items';
 import Fuse from 'fuse.js';
 
 // Initialize customers with attachments property to match Customer type
@@ -91,6 +93,7 @@ const purchaseOrders: PurchaseOrder[] = PURCHASE_ORDERS_MOCK_DATA;
 const boms: Bom[] = BOMS_MOCK_DATA;
 const users: User[] = USERS_MOCK_DATA;
 const workOrders: WorkOrder[] = WORK_ORDERS_MOCK_DATA;
+const items: Item[] = ITEMS_MOCK_DATA;
 
 // Fuse.js configuration for customer search
 const customerSearchKeys = [
@@ -1977,6 +1980,184 @@ const mockService: IApiService = {
           efficiencyPercentage,
         });
       }, 1000);
+    });
+  },
+
+  // Items API methods
+  async getItems(
+    searchQuery?: string,
+    page?: number,
+    limit?: number,
+    isActiveFilter?: boolean,
+    categoryFilter?: string
+  ) {
+    // Set defaults
+    const currentPage = page || 1;
+    const currentLimit = limit || 10;
+    
+    // Check if there's a search query
+    const isSearching = searchQuery && searchQuery.trim().length > 0;
+
+    // Filter items based on criteria
+    let filteredItems = [...items];
+
+    // Apply active filter
+    if (isActiveFilter !== undefined) {
+      filteredItems = filteredItems.filter(
+        (item) => item.isActive === isActiveFilter
+      );
+    }
+
+    // Apply category filter
+    if (categoryFilter) {
+      filteredItems = filteredItems.filter(
+        (item) => item.category === categoryFilter
+      );
+    }
+
+    // Apply search if provided
+    if (isSearching && searchQuery) {
+      const searchLower = searchQuery.toLowerCase();
+      filteredItems = filteredItems.filter(
+        (item) =>
+          item.itemCode?.toLowerCase().includes(searchLower) ||
+          item.itemDescription?.toLowerCase().includes(searchLower) ||
+          item.category?.toLowerCase().includes(searchLower) ||
+          item.manufacturer?.toLowerCase().includes(searchLower) ||
+          item.partNumber?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Calculate pagination
+    const startIndex = (currentPage - 1) * currentLimit;
+    const endIndex = startIndex + currentLimit;
+    const paginatedItems = filteredItems.slice(startIndex, endIndex);
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          data: paginatedItems,
+          total: filteredItems.length,
+          page: currentPage,
+          limit: currentLimit,
+          totalPages: Math.ceil(filteredItems.length / currentLimit),
+        });
+      }, 500);
+    });
+  },
+
+  async getItem(id: string) {
+    const item = items.find((item) => item.id === id);
+    
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (item) {
+          resolve(item);
+        } else {
+          reject(new Error('Item not found'));
+        }
+      }, 300);
+    });
+  },
+
+  async createItem(data: CreateItem) {
+    const newItem: Item = {
+      id: `item-${Date.now()}`,
+      ...data,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    items.push(newItem);
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'Item created successfully',
+          data: newItem,
+        });
+      }, 800);
+    });
+  },
+
+  async updateItem(id: string, data: UpdateItem) {
+    const index = items.findIndex((item) => item.id === id);
+    
+    if (index === -1) {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          reject(new Error('Item not found'));
+        }, 300);
+      });
+    }
+
+    const updatedItem = {
+      ...items[index],
+      ...data,
+      updatedAt: new Date(),
+    };
+
+    items[index] = updatedItem;
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'Item updated successfully',
+          data: updatedItem,
+        });
+      }, 800);
+    });
+  },
+
+  async deleteItem(id: string) {
+    const index = items.findIndex((item) => item.id === id);
+    
+    if (index === -1) {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          reject(new Error('Item not found'));
+        }, 300);
+      });
+    }
+
+    // Soft delete - mark as inactive
+    items[index].isActive = false;
+    items[index].updatedAt = new Date();
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'Item deleted successfully',
+        });
+      }, 500);
+    });
+  },
+
+  async getItemCategories() {
+    const categories = [...new Set(
+      items
+        .filter(item => item.isActive && item.category)
+        .map(item => item.category!)
+    )];
+    
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(categories);
+      }, 200);
+    });
+  },
+
+  async getItemsByIds(ids: string[]) {
+    const foundItems = items.filter(item => ids.includes(item.id || ''));
+    
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(foundItems);
+      }, 300);
     });
   },
 };

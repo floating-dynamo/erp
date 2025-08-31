@@ -969,6 +969,90 @@ const apiService: IApiService = {
     }
   },
 
+  // Items Endpoints
+  async getItems(
+    searchQuery?: string,
+    page?: number,
+    limit?: number,
+    isActiveFilter?: boolean,
+    categoryFilter?: string
+  ) {
+    try {
+      const params = new URLSearchParams();
+      if (searchQuery) params.append('searchQuery', searchQuery);
+      if (page) params.append('page', page.toString());
+      if (limit) params.append('limit', limit.toString());
+      if (isActiveFilter !== undefined) params.append('isActiveFilter', isActiveFilter.toString());
+      if (categoryFilter) params.append('categoryFilter', categoryFilter);
+
+      const response = await axios.get(`/api/items?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching items:', error);
+      throw new Error(`Error fetching items: ${(error as Error).message}`);
+    }
+  },
+
+  async getItem(id: string) {
+    try {
+      const response = await axios.get(`/api/items/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching item:', error);
+      throw new Error(`Error fetching item: ${(error as Error).message}`);
+    }
+  },
+
+  async createItem(data: import('@/features/items/schemas').CreateItem) {
+    try {
+      const response = await axios.post('/api/items', data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating item:', error);
+      throw new Error(`Error creating item: ${(error as Error).message}`);
+    }
+  },
+
+  async updateItem(id: string, data: import('@/features/items/schemas').UpdateItem) {
+    try {
+      const response = await axios.put(`/api/items/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating item:', error);
+      throw new Error(`Error updating item: ${(error as Error).message}`);
+    }
+  },
+
+  async deleteItem(id: string) {
+    try {
+      const response = await axios.delete(`/api/items/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      throw new Error(`Error deleting item: ${(error as Error).message}`);
+    }
+  },
+
+  async getItemCategories() {
+    try {
+      const response = await axios.get('/api/items/categories');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching item categories:', error);
+      throw new Error(`Error fetching item categories: ${(error as Error).message}`);
+    }
+  },
+
+  async getItemsByIds(ids: string[]) {
+    try {
+      const response = await axios.post('/api/items/by-ids', { ids });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching items by IDs:', error);
+      throw new Error(`Error fetching items by IDs: ${(error as Error).message}`);
+    }
+  },
+
   async getWorkOrderStats() {
     try {
       const response = await axios.get('/api/work-orders/stats/dashboard');

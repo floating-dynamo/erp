@@ -1,4 +1,5 @@
 import { Enquiry } from "@/features/enquiries/schemas";
+import { convertItemToReference } from '../item-mapping';
 
 const mockEnquiries: Enquiry[] = [
   {
@@ -12,11 +13,11 @@ const mockEnquiries: Enquiry[] = [
     enquiryDate: "2023-01-01",
     quotationDueDate: "2023-01-15",
     items: [
-      {
+      convertItemToReference({
         itemCode: 101,
-        itemDescription: "Item 1",
+        itemDescription: "Laptop",
         quantity: 2,
-      },
+      }),
     ],
     termsAndConditions: "Terms 1",
     isQotationCreated: true,
@@ -33,11 +34,11 @@ const mockEnquiries: Enquiry[] = [
     enquiryDate: "2023-02-01",
     quotationDueDate: "2023-01-15",
     items: [
-      {
+      convertItemToReference({
         itemCode: 102,
-        itemDescription: "Item 2",
+        itemDescription: "Mouse",
         quantity: 4,
-      },
+      }),
     ],
     termsAndConditions: "Terms 2",
     isQotationCreated: false,
@@ -54,11 +55,11 @@ const mockEnquiries: Enquiry[] = [
     enquiryDate: "2023-03-01",
     quotationDueDate: "2025-02-10",
     items: [
-      {
+      convertItemToReference({
         itemCode: 103,
-        itemDescription: "Item 3",
+        itemDescription: "Office Chair",
         quantity: 3,
-      },
+      }),
     ],
     termsAndConditions: "Terms 3",
     isQotationCreated: false,
@@ -75,11 +76,11 @@ const mockEnquiries: Enquiry[] = [
     enquiryDate: "2023-04-01",
     quotationDueDate: "2025-02-15",
     items: [
-      {
+      convertItemToReference({
         itemCode: 104,
-        itemDescription: "Item 4",
+        itemDescription: "Steel Rods",
         quantity: 5,
-      },
+      }),
     ],
     termsAndConditions: "Terms 4",
     isQotationCreated: true,
@@ -96,11 +97,11 @@ const mockEnquiries: Enquiry[] = [
     enquiryDate: "2023-05-01",
     quotationDueDate: "2023-01-15",
     items: [
-      {
+      convertItemToReference({
         itemCode: 105,
-        itemDescription: "Item 5",
+        itemDescription: "Welding Rods",
         quantity: 6,
-      },
+      }),
     ],
     termsAndConditions: "Terms 5",
     isQotationCreated: false,

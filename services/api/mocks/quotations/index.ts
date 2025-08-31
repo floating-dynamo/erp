@@ -1,6 +1,7 @@
 import { Quotation } from '@/features/quotations/schemas'; // Assuming the mock data is in mockData.ts
 import { CUSTOMERS_MOCK_DATA } from '../customers';
 import { ENQUIRIES_MOCK_DATA } from '../enquiries';
+import { convertItemToReference } from '../item-mapping';
 
 const QUOTATIONS_MOCK_DATA: Quotation[] = [
   {
@@ -14,27 +15,30 @@ const QUOTATIONS_MOCK_DATA: Quotation[] = [
     quotationDate: '2025-02-09',
     quoteNumber: 'QUO/25/02/09/00001',
     items: [
-      {
-        itemCode: 9019201,
-        itemDescription: 'Laptop',
-        materialConsideration: 'High-end laptop with extra RAM',
-        quantity: 2,
-        uom: 'Piece',
-        rate: 50000,
-        currency: 'INR',
-        amount: 100000,
-        remarks: 'Fast delivery requested',
-      },
-      {
-        itemCode: 912901,
-        itemDescription: 'Mouse',
-        quantity: 2,
-        uom: 'Piece',
-        rate: 1000,
-        currency: 'INR',
-        amount: 2000,
-        remarks: 'Wireless mouse',
-      },
+      convertItemToReference(
+        {
+          itemCode: 101,
+          itemDescription: 'Laptop',
+          quantity: 2,
+        },
+        {
+          rate: 50000,
+          amount: 100000,
+          remarks: 'Fast delivery requested',
+        }
+      ),
+      convertItemToReference(
+        {
+          itemCode: 102,
+          itemDescription: 'Mouse',
+          quantity: 2,
+        },
+        {
+          rate: 1000,
+          amount: 2000,
+          remarks: 'Wireless mouse',
+        }
+      ),
     ],
     totalAmount: 102000,
     termsAndConditions: ENQUIRIES_MOCK_DATA[0].termsAndConditions,
@@ -54,26 +58,30 @@ const QUOTATIONS_MOCK_DATA: Quotation[] = [
     quotationDate: '2025-02-10',
     quoteNumber: 'QUO/25/02/10/00002',
     items: [
-      {
-        itemCode: 912921,
-        itemDescription: 'Office Chair',
-        quantity: 5,
-        uom: 'Piece',
-        rate: 3000,
-        currency: 'INR',
-        amount: 15000,
-        remarks: 'Ergonomic design',
-      },
-      {
-        itemCode: 326722,
-        itemDescription: 'Desk',
-        quantity: 3,
-        uom: 'Piece',
-        rate: 8000,
-        currency: 'INR',
-        amount: 24000,
-        remarks: 'Wooden desk with storage',
-      },
+      convertItemToReference(
+        {
+          itemCode: 103,
+          itemDescription: 'Office Chair',
+          quantity: 5,
+        },
+        {
+          rate: 3000,
+          amount: 15000,
+          remarks: 'Ergonomic design',
+        }
+      ),
+      convertItemToReference(
+        {
+          itemCode: 106,
+          itemDescription: 'Desk',
+          quantity: 3,
+        },
+        {
+          rate: 8000,
+          amount: 24000,
+          remarks: 'Wooden desk with storage',
+        }
+      ),
     ],
     totalAmount: 39000,
     termsAndConditions: ENQUIRIES_MOCK_DATA[1].termsAndConditions,
@@ -93,17 +101,18 @@ const QUOTATIONS_MOCK_DATA: Quotation[] = [
     quotationDate: '2025-02-11',
     quoteNumber: 'QUO/25/02/11/00003',
     items: [
-      {
-        itemCode: 2749305,
-        itemDescription: 'Projector',
-        materialConsideration: 'Full HD projector with remote',
-        quantity: 1,
-        uom: 'Piece',
-        rate: 25000,
-        currency: 'INR',
-        amount: 25000,
-        remarks: 'Includes installation',
-      },
+      convertItemToReference(
+        {
+          itemCode: 107,
+          itemDescription: 'Projector',
+          quantity: 1,
+        },
+        {
+          rate: 25000,
+          amount: 25000,
+          remarks: 'Includes installation',
+        }
+      ),
     ],
     totalAmount: 25000,
     termsAndConditions: ENQUIRIES_MOCK_DATA[2].termsAndConditions,

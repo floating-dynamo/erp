@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { itemReferenceSchema } from "../items/schemas";
 
 export const createPurchaseOrderSchema = z.object({
   id: z.string().optional(),
@@ -11,10 +12,10 @@ export const createPurchaseOrderSchema = z.object({
   deliveryDate: z.string().optional(),
   poDate: z.string().optional(),
   items: z.array(
-    z.object({
-      itemCode: z.number().optional(),
-      itemDescription: z.string().min(1, 'Required'),
-      quantity: z.number().min(0, 'It cannot be negative'),
+    itemReferenceSchema.extend({
+      // Purchase order specific fields
+      itemCode: z.number().optional(), // Keep for backward compatibility during migration
+      itemDescription: z.string().optional(), // Keep for backward compatibility during migration
     })
   ),
   typeOfService: z.string().optional(),

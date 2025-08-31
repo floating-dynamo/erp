@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { itemReferenceSchema } from "../items/schemas";
 
 // Define the schema for Quotation File Attachments
 export const quotationFileSchema = z.object({
@@ -19,17 +20,14 @@ export const quotationFileSchema = z.object({
   description: z.string().optional(), // Optional description for the file
 });
 
-// Define the schema for the Item
-export const quotationItemSchema = z.object({
-  itemCode: z.number().min(0, "Cannot be negative"),
-  itemDescription: z.string().trim(),
+// Define the schema for the Item - now uses item reference
+export const quotationItemSchema = itemReferenceSchema.extend({
+  // Quotation-specific fields
+  itemCode: z.number().optional(), // Keep for backward compatibility during migration
+  itemDescription: z.string().optional(), // Keep for backward compatibility during migration
   materialConsideration: z.string().optional(),
-  quantity: z.number().min(1, "Quantity must be greater than 0"),
   uom: z.string().optional(), // Dropdown selection for unit of measurement (UOM)
-  rate: z.number().min(0, "Rate must be a positive number"),
   currency: z.string().optional(), // Dropdown selection for currency
-  amount: z.number().min(0), // Amount (calculated as Quantity x Rate, not editable)
-  remarks: z.string().optional(),
 });
 
 // Define the Quotation schema
