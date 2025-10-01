@@ -1013,6 +1013,84 @@ const apiService: IApiService = {
     }
   },
 
+  // Operations Endpoints
+  async getOperations({
+    page = 1,
+    limit = 20,
+    searchTerm = '',
+    processFilter = '',
+    workCenterFilter = '',
+  } = {}) {
+    try {
+      const response = await axios.get('/api/operations', {
+        params: {
+          page,
+          limit,
+          searchTerm,
+          processFilter,
+          workCenterFilter,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching operations:', error);
+      return null;
+    }
+  },
+
+  async addOperation({ operation }) {
+    try {
+      const response = await axios.post('/api/operations', { operation });
+      return response.data;
+    } catch (error) {
+      console.error('Error creating operation:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to create operation');
+      }
+      throw error;
+    }
+  },
+
+  async getOperationById({ id }) {
+    try {
+      const response = await axios.get('/api/operations', {
+        params: { id },
+      });
+      return response.data.success ? response.data.operation : null;
+    } catch (error) {
+      console.error('Error fetching operation details:', error);
+      throw error;
+    }
+  },
+
+  async editOperation({ id, data }) {
+    try {
+      const response = await axios.put('/api/operations', { id, data });
+      return response.data;
+    } catch (error) {
+      console.error('Error updating operation:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to update operation');
+      }
+      throw error;
+    }
+  },
+
+  async deleteOperation({ id }) {
+    try {
+      const response = await axios.delete('/api/operations', {
+        params: { id },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting operation:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.message || 'Failed to delete operation');
+      }
+      throw error;
+    }
+  },
+
   async getWorkOrderStats() {
     try {
       const response = await axios.get('/api/work-orders/stats/dashboard');
