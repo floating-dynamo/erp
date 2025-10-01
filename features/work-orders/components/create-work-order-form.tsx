@@ -30,7 +30,9 @@ import { useCreateWorkOrder, useUpdateWorkOrder, useGetWorkOrderDetails } from '
 import { useCustomers } from '@/features/customers/api/use-customers';
 import { usePurchaseOrders } from '@/features/purchase-orders/api/use-purchase-orders';
 import { useItems } from '@/features/items/api/use-items';
+import { useGetCompanies } from '@/features/companies/api/use-get-companies';
 import { Item } from '@/features/items/schemas';
+import { Company } from '@/features/companies/schemas';
 import { MinusCircle, PlusCircle } from 'lucide-react';
 
 type CreateWorkOrderFormData = z.infer<typeof createWorkOrderSchema>;
@@ -76,6 +78,9 @@ export const CreateWorkOrderForm: React.FC<CreateWorkOrderFormProps> = ({
     limit: 200, // Get enough items for dropdown
     isActiveFilter: true, // Only active items
   });
+
+  // Fetch companies for dropdown
+  const { data: companiesData } = useGetCompanies();
 
   const schema = isEdit ? editWorkOrderSchema : createWorkOrderSchema;
   
@@ -203,6 +208,16 @@ export const CreateWorkOrderForm: React.FC<CreateWorkOrderFormProps> = ({
       form.setValue('customerId', customerId);
       form.setValue('customerName', selectedCustomer.name);
     }
+  };
+
+  // Handle company selection
+  const handleCompanySelection = (companyId: string) => {
+    if (companyId === 'none') {
+      form.setValue('companyId', '');
+      return;
+    }
+    
+    form.setValue('companyId', companyId);
   };
 
   // Handle PO selection - auto-populate customer info when PO is selected
@@ -430,10 +445,25 @@ export const CreateWorkOrderForm: React.FC<CreateWorkOrderFormProps> = ({
                 name="companyId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Company ID</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter company ID" />
-                    </FormControl>
+                    <FormLabel>Company</FormLabel>
+                    <Select 
+                      onValueChange={handleCompanySelection} 
+                      value={field.value || 'none'}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a company" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">No Company</SelectItem>
+                        {companiesData?.filter((company: Company) => company.id).map((company: Company) => (
+                          <SelectItem key={company.id} value={company.id!}>
+                            {company.name} - {company.city}, {company.state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
