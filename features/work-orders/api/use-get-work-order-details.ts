@@ -9,7 +9,7 @@ interface UseGetWorkOrderDetailsProps {
 export const useGetWorkOrderDetails = ({ id }: UseGetWorkOrderDetailsProps) => {
   const query = useQuery({
     queryKey: [QueryKeyString.WORK_ORDERS, id],
-    queryFn: () => APIService.getWorkOrderById({ id }),
+    queryFn: () => APIService.getWorkOrderDetails(id),
     enabled: !!id,
     staleTime: 30000, // 30 seconds
   });

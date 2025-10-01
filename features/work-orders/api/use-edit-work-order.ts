@@ -9,7 +9,7 @@ export const useEditWorkOrder = () => {
 
   const mutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: WorkOrder }) => {
-      const response = await APIService.editWorkOrder({ id, data });
+      const response = await APIService.updateWorkOrder(id, data);
       return response;
     },
     onSuccess: () => {

@@ -853,17 +853,11 @@ const apiService: IApiService = {
     page = 1,
     limit = 10,
     searchQuery = '',
-    workOrderTypeFilter = '',
     statusFilter = '',
-    priorityFilter = '',
-    customerIdFilter = '',
-    departmentFilter = '',
-    startDateFrom = '',
-    startDateTo = '',
-    dueDateFrom = '',
-    dueDateTo = '',
-    costFrom = '',
-    costTo = '',
+    orderTypeFilter = '',
+    customerId = '',
+    startDate = '',
+    endDate = '',
   } = {}) {
     try {
       const workOrders = await axios.get('/api/work-orders', {
@@ -871,17 +865,11 @@ const apiService: IApiService = {
           page,
           limit,
           searchQuery,
-          workOrderTypeFilter,
           statusFilter,
-          priorityFilter,
-          customerIdFilter,
-          departmentFilter,
-          startDateFrom,
-          startDateTo,
-          dueDateFrom,
-          dueDateTo,
-          costFrom,
-          costTo,
+          orderTypeFilter,
+          customerId,
+          startDate,
+          endDate,
         },
       });
       return workOrders.data;
@@ -891,81 +879,53 @@ const apiService: IApiService = {
     }
   },
 
-  async addWorkOrder({ workOrder }) {
+  async createWorkOrder(workOrder) {
     try {
       const { data } = await axios.post('/api/work-orders', workOrder);
-      return {
-        message: 'Work Order created successfully',
-        success: true,
-        workOrderNumber: data?.workOrderNumber,
-      };
+      return data;
     } catch (error) {
-      console.error(error);
-      throw new Error(`Error creating Work Order ${(error as Error).message}`);
+      console.error('Error creating work order:', error);
+      throw error;
     }
   },
 
-  async getWorkOrderById({ id }) {
+  async getWorkOrderDetails(id) {
     try {
-      const workOrder = await axios.get(`/api/work-orders/${id}`);
-      return workOrder.data;
-    } catch (error) {
-      console.error(error);
-    }
-  },
-
-  async editWorkOrder({ id, data }) {
-    try {
-      const response = await axios.patch(`/api/work-orders/${id}`, data);
+      const response = await axios.get(`/api/work-orders/${id}`);
       return response.data;
     } catch (error) {
-      console.error(error);
-      throw new Error(`Error editing Work Order ${(error as Error).message}`);
+      console.error('Error fetching work order details:', error);
+      throw error;
     }
   },
 
-  async deleteWorkOrder({ id }) {
+  async updateWorkOrder(id, data) {
+    try {
+      const response = await axios.put(`/api/work-orders/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating work order:', error);
+      throw error;
+    }
+  },
+
+  async deleteWorkOrder(id) {
     try {
       const response = await axios.delete(`/api/work-orders/${id}`);
       return response.data;
     } catch (error) {
-      console.error(error);
-      throw new Error(`Error deleting Work Order ${(error as Error).message}`);
+      console.error('Error deleting work order:', error);
+      throw error;
     }
   },
 
-  async updateWorkOrderStatus({ id, status, actualStartDate, actualEndDate, remarks }) {
+  async updateWorkOrderStatus(id, statusData) {
     try {
-      const response = await axios.patch(`/api/work-orders/${id}/status`, {
-        status,
-        actualStartDate,
-        actualEndDate,
-        remarks,
-      });
+      const response = await axios.patch(`/api/work-orders/${id}/status`, statusData);
       return response.data;
     } catch (error) {
-      console.error(error);
-      throw new Error(`Error updating Work Order status ${(error as Error).message}`);
-    }
-  },
-
-  async updateWorkOrderOperation({ workOrderId, operationSequence, ...operationData }) {
-    try {
-      const response = await axios.patch(`/api/work-orders/${workOrderId}/operations/${operationSequence}`, operationData);
-      return response.data;
-    } catch (error) {
-      console.error(error);
-      throw new Error(`Error updating Work Order operation ${(error as Error).message}`);
-    }
-  },
-
-  async updateWorkOrderResourceConsumption({ workOrderId, resourceIndex, ...resourceData }) {
-    try {
-      const response = await axios.patch(`/api/work-orders/${workOrderId}/resources/${resourceIndex}`, resourceData);
-      return response.data;
-    } catch (error) {
-      console.error(error);
-      throw new Error(`Error updating Work Order resource ${(error as Error).message}`);
+      console.error('Error updating work order status:', error);
+      throw error;
     }
   },
 

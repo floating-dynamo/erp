@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import React, { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useFieldArray, useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -14,6 +14,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -21,253 +23,274 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import {
-  Plus,
-  Trash2,
-  Package,
-  Wrench,
-  Clock,
-  DollarSign,
-} from 'lucide-react';
-import Loader from '@/components/loader';
-import { useRouter } from 'next/navigation';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import { createWorkOrderSchema, editWorkOrderSchema } from '../schemas';
+import { useCreateWorkOrder, useUpdateWorkOrder, useGetWorkOrderDetails } from '../api/use-work-order-api';
+import { useCustomers } from '@/features/customers/api/use-customers';
+import { usePurchaseOrders } from '@/features/purchase-orders/api/use-purchase-orders';
+import { useItems } from '@/features/items/api/use-items';
+import { useGetCompanies } from '@/features/companies/api/use-get-companies';
+import { Item } from '@/features/items/schemas';
+import { Company } from '@/features/companies/schemas';
+import { MinusCircle, PlusCircle } from 'lucide-react';
 
-import { createWorkOrderSchema, WorkOrder } from '../schemas';
-import { useAddWorkOrder } from '../api/use-add-work-order';
-import { useEditWorkOrder } from '../api/use-edit-work-order';
-import { useGetWorkOrderDetails } from '../api/use-get-work-order-details';
+type CreateWorkOrderFormData = z.infer<typeof createWorkOrderSchema>;
+type EditWorkOrderFormData = z.infer<typeof editWorkOrderSchema>;
 
-const CreateWorkOrderForm = ({
-  isEdit = false,
-  workOrderId,
-}: {
-  isEdit?: boolean;
+interface CreateWorkOrderFormProps {
+  onSuccess?: () => void;
   workOrderId?: string;
-}) => {
-  const router = useRouter();
-  const [formKey] = useState(0);
+  isEdit?: boolean;
+}
 
-  const {
-    mutate: addWorkOrder,
-    isPending: isPendingAddWorkOrder,
-  } = useAddWorkOrder();
-  const {
-    mutate: editWorkOrder,
-    isPending: isPendingEditWorkOrder,
-  } = useEditWorkOrder();
+export const CreateWorkOrderForm: React.FC<CreateWorkOrderFormProps> = ({
+  onSuccess,
+  workOrderId,
+  isEdit = false,
+}) => {
+  const { toast } = useToast();
+  
+  // Track which items are manual entry (to enable/disable part name editing)
+  const [manualEntryItems, setManualEntryItems] = React.useState<Set<number>>(new Set());
+  
+  const { mutate: createWorkOrder, isPending: isCreating } = useCreateWorkOrder();
+  const { mutate: updateWorkOrder, isPending: isUpdating } = useUpdateWorkOrder();
   const { data: workOrder, isFetching } = useGetWorkOrderDetails({
     id: workOrderId || '',
   });
 
-  const form = useForm<WorkOrder>({
-    resolver: zodResolver(createWorkOrderSchema),
+  // Fetch customers for dropdown
+  const { data: customersData } = useCustomers({
+    page: 1,
+    limit: 100, // Get enough customers for dropdown
+  });
+  
+  // Fetch purchase orders for dropdown
+  const { data: purchaseOrdersData } = usePurchaseOrders({
+    page: 1,
+    limit: 100, // Get enough POs for dropdown
+  });
+
+  // Fetch items for dropdown
+  const { data: itemsData } = useItems({
+    page: 1,
+    limit: 200, // Get enough items for dropdown
+    isActiveFilter: true, // Only active items
+  });
+
+  // Fetch companies for dropdown
+  const { data: companiesData } = useGetCompanies();
+
+  const schema = isEdit ? editWorkOrderSchema : createWorkOrderSchema;
+  
+  const form = useForm<CreateWorkOrderFormData>({
+    resolver: zodResolver(schema),
     defaultValues: {
-      workOrderName: '',
-      workOrderType: 'PRODUCTION',
-      priority: 'NORMAL',
-      status: 'PLANNED',
-      productName: '',
-      productCode: '',
-      plannedQuantity: 1,
-      uom: '',
-      plannedStartDate: '',
-      plannedEndDate: '',
-      currency: 'INR',
-      operations: [
+      status: 'Open',
+      customerId: '',
+      customerName: '',
+      orderType: 'PRODUCTION',
+      POId: '',
+      targetDate: '',
+      workOrderId: '',
+      projectName: '',
+      companyId: '',
+      items: [
         {
-          operationSequence: 1,
-          operationName: '',
-          operationCode: '',
-          workCenter: '',
-          setupTime: 0,
-          runTime: 0,
-          totalPlannedTime: 0,
-          actualTime: 0,
-          status: 'PLANNED',
-          qualityChecks: [],
+          partNo: '',
+          partName: '',
+          revisionLevel: 'A',
+          qty: 1,
         },
       ],
-      resources: [],
+      progress: 0,
+      completedQty: 0,
+      totalPlannedQty: 0,
+      remarks: '',
+      createdBy: 'system',
     },
   });
 
-  const {
-    fields: operationFields,
-    append: appendOperation,
-    remove: removeOperation,
-  } = useFieldArray({
+  const { fields: itemFields, append: appendItem, remove: removeItem } = useFieldArray({
     control: form.control,
-    name: 'operations',
-  });
-
-  const {
-    fields: resourceFields,
-    append: appendResource,
-    remove: removeResource,
-  } = useFieldArray({
-    control: form.control,
-    name: 'resources',
+    name: 'items',
   });
 
   useEffect(() => {
-    if (isEdit && workOrder) {
+    if (isEdit && workOrder && !isFetching) {
       form.reset({
-        ...workOrder,
-        plannedStartDate: workOrder.plannedStartDate
-          ? new Date(workOrder.plannedStartDate).toISOString().split('T')[0]
-          : '',
-        plannedEndDate: workOrder.plannedEndDate
-          ? new Date(workOrder.plannedEndDate).toISOString().split('T')[0]
-          : '',
-        dueDate: workOrder.dueDate
-          ? new Date(workOrder.dueDate).toISOString().split('T')[0]
-          : undefined,
+        status: workOrder.status,
+        customerId: workOrder.customerId,
+        customerName: workOrder.customerName,
+        orderType: workOrder.orderType,
+        POId: workOrder.POId,
+        targetDate: workOrder.targetDate,
+        workOrderId: workOrder.workOrderId,
+        projectName: workOrder.projectName,
+        companyId: workOrder.companyId,
+        items: workOrder.items?.length > 0 ? workOrder.items : [{
+          partNo: '',
+          partName: '',
+          revisionLevel: 'A',
+          qty: 1,
+        }],
+        progress: workOrder.progress,
+        completedQty: workOrder.completedQty,
+        totalPlannedQty: workOrder.totalPlannedQty,
+        remarks: workOrder.remarks || '',
+        updatedBy: 'system',
       });
     }
-  }, [isEdit, workOrder, form]);
+  }, [workOrder, isFetching, isEdit, form]);
 
-  const onSubmit = (data: WorkOrder) => {
+  const onSubmit = (data: CreateWorkOrderFormData | EditWorkOrderFormData) => {
     if (isEdit && workOrderId) {
-      editWorkOrder(
-        { id: workOrderId, data },
+      updateWorkOrder(
+        { id: workOrderId, data: data as EditWorkOrderFormData },
         {
           onSuccess: () => {
-            router.push('/work-orders');
+            toast({
+              title: 'Success',
+              description: 'Work order updated successfully',
+            });
+            onSuccess?.();
+          },
+          onError: (error: unknown) => {
+            toast({
+              title: 'Error',
+              description: (error as Error)?.message || 'Failed to update work order',
+              variant: 'destructive',
+            });
           },
         }
       );
     } else {
-      addWorkOrder(data, {
+      createWorkOrder(data as CreateWorkOrderFormData, {
         onSuccess: () => {
-          router.push('/work-orders');
+          toast({
+            title: 'Success',
+            description: 'Work order created successfully',
+          });
+          form.reset();
+          onSuccess?.();
+        },
+        onError: (error: unknown) => {
+          toast({
+            title: 'Error',
+            description: (error as Error)?.message || 'Failed to create work order',
+            variant: 'destructive',
+          });
         },
       });
     }
   };
 
-  const addDefaultOperation = () => {
-    appendOperation({
-      operationSequence: operationFields.length + 1,
-      operationName: '',
-      operationCode: '',
-      workCenter: '',
-      setupTime: 0,
-      runTime: 0,
-      totalPlannedTime: 0,
-      actualTime: 0,
-      status: 'PLANNED',
-      qualityChecks: [],
+  const addItem = () => {
+    const newIndex = itemFields.length;
+    appendItem({
+      partNo: '',
+      partName: '',
+      revisionLevel: 'A',
+      qty: 1,
     });
+    
+    // New items start as manual entry
+    const newManualEntryItems = new Set(manualEntryItems);
+    newManualEntryItems.add(newIndex);
+    setManualEntryItems(newManualEntryItems);
   };
 
-  const addDefaultResource = () => {
-    appendResource({
-      resourceType: 'MATERIAL',
-      resourceName: '',
-      resourceCode: '',
-      plannedQuantity: 1,
-      actualQuantity: 0,
-      uom: '',
-      standardCost: 0,
-      actualCost: 0,
-      currency: 'INR',
-      status: 'PLANNED',
-    });
+  // Handle customer selection - auto-populate customer name when ID is selected
+  const handleCustomerSelection = (customerId: string) => {
+    const selectedCustomer = customersData?.customers?.find(customer => customer.id === customerId);
+    if (selectedCustomer) {
+      form.setValue('customerId', customerId);
+      form.setValue('customerName', selectedCustomer.name);
+    }
   };
 
-  if (isFetching) {
-    return <Loader text={`Loading ${isEdit ? 'work order details' : 'form'}`} />;
-  }
+  // Handle company selection
+  const handleCompanySelection = (companyId: string) => {
+    if (companyId === 'none') {
+      form.setValue('companyId', '');
+      return;
+    }
+    
+    form.setValue('companyId', companyId);
+  };
+
+  // Handle PO selection - auto-populate customer info when PO is selected
+  const handlePurchaseOrderSelection = (poId: string) => {
+    if (poId === 'none') {
+      form.setValue('POId', '');
+      return;
+    }
+    
+    const selectedPO = purchaseOrdersData?.purchaseOrders?.find(po => po.id === poId);
+    if (selectedPO) {
+      form.setValue('POId', poId);
+      // If PO has customer info, pre-populate it
+      if (selectedPO.customerId) {
+        form.setValue('customerId', selectedPO.customerId);
+        // Find customer name from customers data
+        const customer = customersData?.customers?.find(c => c.id === selectedPO.customerId);
+        if (customer) {
+          form.setValue('customerName', customer.name);
+        }
+      }
+    }
+  };
+
+  // Handle item selection - auto-populate item fields
+  const handleItemSelection = (itemId: string, index: number) => {
+    const newManualEntryItems = new Set(manualEntryItems);
+    
+    if (itemId === 'none') {
+      // Mark as manual entry and clear fields
+      newManualEntryItems.add(index);
+      setManualEntryItems(newManualEntryItems);
+      form.setValue(`items.${index}.partNo`, '');
+      form.setValue(`items.${index}.partName`, '');
+      form.setValue(`items.${index}.revisionLevel`, 'A');
+      return;
+    }
+    
+    // Remove from manual entry set
+    newManualEntryItems.delete(index);
+    setManualEntryItems(newManualEntryItems);
+    
+    const selectedItem = itemsData?.data?.find((item: Item) => item.id === itemId);
+    if (selectedItem) {
+      // Auto-populate from selected item
+      form.setValue(`items.${index}.partNo`, selectedItem.partNumber || selectedItem.itemCode);
+      form.setValue(`items.${index}.partName`, selectedItem.itemDescription);
+      // Reset revision level to default
+      form.setValue(`items.${index}.revisionLevel`, 'A');
+    }
+  };
+
+  const isPending = isCreating || isUpdating || isFetching;
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">
-            {isEdit ? 'Edit Work Order' : 'Create Work Order'}
-          </h1>
-          <p className="text-muted-foreground">
-            {isEdit
-              ? 'Update work order details and manage production'
-              : 'Create a new work order for production planning'}
-          </p>
-        </div>
-        <Badge variant={isEdit ? 'secondary' : 'default'}>
-          {isEdit ? 'Edit Mode' : 'New Work Order'}
-        </Badge>
-      </div>
-
+    <div className="w-full max-w-4xl mx-auto space-y-6">
       <Form {...form}>
-        <form key={formKey} onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          {/* Basic Information */}
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Header Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Basic Information
-              </CardTitle>
+              <CardTitle>{isEdit ? 'Edit Work Order' : 'Create Work Order'}</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="workOrderName"
+                name="workOrderId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Work Order Name *</FormLabel>
+                    <FormLabel>Work Order ID</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter work order name" {...field} />
+                      <Input {...field} placeholder="Auto-generated if empty" />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="workOrderType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Work Order Type *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select work order type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="PRODUCTION">Production</SelectItem>
-                        <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
-                        <SelectItem value="REWORK">Rework</SelectItem>
-                        <SelectItem value="PROTOTYPE">Prototype</SelectItem>
-                        <SelectItem value="REPAIR">Repair</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="priority"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Priority *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="LOW">Low</SelectItem>
-                        <SelectItem value="NORMAL">Normal</SelectItem>
-                        <SelectItem value="HIGH">High</SelectItem>
-                        <SelectItem value="URGENT">Urgent</SelectItem>
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -278,7 +301,7 @@ const CreateWorkOrderForm = ({
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status *</FormLabel>
+                    <FormLabel>Status</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -286,13 +309,10 @@ const CreateWorkOrderForm = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="PLANNED">Planned</SelectItem>
-                        <SelectItem value="RELEASED">Released</SelectItem>
-                        <SelectItem value="STARTED">Started</SelectItem>
-                        <SelectItem value="PAUSED">Paused</SelectItem>
-                        <SelectItem value="COMPLETED">Completed</SelectItem>
-                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                        <SelectItem value="CLOSED">Closed</SelectItem>
+                        <SelectItem value="Open">Open</SelectItem>
+                        <SelectItem value="Closed">Closed</SelectItem>
+                        <SelectItem value="Short Closed">Short Closed</SelectItem>
+                        <SelectItem value="On Hold">On Hold</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -302,12 +322,37 @@ const CreateWorkOrderForm = ({
 
               <FormField
                 control={form.control}
-                name="department"
+                name="customerId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Department</FormLabel>
+                    <FormLabel>Customer</FormLabel>
+                    <Select onValueChange={handleCustomerSelection} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a customer" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {customersData?.customers?.filter(customer => customer.id).map((customer) => (
+                          <SelectItem key={customer.id} value={customer.id!}>
+                            {customer.name} ({customer.id})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="customerName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Customer Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter department" {...field} />
+                      <Input {...field} placeholder="Auto-filled when customer is selected" readOnly className="bg-gray-50" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -316,38 +361,23 @@ const CreateWorkOrderForm = ({
 
               <FormField
                 control={form.control}
-                name="workCenter"
+                name="orderType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Work Center</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter work center" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Product Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Product Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <FormField
-                control={form.control}
-                name="productName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Product Name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter product name" {...field} />
-                    </FormControl>
+                    <FormLabel>Order Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select order type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="PRODUCTION">Production</SelectItem>
+                        <SelectItem value="PROTOTYPE">Prototype</SelectItem>
+                        <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
+                        <SelectItem value="REWORK">Rework</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -355,13 +385,28 @@ const CreateWorkOrderForm = ({
 
               <FormField
                 control={form.control}
-                name="productCode"
+                name="POId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product Code *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter product code" {...field} />
-                    </FormControl>
+                    <FormLabel>Purchase Order</FormLabel>
+                    <Select 
+                      onValueChange={handlePurchaseOrderSelection} 
+                      value={field.value || 'none'}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a purchase order" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">No Purchase Order</SelectItem>
+                        {purchaseOrdersData?.purchaseOrders?.filter(po => po.id).map((po) => (
+                          <SelectItem key={po.id} value={po.id!}>
+                            {po.poNumber} - {po.buyerName || 'No Buyer'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -369,82 +414,10 @@ const CreateWorkOrderForm = ({
 
               <FormField
                 control={form.control}
-                name="productDescription"
+                name="targetDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product Description</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter product description" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="plannedQuantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Planned Quantity *</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Enter planned quantity"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="uom"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Unit of Measurement *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Nos, Kg, Meter" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="drawingNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Drawing Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter drawing number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Dates and Planning */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Dates and Planning
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <FormField
-                control={form.control}
-                name="plannedStartDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Planned Start Date *</FormLabel>
+                    <FormLabel>Target Date</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -455,12 +428,12 @@ const CreateWorkOrderForm = ({
 
               <FormField
                 control={form.control}
-                name="plannedEndDate"
+                name="projectName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Planned End Date *</FormLabel>
+                    <FormLabel>Project Name</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input {...field} placeholder="Enter project name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -469,13 +442,28 @@ const CreateWorkOrderForm = ({
 
               <FormField
                 control={form.control}
-                name="dueDate"
+                name="companyId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Due Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
+                    <FormLabel>Company</FormLabel>
+                    <Select 
+                      onValueChange={handleCompanySelection} 
+                      value={field.value || 'none'}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a company" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">No Company</SelectItem>
+                        {companiesData?.filter((company: Company) => company.id).map((company: Company) => (
+                          <SelectItem key={company.id} value={company.id!}>
+                            {company.name} - {company.city}, {company.state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -483,40 +471,82 @@ const CreateWorkOrderForm = ({
             </CardContent>
           </Card>
 
-          {/* Operations */}
+          {/* Items Section */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Wrench className="h-5 w-5" />
-                Operations
-              </CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Items</CardTitle>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addItem}
+                className="h-8"
+              >
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Add Item
+              </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {operationFields.map((field, index) => (
-                <div key={field.id} className="border p-4 rounded-lg space-y-4">
+              {itemFields.map((item, index) => (
+                <div key={item.id} className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Operation {index + 1}</h4>
-                    {operationFields.length > 1 && (
+                    <h4 className="text-sm font-medium">Item {index + 1}</h4>
+                    {itemFields.length > 1 && (
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => removeOperation(index)}
+                        onClick={() => {
+                          removeItem(index);
+                          // Clean up manual entry state
+                          const newManualEntryItems = new Set(manualEntryItems);
+                          newManualEntryItems.delete(index);
+                          // Adjust indices for remaining items
+                          const adjustedSet = new Set<number>();
+                          newManualEntryItems.forEach(i => {
+                            if (i > index) {
+                              adjustedSet.add(i - 1);
+                            } else if (i < index) {
+                              adjustedSet.add(i);
+                            }
+                          });
+                          setManualEntryItems(adjustedSet);
+                        }}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <MinusCircle className="h-4 w-4" />
                       </Button>
                     )}
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {/* Item Selector */}
+                    <FormItem>
+                      <FormLabel>Select Item</FormLabel>
+                      <Select onValueChange={(value) => handleItemSelection(value, index)}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an item" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">Manual Entry</SelectItem>
+                          {itemsData?.data?.filter((item: Item) => item.id).map((item: Item) => (
+                            <SelectItem key={item.id} value={item.id!}>
+                              {item.itemCode} - {item.itemDescription}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+
                     <FormField
                       control={form.control}
-                      name={`operations.${index}.operationName`}
+                      name={`items.${index}.partNo`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Operation Name *</FormLabel>
+                          <FormLabel>Part No</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter operation name" {...field} />
+                            <Input {...field} placeholder="Auto-filled or manual entry" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -525,30 +555,16 @@ const CreateWorkOrderForm = ({
 
                     <FormField
                       control={form.control}
-                      name={`operations.${index}.workCenter`}
+                      name={`items.${index}.partName`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Work Center *</FormLabel>
+                          <FormLabel>Part Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter work center" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`operations.${index}.runTime`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Run Time (minutes) *</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="Enter run time"
-                              {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            <Input 
+                              {...field} 
+                              placeholder={manualEntryItems.has(index) ? "Enter part name" : "Auto-filled when item selected"} 
+                              readOnly={!manualEntryItems.has(index)} 
+                              className={!manualEntryItems.has(index) ? "bg-gray-50" : ""} 
                             />
                           </FormControl>
                           <FormMessage />
@@ -558,17 +574,12 @@ const CreateWorkOrderForm = ({
 
                     <FormField
                       control={form.control}
-                      name={`operations.${index}.totalPlannedTime`}
+                      name={`items.${index}.revisionLevel`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Total Planned Time (minutes) *</FormLabel>
+                          <FormLabel>Revision Level</FormLabel>
                           <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="Enter total planned time"
-                              {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            />
+                            <Input {...field} placeholder="A" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -577,30 +588,16 @@ const CreateWorkOrderForm = ({
 
                     <FormField
                       control={form.control}
-                      name={`operations.${index}.operationCode`}
+                      name={`items.${index}.qty`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Operation Code</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter operation code" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`operations.${index}.setupTime`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Setup Time (minutes)</FormLabel>
+                          <FormLabel>Quantity</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
-                              placeholder="Enter setup time"
+                              min="1"
                               {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                             />
                           </FormControl>
                           <FormMessage />
@@ -608,187 +605,96 @@ const CreateWorkOrderForm = ({
                       )}
                     />
                   </div>
+
+                  {index < itemFields.length - 1 && <Separator />}
                 </div>
               ))}
-              
-              <Button type="button" variant="outline" onClick={addDefaultOperation}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Operation
-              </Button>
             </CardContent>
           </Card>
 
-          {/* Resources (Optional) */}
+          {/* Progress & Quantities */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
-                Resources (Optional)
-              </CardTitle>
+              <CardTitle>Progress & Quantities</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {resourceFields.map((field, index) => (
-                <div key={field.id} className="border p-4 rounded-lg space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Resource {index + 1}</h4>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeResource(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <FormField
-                      control={form.control}
-                      name={`resources.${index}.resourceType`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Resource Type *</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select resource type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="MATERIAL">Material</SelectItem>
-                              <SelectItem value="LABOR">Labor</SelectItem>
-                              <SelectItem value="EQUIPMENT">Equipment</SelectItem>
-                              <SelectItem value="OVERHEAD">Overhead</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="progress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Progress (%)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                    <FormField
-                      control={form.control}
-                      name={`resources.${index}.resourceName`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Resource Name *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter resource name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+              <FormField
+                control={form.control}
+                name="completedQty"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Completed Quantity</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                    <FormField
-                      control={form.control}
-                      name={`resources.${index}.plannedQuantity`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Planned Quantity *</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="Enter planned quantity"
-                              {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`resources.${index}.uom`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Unit of Measurement *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g., Nos, Kg, Hours" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`resources.${index}.standardCost`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Standard Cost *</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="Enter standard cost"
-                              {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`resources.${index}.resourceCode`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Resource Code</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter resource code" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              ))}
-              
-              <Button type="button" variant="outline" onClick={addDefaultResource}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Resource
-              </Button>
+              <FormField
+                control={form.control}
+                name="totalPlannedQty"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Total Planned Quantity</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </CardContent>
           </Card>
 
-          {/* Additional Information */}
+          {/* Remarks */}
           <Card>
             <CardHeader>
               <CardTitle>Additional Information</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               <FormField
                 control={form.control}
-                name="specialInstructions"
+                name="remarks"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Special Instructions</FormLabel>
+                    <FormLabel>Remarks</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Enter any special instructions for this work order"
+                      <Textarea
                         {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="routingInstructions"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Routing Instructions</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Enter routing instructions"
-                        {...field}
+                        placeholder="Enter any additional remarks or notes"
+                        rows={4}
                       />
                     </FormControl>
                     <FormMessage />
@@ -798,24 +704,10 @@ const CreateWorkOrderForm = ({
             </CardContent>
           </Card>
 
-          {/* Form Actions */}
-          <div className="flex items-center justify-end gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push('/work-orders')}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isPendingAddWorkOrder || isPendingEditWorkOrder}
-            >
-              {isPendingAddWorkOrder || isPendingEditWorkOrder
-                ? 'Saving...'
-                : isEdit
-                ? 'Update Work Order'
-                : 'Create Work Order'}
+          {/* Submit Buttons */}
+          <div className="flex justify-end space-x-4">
+            <Button type="submit" disabled={isPending}>
+              {isPending ? 'Saving...' : isEdit ? 'Update Work Order' : 'Create Work Order'}
             </Button>
           </div>
         </form>

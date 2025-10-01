@@ -139,27 +139,27 @@ const WorkOrderDashboard = () => {
                 <div key={workOrder.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center space-x-4">
                     <div>
-                      <p className="font-medium">{workOrder.workOrderName}</p>
+                      <p className="font-medium">{workOrder.projectName}</p>
                       <p className="text-sm text-muted-foreground">
-                        {workOrder.workOrderNumber} • {workOrder.productName}
+                        {workOrder.workOrderId} • {workOrder.customerName}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Badge 
                       variant={
-                        workOrder.priority === 'URGENT' ? 'destructive' :
-                        workOrder.priority === 'HIGH' ? 'destructive' :
-                        workOrder.priority === 'NORMAL' ? 'default' : 'secondary'
+                        workOrder.orderType === 'PRODUCTION' ? 'default' :
+                        workOrder.orderType === 'PROTOTYPE' ? 'destructive' :
+                        workOrder.orderType === 'MAINTENANCE' ? 'secondary' : 'default'
                       }
                     >
-                      {workOrder.priority}
+                      {workOrder.orderType}
                     </Badge>
                     <Badge 
                       variant={
-                        workOrder.status === 'COMPLETED' ? 'default' :
-                        workOrder.status === 'STARTED' ? 'default' :
-                        workOrder.status === 'PAUSED' ? 'destructive' : 'secondary'
+                        workOrder.status === 'Closed' ? 'default' :
+                        workOrder.status === 'Open' ? 'default' :
+                        workOrder.status === 'On Hold' ? 'destructive' : 'secondary'
                       }
                     >
                       {workOrder.status}

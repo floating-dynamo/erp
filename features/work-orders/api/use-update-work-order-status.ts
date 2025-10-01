@@ -20,8 +20,7 @@ export const useUpdateWorkOrderStatus = () => {
       actualEndDate?: string;
       remarks?: string;
     }) => {
-      const response = await APIService.updateWorkOrderStatus({
-        id,
+      const response = await APIService.updateWorkOrderStatus(id, {
         status,
         actualStartDate,
         actualEndDate,
