@@ -71,7 +71,8 @@ export enum QueryKeyString {
   WORK_ORDERS = 'work-orders',
   COUNTRIES = 'countries',
   METADATA = 'metadata',
-  USERS = 'users'
+  USERS = 'users',
+  ITEMS = 'items'
 }
 
 // Authentication response types
