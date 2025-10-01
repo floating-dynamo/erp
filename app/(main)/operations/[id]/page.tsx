@@ -21,18 +21,25 @@ import Loader from '@/components/loader';
 
 
 interface OperationDetailsPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 const OperationDetailsPage = ({ params }: OperationDetailsPageProps) => {
+  const [operationId, setOperationId] = React.useState<string>('');
   const router = useRouter();
-  const { data: operation, isLoading, error } = useGetOperationDetails(params.id);
+  const { data: operation, isLoading, error } = useGetOperationDetails(operationId);
   const deleteOperation = useDeleteOperation();
 
+  React.useEffect(() => {
+    params.then((resolvedParams) => {
+      setOperationId(resolvedParams.id);
+    });
+  }, [params]);
+
   const handleDelete = () => {
-    deleteOperation.mutate(params.id, {
+    deleteOperation.mutate(operationId, {
       onSuccess: () => {
         router.push('/operations');
       },
@@ -84,7 +91,7 @@ const OperationDetailsPage = ({ params }: OperationDetailsPageProps) => {
 
         <div className="flex items-center space-x-2">
           <Button variant="outline" asChild>
-            <Link href={`/operations/${params.id}/edit`}>
+            <Link href={`/operations/${operationId}/edit`}>
               <Edit className="mr-2 h-4 w-4" />
               Edit
             </Link>

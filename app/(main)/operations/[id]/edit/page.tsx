@@ -2,16 +2,18 @@ import { CreateOperationForm } from '@/features/operations/components/create-ope
 import React from 'react';
 
 interface EditOperationPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-const EditOperationPage = ({ params }: EditOperationPageProps) => {
+const EditOperationPage = async ({ params }: EditOperationPageProps) => {
+  const { id } = await params;
+  
   return (
     <div className="w-full" data-testid="edit-operation-page">
       <CreateOperationForm 
-        operationId={params.id} 
+        operationId={id} 
         showBackButton={true} 
       />
     </div>
