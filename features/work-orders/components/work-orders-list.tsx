@@ -52,7 +52,6 @@ const WorkOrdersList = () => {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL_STATUS');
-  const [priorityFilter, setPriorityFilter] = useState('ALL_PRIORITY');
   const [workOrderTypeFilter, setWorkOrderTypeFilter] = useState('ALL_TYPES');
 
   const { 
@@ -64,8 +63,7 @@ const WorkOrdersList = () => {
     limit: 10,
     searchQuery,
     statusFilter: statusFilter === 'ALL_STATUS' ? undefined : statusFilter,
-    priorityFilter: priorityFilter === 'ALL_PRIORITY' ? undefined : priorityFilter,
-    workOrderTypeFilter: workOrderTypeFilter === 'ALL_TYPES' ? undefined : workOrderTypeFilter,
+    orderTypeFilter: workOrderTypeFilter === 'ALL_TYPES' ? undefined : workOrderTypeFilter,
   });
 
   const { mutate: deleteWorkOrder, isPending: isDeleting } = useDeleteWorkOrder();
@@ -76,46 +74,25 @@ const WorkOrdersList = () => {
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'PLANNED':
+      case 'Open':
+        return 'default';
+      case 'Closed':
         return 'secondary';
-      case 'RELEASED':
+      case 'Short Closed':
         return 'outline';
-      case 'STARTED':
-        return 'default';
-      case 'PAUSED':
+      case 'On Hold':
         return 'destructive';
-      case 'COMPLETED':
-        return 'default';
-      case 'CANCELLED':
-        return 'destructive';
-      case 'CLOSED':
-        return 'secondary';
       default:
         return 'secondary';
     }
   };
 
-  const getPriorityBadgeVariant = (priority: string) => {
-    switch (priority) {
-      case 'URGENT':
-        return 'destructive';
-      case 'HIGH':
-        return 'destructive';
-      case 'NORMAL':
-        return 'default';
-      case 'LOW':
-        return 'secondary';
-      default:
-        return 'secondary';
-    }
-  };
+
 
   const handleStatusUpdate = (workOrderId: string, newStatus: string) => {
     updateStatus({
       id: workOrderId,
       status: newStatus,
-      actualStartDate: newStatus === 'STARTED' ? new Date().toISOString() : undefined,
-      actualEndDate: newStatus === 'COMPLETED' ? new Date().toISOString() : undefined,
     });
   };
 
@@ -160,7 +137,7 @@ const WorkOrdersList = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -177,26 +154,10 @@ const WorkOrdersList = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL_STATUS">All Status</SelectItem>
-                <SelectItem value="PLANNED">Planned</SelectItem>
-                <SelectItem value="RELEASED">Released</SelectItem>
-                <SelectItem value="STARTED">Started</SelectItem>
-                <SelectItem value="PAUSED">Paused</SelectItem>
-                <SelectItem value="COMPLETED">Completed</SelectItem>
-                <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                <SelectItem value="CLOSED">Closed</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Priority" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL_PRIORITY">All Priority</SelectItem>
-                <SelectItem value="LOW">Low</SelectItem>
-                <SelectItem value="NORMAL">Normal</SelectItem>
-                <SelectItem value="HIGH">High</SelectItem>
-                <SelectItem value="URGENT">Urgent</SelectItem>
+                <SelectItem value="Open">Open</SelectItem>
+                <SelectItem value="Closed">Closed</SelectItem>
+                <SelectItem value="Short Closed">Short Closed</SelectItem>
+                <SelectItem value="On Hold">On Hold</SelectItem>
               </SelectContent>
             </Select>
 
@@ -219,7 +180,6 @@ const WorkOrdersList = () => {
               onClick={() => {
                 setSearchQuery('');
                 setStatusFilter('ALL_STATUS');
-                setPriorityFilter('ALL_PRIORITY');
                 setWorkOrderTypeFilter('ALL_TYPES');
               }}
             >
@@ -251,15 +211,13 @@ const WorkOrdersList = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Work Order #</TableHead>
-                  <TableHead>Name</TableHead>
+                  <TableHead>Project Name</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Priority</TableHead>
+                  <TableHead>Customer</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Planned Qty</TableHead>
                   <TableHead>Completed Qty</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead>Due Date</TableHead>
+                  <TableHead>Target Date</TableHead>
                   <TableHead>Progress</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -268,26 +226,21 @@ const WorkOrdersList = () => {
                 {workOrders.map((workOrder) => (
                   <TableRow key={workOrder.id}>
                     <TableCell className="font-medium">
-                      {workOrder.workOrderNumber}
+                      {workOrder.workOrderId}
                     </TableCell>
-                    <TableCell>{workOrder.workOrderName}</TableCell>
+                    <TableCell>{workOrder.projectName}</TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {workOrder.workOrderType}
+                        {workOrder.orderType}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{workOrder.productName}</p>
+                        <p className="font-medium">{workOrder.customerName}</p>
                         <p className="text-sm text-muted-foreground">
-                          {workOrder.productCode}
+                          {workOrder.customerId}
                         </p>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getPriorityBadgeVariant(workOrder.priority)}>
-                        {workOrder.priority}
-                      </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={getStatusBadgeVariant(workOrder.status)}>
@@ -295,19 +248,14 @@ const WorkOrdersList = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {workOrder.plannedQuantity} {workOrder.uom}
+                      {workOrder.totalPlannedQty || 0}
                     </TableCell>
                     <TableCell>
-                      {workOrder.completedQuantity} {workOrder.uom}
+                      {workOrder.completedQty || 0}
                     </TableCell>
                     <TableCell>
-                      {workOrder.plannedStartDate 
-                        ? format(new Date(workOrder.plannedStartDate), 'MMM dd, yyyy')
-                        : '-'}
-                    </TableCell>
-                    <TableCell>
-                      {workOrder.dueDate 
-                        ? format(new Date(workOrder.dueDate), 'MMM dd, yyyy')
+                      {workOrder.targetDate 
+                        ? format(new Date(workOrder.targetDate), 'MMM dd, yyyy')
                         : '-'}
                     </TableCell>
                     <TableCell>
@@ -316,12 +264,12 @@ const WorkOrdersList = () => {
                           <div 
                             className="bg-blue-500 h-2 rounded-full" 
                             style={{ 
-                              width: `${Math.min(workOrder.progressPercentage || 0, 100)}%` 
+                              width: `${Math.min(workOrder.progress || 0, 100)}%` 
                             }}
                           ></div>
                         </div>
                         <span className="text-sm text-muted-foreground">
-                          {workOrder.progressPercentage || 0}%
+                          {workOrder.progress || 0}%
                         </span>
                       </div>
                     </TableCell>
@@ -348,36 +296,27 @@ const WorkOrdersList = () => {
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          {workOrder.status === 'PLANNED' && (
+                          {workOrder.status === 'Open' && (
                             <DropdownMenuItem 
-                              onClick={() => workOrder.id && handleStatusUpdate(workOrder.id, 'STARTED')}
+                              onClick={() => workOrder.id && handleStatusUpdate(workOrder.id, 'Closed')}
                               disabled={isUpdatingStatus}
                             >
-                              <Play className="mr-2 h-4 w-4" />
-                              Start Work Order
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Close Work Order
                             </DropdownMenuItem>
                           )}
-                          {workOrder.status === 'STARTED' && (
-                            <>
-                              <DropdownMenuItem 
-                                onClick={() => workOrder.id && handleStatusUpdate(workOrder.id, 'PAUSED')}
-                                disabled={isUpdatingStatus}
-                              >
-                                <Pause className="mr-2 h-4 w-4" />
-                                Pause Work Order
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => workOrder.id && handleStatusUpdate(workOrder.id, 'COMPLETED')}
-                                disabled={isUpdatingStatus}
-                              >
-                                <CheckCircle className="mr-2 h-4 w-4" />
-                                Complete Work Order
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                          {workOrder.status === 'PAUSED' && (
+                          {workOrder.status === 'Open' && (
                             <DropdownMenuItem 
-                              onClick={() => workOrder.id && handleStatusUpdate(workOrder.id, 'STARTED')}
+                              onClick={() => workOrder.id && handleStatusUpdate(workOrder.id, 'On Hold')}
+                              disabled={isUpdatingStatus}
+                            >
+                              <Pause className="mr-2 h-4 w-4" />
+                              Put On Hold
+                            </DropdownMenuItem>
+                          )}
+                          {workOrder.status === 'On Hold' && (
+                            <DropdownMenuItem 
+                              onClick={() => workOrder.id && handleStatusUpdate(workOrder.id, 'Open')}
                               disabled={isUpdatingStatus}
                             >
                               <Play className="mr-2 h-4 w-4" />

@@ -8,7 +8,7 @@ export const useDeleteWorkOrder = () => {
 
   const mutation = useMutation({
     mutationFn: async ({ id }: { id: string }) => {
-      const response = await APIService.deleteWorkOrder({ id });
+      const response = await APIService.deleteWorkOrder(id);
       return response;
     },
     onSuccess: () => {

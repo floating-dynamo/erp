@@ -6,17 +6,11 @@ interface UseWorkOrdersProps {
   page?: number;
   limit?: number;
   searchQuery?: string;
-  workOrderTypeFilter?: string;
   statusFilter?: string;
-  priorityFilter?: string;
-  customerIdFilter?: string;
-  departmentFilter?: string;
-  startDateFrom?: string;
-  startDateTo?: string;
-  dueDateFrom?: string;
-  dueDateTo?: string;
-  costFrom?: string;
-  costTo?: string;
+  orderTypeFilter?: string;
+  customerId?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export const useWorkOrders = (params?: UseWorkOrdersProps) => {

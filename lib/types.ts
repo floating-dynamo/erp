@@ -419,63 +419,18 @@ export interface IApiService {
     page?: number;
     limit?: number;
     searchQuery?: string;
-    workOrderTypeFilter?: string;
     statusFilter?: string;
-    priorityFilter?: string;
-    customerIdFilter?: string;
-    departmentFilter?: string;
-    startDateFrom?: string;
-    startDateTo?: string;
-    dueDateFrom?: string;
-    dueDateTo?: string;
-    costFrom?: string;
-    costTo?: string;
+    orderTypeFilter?: string;
+    customerId?: string;
+    startDate?: string;
+    endDate?: string;
   }) => Promise<GetWorkOrdersResponse>;
-  addWorkOrder: ({
-    workOrder,
-  }: {
-    workOrder: WorkOrder;
-  }) => Promise<AddWorkOrderResponse>;
-  getWorkOrderById: ({ id }: { id: string }) => Promise<WorkOrder | null>;
-  editWorkOrder: ({
-    id,
-    data,
-  }: {
-    id: string;
-    data: WorkOrder;
-  }) => Promise<EditWorkOrderResponse>;
-  deleteWorkOrder: ({ id }: { id: string }) => Promise<{ message: string; success: boolean }>;
-  updateWorkOrderStatus: ({
-    id,
-    status,
-    actualStartDate,
-    actualEndDate,
-    remarks,
-  }: {
-    id: string;
-    status: string;
-    actualStartDate?: string;
-    actualEndDate?: string;
-    remarks?: string;
-  }) => Promise<{ message: string; success: boolean }>;
-  updateWorkOrderOperation: ({
-    workOrderId,
-    operationSequence,
-    ...operationData
-  }: {
-    workOrderId: string;
-    operationSequence: number;
-    [key: string]: unknown;
-  }) => Promise<{ message: string; success: boolean }>;
-  updateWorkOrderResourceConsumption: ({
-    workOrderId,
-    resourceIndex,
-    ...resourceData
-  }: {
-    workOrderId: string;
-    resourceIndex: number;
-    [key: string]: unknown;
-  }) => Promise<{ message: string; success: boolean }>;
+  createWorkOrder: (workOrder: Record<string, unknown>) => Promise<AddWorkOrderResponse>;
+  getWorkOrderDetails: (id: string) => Promise<WorkOrder | null>;
+  updateWorkOrder: (id: string, data: Record<string, unknown>) => Promise<EditWorkOrderResponse>;
+  deleteWorkOrder: (id: string) => Promise<{ message: string; success: boolean }>;
+  updateWorkOrderStatus: (id: string, statusData: Record<string, unknown>) => Promise<{ message: string; success: boolean }>;
+
   getWorkOrderStats: () => Promise<WorkOrderStatsResponse>;
 
   // Items Endpoints

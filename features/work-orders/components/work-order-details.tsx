@@ -13,8 +13,6 @@ import {
   CheckCircle,
   Clock,
   Package,
-  Wrench,
-  DollarSign,
   Calendar,
   FileText,
 } from 'lucide-react';
@@ -40,46 +38,25 @@ const WorkOrderDetails = ({ workOrderId }: WorkOrderDetailsProps) => {
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'PLANNED':
+      case 'Open':
+        return 'default';
+      case 'Closed':
         return 'secondary';
-      case 'RELEASED':
+      case 'On Hold':
+        return 'destructive';
+      case 'Short Closed':
         return 'outline';
-      case 'STARTED':
-        return 'default';
-      case 'PAUSED':
-        return 'destructive';
-      case 'COMPLETED':
-        return 'default';
-      case 'CANCELLED':
-        return 'destructive';
-      case 'CLOSED':
-        return 'secondary';
       default:
         return 'secondary';
     }
   };
 
-  const getPriorityBadgeVariant = (priority: string) => {
-    switch (priority) {
-      case 'URGENT':
-        return 'destructive';
-      case 'HIGH':
-        return 'destructive';
-      case 'NORMAL':
-        return 'default';
-      case 'LOW':
-        return 'secondary';
-      default:
-        return 'secondary';
-    }
-  };
+
 
   const handleStatusUpdate = (newStatus: string) => {
     updateStatus({
       id: workOrderId,
       status: newStatus,
-      actualStartDate: newStatus === 'STARTED' ? new Date().toISOString() : undefined,
-      actualEndDate: newStatus === 'COMPLETED' ? new Date().toISOString() : undefined,
     });
   };
 
@@ -121,45 +98,36 @@ const WorkOrderDetails = ({ workOrderId }: WorkOrderDetailsProps) => {
           </Link>
           <div>
             <h1 className="text-3xl font-bold">
-              {workOrder.workOrderNumber || 'Work Order'}
+              {workOrder.workOrderId || 'Work Order'}
             </h1>
-            <p className="text-muted-foreground">{workOrder.workOrderName}</p>
+            <p className="text-muted-foreground">{workOrder.projectName}</p>
           </div>
         </div>
         
         <div className="flex items-center gap-2">
           {/* Status Actions */}
-          {workOrder.status === 'PLANNED' && (
-            <Button
-              onClick={() => handleStatusUpdate('STARTED')}
-              disabled={isUpdatingStatus}
-            >
-              <Play className="mr-2 h-4 w-4" />
-              Start
-            </Button>
-          )}
-          {workOrder.status === 'STARTED' && (
+          {workOrder.status === 'Open' && (
             <>
               <Button
-                variant="outline"
-                onClick={() => handleStatusUpdate('PAUSED')}
-                disabled={isUpdatingStatus}
-              >
-                <Pause className="mr-2 h-4 w-4" />
-                Pause
-              </Button>
-              <Button
-                onClick={() => handleStatusUpdate('COMPLETED')}
+                onClick={() => handleStatusUpdate('Closed')}
                 disabled={isUpdatingStatus}
               >
                 <CheckCircle className="mr-2 h-4 w-4" />
-                Complete
+                Close
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleStatusUpdate('On Hold')}
+                disabled={isUpdatingStatus}
+              >
+                <Pause className="mr-2 h-4 w-4" />
+                Put On Hold
               </Button>
             </>
           )}
-          {workOrder.status === 'PAUSED' && (
+          {workOrder.status === 'On Hold' && (
             <Button
-              onClick={() => handleStatusUpdate('STARTED')}
+              onClick={() => handleStatusUpdate('Open')}
               disabled={isUpdatingStatus}
             >
               <Play className="mr-2 h-4 w-4" />
@@ -185,16 +153,13 @@ const WorkOrderDetails = ({ workOrderId }: WorkOrderDetailsProps) => {
         </div>
       </div>
 
-      {/* Status and Priority */}
+      {/* Status and Type */}
       <div className="flex items-center gap-4">
         <Badge variant={getStatusBadgeVariant(workOrder.status)} className="text-sm">
           {workOrder.status}
         </Badge>
-        <Badge variant={getPriorityBadgeVariant(workOrder.priority)} className="text-sm">
-          {workOrder.priority} Priority
-        </Badge>
         <Badge variant="outline" className="text-sm">
-          {workOrder.workOrderType}
+          {workOrder.orderType}
         </Badge>
       </div>
 
@@ -204,12 +169,12 @@ const WorkOrderDetails = ({ workOrderId }: WorkOrderDetailsProps) => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Package className="h-4 w-4" />
-              Product
+              Customer
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{workOrder.productName}</div>
-            <p className="text-xs text-muted-foreground">{workOrder.productCode}</p>
+            <div className="text-2xl font-bold">{workOrder.customerName}</div>
+            <p className="text-xs text-muted-foreground">{workOrder.customerId}</p>
           </CardContent>
         </Card>
 
@@ -221,12 +186,12 @@ const WorkOrderDetails = ({ workOrderId }: WorkOrderDetailsProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{workOrder.progressPercentage || 0}%</div>
+            <div className="text-2xl font-bold">{workOrder.progress || 0}%</div>
             <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
               <div 
                 className="bg-blue-500 h-2 rounded-full" 
                 style={{ 
-                  width: `${Math.min(workOrder.progressPercentage || 0, 100)}%` 
+                  width: `${Math.min(workOrder.progress || 0, 100)}%` 
                 }}
               ></div>
             </div>
@@ -242,25 +207,27 @@ const WorkOrderDetails = ({ workOrderId }: WorkOrderDetailsProps) => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {workOrder.completedQuantity || 0} / {workOrder.plannedQuantity}
+              {workOrder.completedQty || 0} / {workOrder.totalPlannedQty || 0}
             </div>
-            <p className="text-xs text-muted-foreground">{workOrder.uom}</p>
+            <p className="text-xs text-muted-foreground">Items</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              Cost
+              <Calendar className="h-4 w-4" />
+              Target Date
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {workOrder.currency} {workOrder.actualCost || 0}
+              {workOrder.targetDate 
+                ? format(new Date(workOrder.targetDate), 'MMM dd, yyyy')
+                : 'Not set'}
             </div>
             <p className="text-xs text-muted-foreground">
-              Planned: {workOrder.currency} {workOrder.plannedCost || 0}
+              {workOrder.POId ? `PO: ${workOrder.POId}` : 'No PO'}
             </p>
           </CardContent>
         </Card>
@@ -279,225 +246,90 @@ const WorkOrderDetails = ({ workOrderId }: WorkOrderDetailsProps) => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Work Order Number</p>
-                <p className="font-medium">{workOrder.workOrderNumber || 'Not assigned'}</p>
+                <p className="text-sm font-medium text-muted-foreground">Work Order ID</p>
+                <p className="font-medium">{workOrder.workOrderId || 'Not assigned'}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Work Order Name</p>
-                <p className="font-medium">{workOrder.workOrderName}</p>
+                <p className="text-sm font-medium text-muted-foreground">Project Name</p>
+                <p className="font-medium">{workOrder.projectName}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Department</p>
-                <p className="font-medium">{workOrder.department || 'Not specified'}</p>
+                <p className="text-sm font-medium text-muted-foreground">Order Type</p>
+                <p className="font-medium">{workOrder.orderType}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Work Center</p>
-                <p className="font-medium">{workOrder.workCenter || 'Not specified'}</p>
+                <p className="text-sm font-medium text-muted-foreground">Customer ID</p>
+                <p className="font-medium">{workOrder.customerId}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Drawing Number</p>
-                <p className="font-medium">{workOrder.drawingNumber || 'Not specified'}</p>
+                <p className="text-sm font-medium text-muted-foreground">Purchase Order</p>
+                <p className="font-medium">{workOrder.POId || 'Not specified'}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Revision</p>
-                <p className="font-medium">{workOrder.revision || 'Not specified'}</p>
-              </div>
-            </div>
-            
-            {workOrder.productDescription && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Product Description</p>
-                <p className="font-medium">{workOrder.productDescription}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Dates and Timeline */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Timeline
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Planned Start Date</p>
+                <p className="text-sm font-medium text-muted-foreground">Target Date</p>
                 <p className="font-medium">
-                  {workOrder.plannedStartDate 
-                    ? format(new Date(workOrder.plannedStartDate), 'PPP')
-                    : 'Not set'}
+                  {workOrder.targetDate 
+                    ? format(new Date(workOrder.targetDate), 'MMM dd, yyyy') 
+                    : 'Not specified'}
                 </p>
               </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Planned End Date</p>
-                <p className="font-medium">
-                  {workOrder.plannedEndDate 
-                    ? format(new Date(workOrder.plannedEndDate), 'PPP')
-                    : 'Not set'}
-                </p>
-              </div>
-              {workOrder.dueDate && (
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Due Date</p>
-                  <p className="font-medium">
-                    {format(new Date(workOrder.dueDate), 'PPP')}
-                  </p>
-                </div>
-              )}
-              {workOrder.actualStartDate && (
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Actual Start Date</p>
-                  <p className="font-medium">
-                    {format(new Date(workOrder.actualStartDate), 'PPP')}
-                  </p>
-                </div>
-              )}
-              {workOrder.actualEndDate && (
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Actual End Date</p>
-                  <p className="font-medium">
-                    {format(new Date(workOrder.actualEndDate), 'PPP')}
-                  </p>
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Operations */}
-      {workOrder.operations && workOrder.operations.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Wrench className="h-5 w-5" />
-              Operations
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {workOrder.operations.map((operation, index) => (
-                <div key={index} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium">
-                      {operation.operationSequence}. {operation.operationName}
-                    </h4>
-                    <Badge variant="outline">
-                      {operation.status}
-                    </Badge>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Work Center</p>
-                      <p className="font-medium">{operation.workCenter}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Setup Time</p>
-                      <p className="font-medium">{operation.setupTime || 0} min</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Run Time</p>
-                      <p className="font-medium">{operation.runTime} min</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Total Planned Time</p>
-                      <p className="font-medium">{operation.totalPlannedTime} min</p>
-                    </div>
-                  </div>
-                  
-                  {operation.notes && (
-                    <div className="mt-2">
-                      <p className="text-sm text-muted-foreground">Notes</p>
-                      <p className="text-sm">{operation.notes}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Resources */}
-      {workOrder.resources && workOrder.resources.length > 0 && (
+        {/* Items */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />
-              Resources
+              Items
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {workOrder.resources.map((resource, index) => (
-                <div key={index} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium">{resource.resourceName}</h4>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">
-                        {resource.resourceType}
-                      </Badge>
-                      <Badge variant="outline">
-                        {resource.status}
-                      </Badge>
+            {workOrder.items && workOrder.items.length > 0 ? (
+              <div className="space-y-4">
+                {workOrder.items.map((item, index) => (
+                  <div key={index} className="border rounded-lg p-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Part Number</p>
+                        <p className="font-medium">{item.partNo}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Part Name</p>
+                        <p className="font-medium">{item.partName}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Revision Level</p>
+                        <p className="font-medium">{item.revisionLevel || 'A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Quantity</p>
+                        <p className="font-medium">{item.qty}</p>
+                      </div>
                     </div>
                   </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Planned Quantity</p>
-                      <p className="font-medium">{resource.plannedQuantity} {resource.uom}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Actual Quantity</p>
-                      <p className="font-medium">{resource.actualQuantity || 0} {resource.uom}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Standard Cost</p>
-                      <p className="font-medium">{resource.currency} {resource.standardCost}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Actual Cost</p>
-                      <p className="font-medium">{resource.currency} {resource.actualCost || 0}</p>
-                    </div>
-                  </div>
-                  
-                  {resource.remarks && (
-                    <div className="mt-2">
-                      <p className="text-sm text-muted-foreground">Remarks</p>
-                      <p className="text-sm">{resource.remarks}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No items defined</p>
+            )}
           </CardContent>
         </Card>
-      )}
+      </div>
 
-      {/* Instructions */}
-      {(workOrder.specialInstructions || workOrder.routingInstructions) && (
+
+
+
+
+      {/* Remarks */}
+      {workOrder.remarks && (
         <Card>
           <CardHeader>
-            <CardTitle>Instructions</CardTitle>
+            <CardTitle>Remarks</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {workOrder.specialInstructions && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Special Instructions</p>
-                <p className="mt-1">{workOrder.specialInstructions}</p>
-              </div>
-            )}
-            {workOrder.routingInstructions && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Routing Instructions</p>
-                <p className="mt-1">{workOrder.routingInstructions}</p>
-              </div>
-            )}
+          <CardContent>
+            <p>{workOrder.remarks}</p>
           </CardContent>
         </Card>
       )}
