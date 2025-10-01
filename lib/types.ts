@@ -43,6 +43,12 @@ import {
   WorkOrderStatsResponse,
 } from './types/work-order';
 import { WorkOrder } from '@/features/work-orders/schemas';
+import {
+  AddOperationResponse,
+  EditOperationResponse,
+  GetOperationsResponse,
+} from './types/operation';
+import { Operation } from '@/features/operations/schemas';
 
 export enum CurrencySymbol {
   INR = '₹',
@@ -69,6 +75,7 @@ export enum QueryKeyString {
   PURCHASE_ORDERS = 'purchase-orders',
   BOMS = 'boms',
   WORK_ORDERS = 'work-orders',
+  OPERATIONS = 'operations',
   COUNTRIES = 'countries',
   METADATA = 'metadata',
   USERS = 'users',
@@ -432,6 +439,29 @@ export interface IApiService {
   updateWorkOrderStatus: (id: string, statusData: Record<string, unknown>) => Promise<{ message: string; success: boolean }>;
 
   getWorkOrderStats: () => Promise<WorkOrderStatsResponse>;
+
+  // Operations Endpoints
+  getOperations: (params?: {
+    page?: number;
+    limit?: number;
+    searchTerm?: string;
+    processFilter?: string;
+    workCenterFilter?: string;
+  }) => Promise<GetOperationsResponse>;
+  addOperation: ({
+    operation,
+  }: {
+    operation: Operation;
+  }) => Promise<AddOperationResponse>;
+  getOperationById: ({ id }: { id: string }) => Promise<Operation | null>;
+  editOperation: ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: Partial<Operation>;
+  }) => Promise<EditOperationResponse>;
+  deleteOperation: ({ id }: { id: string }) => Promise<{ success: boolean; message: string }>;
 
   // Items Endpoints
   getItems: (

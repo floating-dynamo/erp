@@ -16,6 +16,7 @@ import {
   UsersIcon,
   ClipboardListIcon,
   WrenchIcon,
+  CogIcon,
 } from 'lucide-react';
 
 const routes = [
@@ -66,6 +67,12 @@ const routes = [
     href: '/work-orders',
     icon: WrenchIcon,
     activeIcon: WrenchIcon,
+  },
+  {
+    label: 'Operations',
+    href: '/operations',
+    icon: CogIcon,
+    activeIcon: CogIcon,
   },
   {
     label: 'Supplier PO',

@@ -2168,6 +2168,208 @@ const mockService: IApiService = {
       }, 300);
     });
   },
+
+  // Operations Endpoints
+  async getOperations({
+    page = 1,
+    limit = 20,
+    searchTerm = '',
+    processFilter = '',
+    workCenterFilter = '',
+  } = {}) {
+    // Mock operations data
+    let filteredOperations = mockOperations;
+
+    // Apply search filter
+    if (searchTerm) {
+      filteredOperations = filteredOperations.filter(operation =>
+        operation.process.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        operation.workCenter.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (operation.description && operation.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    // Apply process filter
+    if (processFilter) {
+      filteredOperations = filteredOperations.filter(operation => operation.process === processFilter);
+    }
+
+    // Apply work center filter
+    if (workCenterFilter) {
+      filteredOperations = filteredOperations.filter(operation => operation.workCenter === workCenterFilter);
+    }
+
+    const totalCount = filteredOperations.length;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedOperations = filteredOperations.slice(startIndex, endIndex);
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          operations: paginatedOperations,
+          totalCount,
+          currentPage: page,
+          totalPages: Math.ceil(totalCount / limit),
+        });
+      }, 500);
+    });
+  },
+
+  async addOperation({ operation }) {
+    const newOperation = {
+      ...operation,
+      id: `op-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    mockOperations.push(newOperation);
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'Operation created successfully',
+          operationId: newOperation.id,
+        });
+      }, 800);
+    });
+  },
+
+  async getOperationById({ id }) {
+    const operation = mockOperations.find(op => op.id === id);
+    
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(operation || null);
+      }, 300);
+    });
+  },
+
+  async editOperation({ id, data }) {
+    const operationIndex = mockOperations.findIndex(op => op.id === id);
+    
+    if (operationIndex === -1) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({
+            success: false,
+            message: 'Operation not found',
+          });
+        }, 300);
+      });
+    }
+
+    mockOperations[operationIndex] = {
+      ...mockOperations[operationIndex],
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'Operation updated successfully',
+          operationId: id,
+        });
+      }, 800);
+    });
+  },
+
+  async deleteOperation({ id }) {
+    const operationIndex = mockOperations.findIndex(op => op.id === id);
+    
+    if (operationIndex === -1) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({
+            success: false,
+            message: 'Operation not found',
+          });
+        }, 300);
+      });
+    }
+
+    // Soft delete by setting isActive to false
+    mockOperations[operationIndex].isActive = false;
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          message: 'Operation deleted successfully',
+        });
+      }, 500);
+    });
+  },
 };
+
+// Mock operations data
+const mockOperations = [
+  {
+    id: 'op-1',
+    process: 'Casting',
+    workCenter: 'Foundry-01',
+    rawMaterials: [
+      {
+        itemId: 'item-1',
+        itemCode: 'MAT-001',
+        itemDescription: 'Aluminum Alloy',
+        quantity: 10,
+        uom: 'kg'
+      }
+    ],
+    setupMinutes: 30,
+    cncMinutesEstimate: 120,
+    totalMinutesEstimate: 150,
+    description: 'Aluminum casting process for engine blocks',
+    isActive: true,
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-15T10:00:00Z'
+  },
+  {
+    id: 'op-2',
+    process: 'Machining',
+    workCenter: 'CNC-Machine-01',
+    rawMaterials: [],
+    setupMinutes: 45,
+    cncMinutesEstimate: 90,
+    totalMinutesEstimate: 135,
+    description: 'Precision machining operation',
+    isActive: true,
+    createdAt: '2024-01-16T09:00:00Z',
+    updatedAt: '2024-01-16T09:00:00Z'
+  },
+  {
+    id: 'op-3',
+    process: 'Assembly',
+    workCenter: 'Assembly-Line-01',
+    rawMaterials: [
+      {
+        itemId: 'item-2',
+        itemCode: 'BOLT-001',
+        itemDescription: 'M8 Bolts',
+        quantity: 8,
+        uom: 'pcs'
+      },
+      {
+        itemId: 'item-3',
+        itemCode: 'SEAL-001',
+        itemDescription: 'Rubber Seal',
+        quantity: 2,
+        uom: 'pcs'
+      }
+    ],
+    setupMinutes: 15,
+    cncMinutesEstimate: 60,
+    totalMinutesEstimate: 75,
+    description: 'Final assembly of components',
+    isActive: true,
+    createdAt: '2024-01-17T08:00:00Z',
+    updatedAt: '2024-01-17T08:00:00Z'
+  }
+];
 
 export default mockService;
