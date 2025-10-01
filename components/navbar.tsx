@@ -34,6 +34,11 @@ const Navbar = () => {
           title: 'Quotations',
           description: 'Manage and create quotations for customers',
         };
+      case '/items':
+        return {
+          title: 'Items',
+          description: 'View and manage inventory items and products',
+        };
       case '/purchase-orders':
         return {
           title: 'Purchase Orders',

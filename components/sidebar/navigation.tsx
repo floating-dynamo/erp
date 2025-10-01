@@ -44,6 +44,12 @@ const routes = [
     activeIcon: CalculatorIcon,
   },
   {
+    label: 'Items',
+    href: '/items',
+    icon: PackageIcon,
+    activeIcon: PackageOpenIcon,
+  },
+  {
     label: 'Customer PO',
     href: '/purchase-orders',
     icon: PackageIcon,
