@@ -12,15 +12,18 @@ const QuotationFileSchema = new Schema({
 });
 
 const QuotationItemSchema = new Schema({
-  itemCode: { type: Number, required: true, min: 0 },
-  itemDescription: { type: String, required: true, trim: true },
-  materialConsideration: { type: String },
-  quantity: { type: Number, required: true, min: 1 },
-  uom: { type: String },
-  rate: { type: Number, required: true, min: 0 },
-  currency: { type: String },
-  amount: { type: Number, required: true, min: 0 },
+  itemId: { type: String, required: true },
+  quantity: { type: Number, required: true, min: 0.01 },
+  rate: { type: Number, min: 0 },
+  amount: { type: Number, min: 0 },
   remarks: { type: String },
+  // Quotation-specific fields
+  materialConsideration: { type: String },
+  uom: { type: String },
+  currency: { type: String },
+  // Keep for backward compatibility during migration
+  itemCode: { type: Number },
+  itemDescription: { type: String },
 });
 
 const QuotationSchema = new Schema(

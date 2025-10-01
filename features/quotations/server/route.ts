@@ -102,7 +102,7 @@ const app = new Hono()
         `${quotations.length + 1}`
       );
       parsedData.totalAmount = parsedData.items.reduce(
-        (acc, prev) => prev.amount + acc,
+        (acc, prev) => (prev.amount || 0) + acc,
         0
       );
 

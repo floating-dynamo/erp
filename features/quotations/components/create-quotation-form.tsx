@@ -125,7 +125,8 @@ const CreateQuotationForm = ({ quotationId }: CreateQuotationFormProps) => {
         enquiryNumber: enquiry?.enquiryNumber || '',
         customerName: enquiry?.customerName || '',
         items: enquiry
-          ? enquiry?.items?.map(({ itemCode, itemDescription, quantity }) => ({
+          ? enquiry?.items?.map(({ itemCode, itemDescription, quantity, itemId }) => ({
+              itemId: itemId || `item-${Date.now()}-${Math.random()}`, // Generate fallback ID if missing
               itemDescription,
               quantity,
               itemCode: itemCode || 0,
@@ -137,6 +138,7 @@ const CreateQuotationForm = ({ quotationId }: CreateQuotationFormProps) => {
             }))
           : [
               {
+                itemId: `item-${Date.now()}-${Math.random()}`, // Generate unique ID
                 itemDescription: '',
                 quantity: 0,
                 itemCode: 0,
@@ -171,7 +173,7 @@ const CreateQuotationForm = ({ quotationId }: CreateQuotationFormProps) => {
     // Calculating amount for each item
     values.items = values.items.map((item) => ({
       ...item,
-      amount: item.rate * item.quantity,
+      amount: (item.rate || 0) * item.quantity,
     }));
 
     console.log('Quotation: ', values);
@@ -183,7 +185,7 @@ const CreateQuotationForm = ({ quotationId }: CreateQuotationFormProps) => {
             id: quotationId,
             ...values,
             totalAmount: values.items.reduce(
-              (acc, prev) => prev.amount + acc,
+              (acc, prev) => (prev.amount || 0) + acc,
               0
             ),
           },
@@ -822,6 +824,7 @@ const CreateQuotationForm = ({ quotationId }: CreateQuotationFormProps) => {
                   variant={'tertiary'}
                   onClick={() =>
                     addItem({
+                      itemId: `item-${Date.now()}-${Math.random()}`, // Generate unique ID
                       itemCode: 0,
                       itemDescription: '',
                       quantity: 0,

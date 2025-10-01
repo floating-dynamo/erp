@@ -121,6 +121,7 @@ const CreatePurchaseOrderForm = ({
     if (enquiry && !isEdit) {
       // Update items based on the selected enquiry
       form.setValue('items', enquiry.items.map(item => ({
+        itemId: item.itemId || `item-${Date.now()}-${Math.random()}`, // Generate fallback ID if missing
         itemCode: item.itemCode,
         itemDescription: item.itemDescription,
         quantity: item.quantity

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { itemReferenceSchema } from "../items/schemas";
 
 // Define the schema for Enquiry File Attachments
 export const enquiryFileSchema = z.object({
@@ -34,10 +35,10 @@ export const createEnquirySchema = z.object({
     message: "Invalid date",
   }),
   items: z.array(
-    z.object({
-      itemCode: z.number().optional(),
-      itemDescription: z.string().min(1, "Required"),
-      quantity: z.number().min(0, "It cannot be negative"),
+    itemReferenceSchema.extend({
+      // Enquiries only need basic item reference with quantity
+      itemCode: z.number().optional(), // Keep for backward compatibility during migration
+      itemDescription: z.string().optional(), // Keep for backward compatibility during migration
     })
   ),
   termsAndConditions: z.string().optional(),

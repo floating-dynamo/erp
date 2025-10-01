@@ -12,9 +12,14 @@ const PurchoseOrderSchema = new Schema<PurchaseOrder>({
   exRate: { type: Number, required: false },
   items: [
     {
+      itemId: { type: String, required: true },
+      quantity: { type: Number, required: true, min: 0.01 },
+      rate: { type: Number, min: 0 },
+      amount: { type: Number, min: 0 },
+      remarks: { type: String },
+      // Keep for backward compatibility during migration
       itemCode: { type: Number },
-      itemDescription: { type: String, required: true },
-      quantity: { type: Number, required: true, min: 0 },
+      itemDescription: { type: String },
     },
   ],
   deliveryDate: { type: String, required: false },

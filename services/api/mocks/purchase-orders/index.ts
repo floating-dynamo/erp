@@ -1,4 +1,5 @@
 import { PurchaseOrder } from '@/features/purchase-orders/schemas';
+import { convertItemToReference } from '../item-mapping';
 
 export const PURCHASE_ORDERS_MOCK_DATA: PurchaseOrder[] = [
   {
@@ -10,11 +11,11 @@ export const PURCHASE_ORDERS_MOCK_DATA: PurchaseOrder[] = [
     buyerName: 'Kishora M',
     poDate: '2024-03-13T18:30:00.000+00:00',
     items: [
-      {
-        itemCode: 16993002,
+      convertItemToReference({
+        itemCode: 108,
         itemDescription: '500KN GRIP BODY',
         quantity: 2,
-      },
+      }),
     ],
     typeOfService: 'Export',
     currency: 'GBP',
@@ -34,24 +35,21 @@ export const PURCHASE_ORDERS_MOCK_DATA: PurchaseOrder[] = [
     buyerName: 'Veena D',
     poDate: '2025-05-02T18:30:00.000+00:00',
     items: [
-      {
-        itemCode: 1,
-        itemDescription:
-          'Load Cell Bottom Covering Sheet 15kN/25kN/50kN AC 06 0030 35/40-003',
+      convertItemToReference({
+        itemCode: 109,
+        itemDescription: 'Load Cell Bottom Covering Sheet 15kN/25kN/50kN AC 06 0030 35/40-003',
         quantity: 10,
-      },
-      {
-        itemCode: 112,
-        itemDescription:
-          '15KN LOAD CELL ELEMENT  HOLE CONCEPT. drwaing no:AC 06 0030 001',
+      }),
+      convertItemToReference({
+        itemCode: 110,
+        itemDescription: '15KN LOAD CELL ELEMENT  HOLE CONCEPT. drwaing no:AC 06 0030 001',
         quantity: 10,
-      },
-      {
-        itemCode: 2,
-        itemDescription:
-          'Load Cell TOP Covering Sheet 15kN/25kN/50kN AC 06 0030 35/40-004',
+      }),
+      convertItemToReference({
+        itemCode: 111,
+        itemDescription: 'Load Cell TOP Covering Sheet 15kN/25kN/50kN AC 06 0030 35/40-004',
         quantity: 10,
-      },
+      }),
     ],
     typeOfService: 'M & S',
     currency: 'INR',
@@ -71,16 +69,16 @@ export const PURCHASE_ORDERS_MOCK_DATA: PurchaseOrder[] = [
     buyerName: 'M AHMED',
     poDate: '2025-03-20T18:30:00.000+00:00',
     items: [
-      {
-        itemCode: 233001,
+      convertItemToReference({
+        itemCode: 112,
         itemDescription: 'BOTTOM PLATE',
         quantity: 1,
-      },
-      {
-        itemCode: 217004,
+      }),
+      convertItemToReference({
+        itemCode: 113,
         itemDescription: 'TORQUE PUNCh',
         quantity: 2,
-      },
+      }),
     ],
     typeOfService: 'M & S',
     currency: 'INR',
@@ -100,16 +98,16 @@ export const PURCHASE_ORDERS_MOCK_DATA: PurchaseOrder[] = [
     buyerName: 'Michael E Berry',
     poDate: '2025-03-22T18:30:00.000+00:00',
     items: [
-      {
-        itemCode: 21113,
+      convertItemToReference({
+        itemCode: 114,
         itemDescription: 'ROTATIONAL STOPPER,LRA FIXTURE',
         quantity: 1,
-      },
-      {
-        itemCode: 21050,
+      }),
+      convertItemToReference({
+        itemCode: 115,
         itemDescription: 'ARM FIXTURE, SIX ARM SUSCEPTOR SHAFT',
         quantity: 1,
-      },
+      }),
     ],
     typeOfService: 'Export',
     currency: 'USD',

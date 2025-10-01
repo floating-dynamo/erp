@@ -477,6 +477,38 @@ export interface IApiService {
   }) => Promise<{ message: string; success: boolean }>;
   getWorkOrderStats: () => Promise<WorkOrderStatsResponse>;
 
+  // Items Endpoints
+  getItems: (
+    searchQuery?: string,
+    page?: number,
+    limit?: number,
+    isActiveFilter?: boolean,
+    categoryFilter?: string
+  ) => Promise<{
+    data: import('@/features/items/schemas').Item[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }>;
+  getItem: (id: string) => Promise<import('@/features/items/schemas').Item>;
+  createItem: (data: import('@/features/items/schemas').CreateItem) => Promise<{
+    success: boolean;
+    message: string;
+    data: import('@/features/items/schemas').Item;
+  }>;
+  updateItem: (id: string, data: import('@/features/items/schemas').UpdateItem) => Promise<{
+    success: boolean;
+    message: string;
+    data: import('@/features/items/schemas').Item;
+  }>;
+  deleteItem: (id: string) => Promise<{
+    success: boolean;
+    message: string;
+  }>;
+  getItemCategories: () => Promise<string[]>;
+  getItemsByIds: (ids: string[]) => Promise<import('@/features/items/schemas').Item[]>;
+
   // Metadata Endpoints
   getMetadata: ({
     type,
